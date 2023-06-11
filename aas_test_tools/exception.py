@@ -1,0 +1,2 @@
+class AasTestToolsException(Exception):
+    pass

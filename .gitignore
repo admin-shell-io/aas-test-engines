@@ -1,0 +1,5 @@
+sdk/test-data
+.venv
+.vscode
+*.pyc
+.coverage
