@@ -23,8 +23,8 @@ def in_memory_zipfile(path: str):
 class CheckJsonTest(TestCase):
 
     def test_empty(self):
-        errors = file.check_json_data({}, '3.0.0')
-        self.assertEqual(len(errors), 0)
+        result = file.check_json_data({}, '3.0.0')
+        self.assertTrue(result.ok())
 
 
 class CheckXmlTest(TestCase):
@@ -33,8 +33,8 @@ class CheckXmlTest(TestCase):
         data = ElementTree.fromstring(
             """<environment xmlns="https://admin-shell.io/aas/3/0">
             </environment>""")
-        errors = file.check_xml_data(data, '3.0.0')
-        self.assertEqual(len(errors), 0)
+        result = file.check_xml_data(data, '3.0.0')
+        self.assertTrue(result.ok())
 
 
 class CheckAasxTest(TestCase):
