@@ -73,3 +73,10 @@ class CheckAasxTest(TestCase):
         result = file.check_aasx_data(z, '3.0.0')
         result.dump()
         self.assertTrue(result.ok())
+
+
+class SupportedVersionTest(TestCase):
+
+    def test_invoke(self):
+        for i in file.supported_versions:
+            print(i)

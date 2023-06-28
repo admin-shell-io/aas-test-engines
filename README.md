@@ -5,7 +5,7 @@ It can be found [here](https://industrialdigitaltwin.org/content-hub/downloads).
 
 For a given implementation of the AAS standard, these test tools offer measures to ensure compliance.
 
-## Check AAS Type 1 (Files)
+## Check AAS Type 1 (File)
 
 ### Check AASX:
 ```python
@@ -63,4 +63,4 @@ print(file.supported_versions)
 ```
 
 ## Check AAS Type 2 (HTTP API)
-(TODO)
+

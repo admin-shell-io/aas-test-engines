@@ -5,9 +5,10 @@ from yaml import safe_load
 
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
+from .data_types import validators
 
 from xml.etree import ElementTree
-from json_schema_plus.schema import JsonSchemaValidator, ValidatorCollection, Config
+from json_schema_plus.schema import JsonSchemaValidator, ValidatorCollection, ValidationConfig, ParseConfig
 from json_schema_plus.types import JsonType
 from zipfile import ZipFile
 
@@ -23,13 +24,16 @@ class AasSchema:
 def _find_schemas() -> Dict[str, any]:
     result = {}
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    data_dir = os.path.join(script_dir, 'data')
+    data_dir = os.path.join(script_dir, 'data', 'file')
     for i in os.listdir(data_dir):
         path = os.path.join(data_dir, i)
         if not i.endswith('.yml'):
             continue
         schema = safe_load(open(path))
-        validator = JsonSchemaValidator(schema)
+        config = ParseConfig(
+            format_validators=validators
+        )
+        validator = JsonSchemaValidator(schema, config)
         result[i[:-4]] = AasSchema(validator)
     return result
 
@@ -37,6 +41,8 @@ def _find_schemas() -> Dict[str, any]:
 _schemas = _find_schemas()
 
 supported_versions = list(_schemas.keys())
+
+DEFAULT_VERSION = '3.0.0'
 
 
 def _get_schema(version: str) -> AasSchema:
@@ -47,21 +53,21 @@ def _get_schema(version: str) -> AasSchema:
             f"Unknown version {version}, must be one of {supported_versions}")
 
 
-def check_json_data(data: any, version: str) -> AasTestResult:
+def check_json_data(data: any, version: str = DEFAULT_VERSION) -> AasTestResult:
     schema = _get_schema(version)
-    error = schema.validator.get_error(data, Config())
+    error = schema.validator.get_error(data, ValidationConfig())
     if error:
         return AasTestResult('Invalid', '', Level.ERROR)
     else:
         return AasTestResult('Valid', '', Level.INFO)
 
 
-def check_json_file(file: TextIO, version: str) -> AasTestResult:
+def check_json_file(file: TextIO, version: str = DEFAULT_VERSION) -> AasTestResult:
     data = json.load(file)
     return check_json_data(data, version)
 
 
-def check_xml_data(data: ElementTree, version: str) -> AasTestResult:
+def check_xml_data(data: ElementTree, version: str = DEFAULT_VERSION) -> AasTestResult:
     expected_namespace = '{https://admin-shell.io/aas/3/0}'
 
     def preprocess(data: ElementTree.Element, validator: ValidatorCollection) -> JSON:
@@ -94,7 +100,7 @@ def check_xml_data(data: ElementTree, version: str) -> AasTestResult:
         else:
             raise Exception(f"Unkown type {types} of {data}")
     schema = _get_schema(version)
-    config = Config(preprocessor=preprocess)
+    config = ValidationConfig(preprocessor=preprocess)
     error = schema.validator.get_error(data, config)
     if error:
         return AasTestResult('Invalid', '', Level.ERROR)
@@ -102,7 +108,7 @@ def check_xml_data(data: ElementTree, version: str) -> AasTestResult:
         return AasTestResult('Valid', '', Level.INFO)
 
 
-def check_xml_file(file: TextIO, version: str) -> AasTestResult:
+def check_xml_file(file: TextIO, version: str = DEFAULT_VERSION) -> AasTestResult:
     data = ElementTree.fromstring(file.read())
     return check_xml_data(data, version)
 
@@ -228,12 +234,12 @@ def _check_files(zipfile: ZipFile, root_rel: Relationship, version: str) -> AasT
                         sub_result.append(AasTestResult(
                             'Unknown filetype', aasx_spec.target))
             except KeyError:
-                return AasError("File does not exist")
+                return AasTestResult("File does not exist")
         result.append(sub_result)
     return result
 
 
-def check_aasx_data(zipfile: ZipFile, version: str) -> AasTestResult:
+def check_aasx_data(zipfile: ZipFile, version: str = DEFAULT_VERSION) -> AasTestResult:
 
     result = AasTestResult('Checking AASX package', '')
 
@@ -253,6 +259,6 @@ def check_aasx_data(zipfile: ZipFile, version: str) -> AasTestResult:
     return result
 
 
-def check_aasx_file(file: TextIO, version: str) -> AasTestResult:
+def check_aasx_file(file: TextIO, version: str = DEFAULT_VERSION) -> AasTestResult:
     zipfile = ZipFile(file)
     return check_json_data(zipfile, version)

@@ -1,0 +1,3 @@
+[submodule "test/fixtures/aas-core3.0-testgen"]
+	path = test/fixtures/aas-core3.0-testgenw
+	url = https://github.com/aas-core-works/aas-core3.0-testgen.git

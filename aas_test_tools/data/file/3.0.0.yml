@@ -7,23 +7,36 @@ $defs:
   StringType:
     $ref: '#/$defs/Constraint_AASd-130'
   Constraint_AASd-130:
-    pattern: ^[\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]*$
-  Base64BinaryType:
     type: string
-    contentEncoding: base64
-  BooleanType:
+    pattern: ^[\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]*$
+  BoolType:
     type: string
     enum:
     - "true"
     - "false"
     - "1"
     - "0"
-  DateTimeType:
+  TimeType:
     type: string
-    pattern: ^-?(([1-9][0-9][0-9][0-9]+)|(0[0-9][0-9][0-9]))-((0[1-9])|(1[0-2]))-((0[1-9])|([12][0-9])|(3[01]))T(((([01][0-9])|(2[0-3])):[0-5][0-9]:([0-5][0-9])(\.[0-9]+)?)|24:00:00(\.0+)?)(Z|\+00:00|-00:00)$
+    pattern: ^(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
   DurationType:
     type: string
     pattern: ^-?P((([0-9]+Y([0-9]+M)?([0-9]+D)?|([0-9]+M)([0-9]+D)?|([0-9]+D))(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S)))?)|(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S))))$
+  DayType:
+    type: string
+    pattern: ^---(0[1-9]|[12][0-9]|3[01])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+  MonthType:
+    type: string
+    pattern: ^--(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+  YearType:
+    type: string
+    pattern: ^-?([1-9][0-9]{3,}|0[0-9]{3})(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+  YearMonthType:
+    type: string
+    pattern: ^-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+  HexBinaryType:
+    type: string
+    pattern: ^([0-9a-fA-F][0-9a-fA-F])*$
   ### 5.3.11.2 Primitive Data Types
   BlobType:
     type: string
@@ -119,190 +132,393 @@ $defs:
     - xs:unsignedShort
   ValueWithType:
     anyOf:
-    - patternProperties:
-        ^valueType$:
+    - properties:
+        valueType:
           const: xs:string
-        ^(value|min|max)$:
+        value:
           $ref: "#/$defs/StringType"
-    - patternProperties:
-        ^valueType$:
+    - properties:
+        valueType:
           const: xs:boolean
-        ^(value|min|max)$:
-          $ref: "#/$defs/BooleanType"
-    - patternProperties:
-        ^valueType$:
+        value:
+          $ref: "#/$defs/BoolType"
+    - properties:
+        valueType:
           const: xs:decimal
-        ^(value|min|max)$:
+        value:
           type: string
-          pattern: ^\d*\.?\d*$
-          minLength: 1
-    - patternProperties:
-        ^valueType$:
+          format: xs:decimal
+    - properties:
+        valueType:
           const: xs:integer
-        ^(value|min|max)$:
+        value:
           type: string
-          pattern: ^[+-]?\d+$
+          format: xs:integer
 
-    - patternProperties:
-        ^valueType$:
+    - properties:
+        valueType:
           const: xs:float
-        ^(value|min|max)$:
-          pattern: ^[-+]?(([0-9]*[.]?[0-9]+([ed][-+]?[0-9]+)?)|(INF)|(NaN))$
-    - patternProperties:
-        ^valueType$:
+        value:
+          type: string
+          format: xs:float
+    - properties:
+        valueType:
           const: xs:double
-        ^(value|min|max)$:
+        value:
           type: string
-          pattern: ^[-+]?(([0-9]*[.]?[0-9]+([ed][-+]?[0-9]+)?)|(INF)|(NaN))$
+          format: xs:double
 
-    - patternProperties:
-        ^valueType$:
+    - properties:
+        valueType:
           const: xs:date
-        ^(value|min|max)$:
+        value:
           type: string
-          pattern: ^\d\d\d\d-\d\d-\d\d(Z|\+\d\d:\d\d)?$
-    - patternProperties:
-        ^valueType$:
+          format: xs:date
+    - properties:
+        valueType:
           const: xs:dateTime
-        ^(value|min|max)$:
+        value:
           type: string
-          $ref: "#/$defs/DateTimeType"
-    - patternProperties:
-        ^valueType$:
+          format: xs:dateTime
+    - properties:
+        valueType:
           const: xs:time
-        ^(value|min|max)$:
-          type: string
-          pattern: ^\d\d:\d\d:\d\d((\.\d+Z)|(\+\d\ð:\d\d))?$
-    - patternProperties:
-        ^valueType$:
+        value:
+          $ref: "#/$defs/TimeType"
+    - properties:
+        valueType:
           const: xs:duration
-        ^(value|min|max)$:
-          type: string
+        value:
           $ref: "#/$defs/DurationType"
-    - patternProperties:
-        ^valueType$:
+    - properties:
+        valueType:
           const: xs:gDay
-        ^(value|min|max)$:
-          type: string
-          pattern: ^---\d\d(\+\d\d:\d\ð)?$
-    - patternProperties:
-        ^valueType$:
+        value:
+          $ref: "#/$defs/DayType"
+    - properties:
+        valueType:
           const: xs:gMonth
-        ^(value|min|max)$:
-          type: string
-          pattern: ^--\d\d\+(\d\d:\d\d)?$
-    - patternProperties:
-        ^valueType$:
+        value:
+          $ref: "#/$defs/MonthType"
+    - properties:
+        valueType:
           const: xs:gMonthDay
-        ^(value|min|max)$:
+        value:
           type: string
-          pattern: ^--\d\d-\d\d(\+\d\ð:\d\d)?$
-    - patternProperties:
-        ^valueType$:
+          format: xs:gMonthDay
+    - properties:
+        valueType:
           const: xs:gYear
-        ^(value|min|max)$:
-          type: string
-          pattern: ^\d\d\d\d(\+\d\ð:\d\d)?$
-    - patternProperties:
-        ^valueType$:
+        value:
+          $ref: "#/$defs/YearType"
+    - properties:
+        valueType:
           const: xs:gYearMonth
-        ^(value|min|max)$:
-          type: string
-          pattern: ^\d\d\d\d-\d\d(\+\d\d:\d\d)?$
+        value:
+          $ref: "#/$defs/YearMonthType"
 
-    - patternProperties:
-        ^valueType$:
+    - properties:
+        valueType:
           const: xs:byte
-        ^(value|min|max)$:
+        value:
           type: string
-          pattern: ^[+-]?\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:int
-        ^(value|min|max)$:
-          type: string
-          pattern: ^[+-]?\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:long
-        ^(value|min|max)$:
-          type: string
-          pattern: ^[+-]?\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:negativeInteger
-        ^(value|min|max)$:
-          type: string
-          pattern: ^-\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:nonNegativeInteger
-        ^(value|min|max)$:
-          type: string
-          pattern: ^(\+?\d+)|(-0)$
-    - patternProperties:
-        ^valueType$:
-          const: xs:nonPositiveInteger
-        ^(value|min|max)$:
-          type: string
-          pattern: ^(-\d+)|(\+?0)$
-    - patternProperties:
-        ^valueType$:
-          const: xs:positiveInteger
-        ^(value|min|max)$:
-          type: string
-          pattern: ^(\+?(\d*|[1-9]))|0$
-          minLength: 1
-    - patternProperties:
-        ^valueType$:
+          format: xs:byte
+    - properties:
+        valueType:
           const: xs:short
-        ^(value|min|max)$:
+        value:
           type: string
-          pattern: ^[+-]?\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:unsignedByte
-        ^(value|min|max)$:
+          format: xs:short
+    - properties:
+        valueType:
+          const: xs:int
+        value:
           type: string
-          pattern: ^[+]?\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:unsignedInt
-        ^(value|min|max)$:
+          format: xs:int
+    - properties:
+        valueType:
+          const: xs:long
+        value:
           type: string
-          pattern: ^[+]?\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:unsignedLong
-        ^(value|min|max)$:
-          type: string
-          pattern: ^[+]?\d+$
-    - patternProperties:
-        ^valueType$:
-          const: xs:unsignedShort
-        ^(value|min|max)$:
-          type: string
-          pattern: ^[+]?\d+$
-  
-    - patternProperties:
-        ^valueType$:
-          const: xs:base64Binary
-        ^(value|min|max)$:
-          type: string
-          pattern: ^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$
-    - patternProperties:
-        ^valueType$:
-          const: xs:hexBinary
-        ^(value|min|max)$:
-          type: string
-          pattern: ^([0-9a-fA-F][0-9a-fA-F])*$
-    - patternProperties:
-        ^valueType$:
-          const: xs:anyURI
-        ^(value|min|max)$:
-          type: string
-          pattern: ^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?$
+          format: xs:long
 
+    - properties:
+        valueType:
+          const: xs:negativeInteger
+        value:
+          type: string
+          format: xs:negativeInteger
+    - properties:
+        valueType:
+          const: xs:nonNegativeInteger
+        value:
+          type: string
+          format: xs:nonNegativeInteger
+    - properties:
+        valueType:
+          const: xs:nonPositiveInteger
+        value:
+          type: string
+          format: xs:nonPositiveInteger
+    - properties:
+        valueType:
+          const: xs:positiveInteger
+        value:
+          type: string
+          format: xs:positiveInteger
+
+    - properties:
+        valueType:
+          const: xs:unsignedByte
+        value:
+          type: string
+          format: xs:unsignedByte
+    - properties:
+        valueType:
+          const: xs:unsignedInt
+        value:
+          type: string
+          format: xs:unsignedInt
+    - properties:
+        valueType:
+          const: xs:unsignedShort
+        value:
+          type: string
+          format: xs:unsignedShort
+    - properties:
+        valueType:
+          const: xs:unsignedLong
+        value:
+          type: string
+          format: xs:unsignedLong
+  
+    - properties:
+        valueType:
+          const: xs:base64Binary
+        value:
+          type: string
+          format: xs:base64Binary
+    - properties:
+        valueType:
+          const: xs:hexBinary
+        value:
+          $ref: "#/$defs/HexBinaryType"
+    - properties:
+        valueType:
+          const: xs:anyURI
+        value:
+          type: string
+          format: xs:anyURI
+
+  MinMaxWithType:
+    anyOf:
+    - properties:
+        valueType:
+          const: xs:string
+        min: &a0
+          $ref: "#/$defs/StringType"
+        max: *a0
+    - properties:
+        valueType:
+          const: xs:boolean
+        min: &a1
+          $ref: "#/$defs/BoolType"
+        max: *a1
+    - properties:
+        valueType:
+          const: xs:decimal
+        min: &a2
+          type: string
+          format: xs:decimal
+        max: *a2
+    - properties:
+        valueType:
+          const: xs:integer
+        min: &a3
+          type: string
+          format: xs:integer
+        max: *a3
+
+    - properties:
+        valueType:
+          const: xs:float
+        min: &a4
+          type: string
+          format: xs:float
+        max: *a4
+    - properties:
+        valueType:
+          const: xs:double
+        min: &a5
+          type: string
+          format: xs:double
+        max: *a5
+
+    - properties:
+        valueType:
+          const: xs:date
+        min: &a6
+          type: string
+          format: xs:date
+        max: *a6
+    - properties:
+        valueType:
+          const: xs:dateTime
+        min: &a7
+          type: string
+          format: xs:dateTime
+        max: *a7
+    - properties:
+        valueType:
+          const: xs:time
+        min: &a8
+          $ref: "#/$defs/TimeType"
+        max: *a8
+    - properties:
+        valueType:
+          const: xs:duration
+        min: &a9
+          $ref: "#/$defs/DurationType"
+        max: *a9
+    - properties:
+        valueType:
+          const: xs:gDay
+        min: &a10
+          $ref: "#/$defs/DayType"
+        max: *a10
+    - properties:
+        valueType:
+          const: xs:gMonth
+        min: &a11
+          $ref: "#/$defs/MonthType"
+        max: *a11
+    - properties:
+        valueType:
+          const: xs:gMonthDay
+        min: &a12
+          type: string
+          format: xs:gMonthDay
+        max: *a12
+    - properties:
+        valueType:
+          const: xs:gYear
+        min: &a13
+          $ref: "#/$defs/YearType"
+        max: *a13
+    - properties:
+        valueType:
+          const: xs:gYearMonth
+        min: &a14
+          $ref: "#/$defs/YearMonthType"
+        max: *a14
+
+    - properties:
+        valueType:
+          const: xs:byte
+        min: &a15
+          type: string
+          format: xs:byte
+        max: *a15
+    - properties:
+        valueType:
+          const: xs:short
+        min: &a16
+          type: string
+          format: xs:short
+        max: *a16
+    - properties:
+        valueType:
+          const: xs:int
+        min: &a17
+          type: string
+          format: xs:int
+        max: *a17
+    - properties:
+        valueType:
+          const: xs:long
+        min: &a18
+          type: string
+          format: xs:long
+        max: *a18
+
+    - properties:
+        valueType:
+          const: xs:negativeInteger
+        min: &a19
+          type: string
+          format: xs:negativeInteger
+        max: *a19
+    - properties:
+        valueType:
+          const: xs:nonNegativeInteger
+        min: &a20
+          type: string
+          format: xs:nonNegativeInteger
+        max: *a20
+    - properties:
+        valueType:
+          const: xs:nonPositiveInteger
+        min: &a21
+          type: string
+          format: xs:nonPositiveInteger
+        max: *a21
+    - properties:
+        valueType:
+          const: xs:positiveInteger
+        min: &a22
+          type: string
+          format: xs:positiveInteger
+        max: *a22
+
+    - properties:
+        valueType:
+          const: xs:unsignedByte
+        min: &a23
+          type: string
+          format: xs:unsignedByte
+        max: *a23
+    - properties:
+        valueType:
+          const: xs:unsignedInt
+        min: &a24
+          type: string
+          format: xs:unsignedInt
+        max: *a24
+    - properties:
+        valueType:
+          const: xs:unsignedShort
+        min: &a25
+          type: string
+          format: xs:unsignedShort
+        max: *a25
+    - properties:
+        valueType:
+          const: xs:unsignedLong
+        min: &a26
+          type: string
+          format: xs:unsignedLong
+        max: *a26
+  
+    - properties:
+        valueType:
+          const: xs:base64Binary
+        min: &a27
+          type: string
+          format: xs:base64Binary
+        max: *a27
+    - properties:
+        valueType:
+          const: xs:hexBinary
+        min: &a28
+          $ref: "#/$defs/HexBinaryType"
+        max: *a28
+    - properties:
+        valueType:
+          const: xs:anyURI
+        min: &a29
+          type: string
+          format: xs:anyURI
+        max: *a29
 
   AasSubmodelElements:
     type: string
@@ -453,7 +669,8 @@ $defs:
         messageBroker:
           $ref: "#/$defs/Reference"
         lastUpdate:
-          $ref: "#/$defs/DateTimeType"
+          type: string
+          format: xs:dateTimeUTC
         minInterval:
           $ref: "#/$defs/DurationType"
         maxInterval:
@@ -979,7 +1196,7 @@ $defs:
   Range:
     allOf:
     - $ref: "#/$defs/DataElement"
-    - $ref: "#/$defs/ValueWithType"
+    - $ref: "#/$defs/MinMaxWithType"
     - properties:
         valueType:
           $ref: "#/$defs/DataTypeDefXsd"
