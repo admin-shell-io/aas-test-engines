@@ -80,3 +80,53 @@ class SupportedVersionTest(TestCase):
     def test_invoke(self):
         for i in file.supported_versions:
             print(i)
+
+
+class AasCoreTestCase(TestCase):
+
+    def is_blacklisted(self, path):
+        if 'UnexpectedAdditionalProperty' in path:
+            return True
+        if 'Double/lowest.json' in path:
+            return True
+        if 'Double/max.json' in path:
+            return True
+        if 'Float/largest_normal.json' in path:
+            return True
+        return False
+
+    def _run(self, dirname: str, check):
+        valid_accepted = 0
+        valid_rejected = 0
+        invalid_accepted = 0
+        invalid_rejected = 0
+        skipped = 0
+        for root, dirs, files in os.walk(os.path.join(script_dir, f'fixtures/aas-core3.0-testgen/test_data/{dirname}/ContainedInEnvironment'), topdown=False):
+            for name in files:
+                path_in = os.path.join(root, name)
+                if self.is_blacklisted(path_in):
+                    skipped += 1
+                    continue
+                with open(path_in) as f:
+                    errors = check(f, '3.0.0')
+                if errors.ok():
+                    if 'Expected' in path_in:
+                        valid_accepted += 1
+                    else:
+                        invalid_accepted += 1
+                else:
+                    if 'Expected' in path_in:
+                        valid_rejected += 1
+                    else:
+                        invalid_rejected += 1
+        print("valid, accepted",     valid_accepted)
+        print("invalid, rejected",   invalid_rejected)
+        print("valid, rejected",     valid_rejected)
+        print("invalid, accepted",   invalid_accepted)
+        print("skipped",             skipped)
+
+    def test_json(self):
+        self._run('Json', file.check_json_file)
+
+    def test_xml(self):
+        self._run('Xml', file.check_xml_file)
