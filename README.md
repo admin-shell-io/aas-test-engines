@@ -100,3 +100,15 @@ from aas_test_tools import api
 print(api.supported_versions())
 print(api.latest_version())
 ```
+
+## Command line interface
+
+You may want to invoke the test tools using the simplified command line interface:
+
+```sh
+# Check file
+python -m aas_test_tools file test.aasx
+
+# Check server
+python -m aas_test_tools api https://localhost 
+```
