@@ -1,0 +1,89 @@
+{
+    "extensions": [
+        {
+            "value": "ExampleExtensionValue",
+            "refersTo": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "idType": "IRI",
+                        "value": "http://acplt.org/RefersTo/ExampleRefersTo"
+                    }
+                ]
+            },
+            "valueType": "string",
+            "name": "ExampleExtension"
+        }
+    ],
+    "idShort": "ManufacturerName",
+    "category": "PARAMETER",
+    "description": [
+        {
+            "language": "en-us",
+            "text": "Legally valid designation of the natural or judicial person which is directly responsible for the design, production, packaging and labeling of a product in respect to its being brought into circulation."
+        },
+        {
+            "language": "de",
+            "text": "Bezeichnung f\u00fcr eine nat\u00fcrliche oder juristische Person, die f\u00fcr die Auslegung, Herstellung und Verpackung sowie die Etikettierung eines Produkts im Hinblick auf das 'Inverkehrbringen' im eigenen Namen verantwortlich ist"
+        }
+    ],
+    "modelType": {
+        "name": "Property"
+    },
+    "semanticId": {
+        "keys": [
+            {
+                "type": "GlobalReference",
+                "idType": "IRI",
+                "value": "0173-1#02-AAO677#002"
+            }
+        ]
+    },
+    "qualifiers": [
+        {
+            "modelType": {
+                "name": "Qualifier"
+            },
+            "value": "50",
+            "valueId": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "idType": "IRI",
+                        "value": "http://acplt.org/ValueId/ExampleValueId"
+                    }
+                ]
+            },
+            "valueType": "int",
+            "type": "http://acplt.org/Qualifier/ExampleQualifier2"
+        },
+        {
+            "modelType": {
+                "name": "Qualifier"
+            },
+            "value": "100",
+            "valueId": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "idType": "IRI",
+                        "value": "http://acplt.org/ValueId/ExampleValueId"
+                    }
+                ]
+            },
+            "valueType": "int",
+            "type": "http://acplt.org/Qualifier/ExampleQualifier"
+        }
+    ],
+    "value": "ACPLT",
+    "valueId": {
+        "keys": [
+            {
+                "type": "GlobalReference",
+                "idType": "IRI",
+                "value": "http://acplt.org/ValueId/ExampleValueId"
+            }
+        ]
+    },
+    "valueType": "string"
+}

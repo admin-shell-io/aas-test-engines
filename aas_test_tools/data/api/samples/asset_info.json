@@ -1,0 +1,38 @@
+{
+    "assetKind": "Instance",
+    "globalAssetId": {
+        "keys": [
+            {
+                "type": "GlobalReference",
+                "idType": "IRI",
+                "value": "http://acplt.org/TestAsset/"
+            }
+        ]
+    },
+    "externalAssetIds": [
+        {
+            "key": "TestKey",
+            "value": "TestValue",
+            "subjectId": {
+                "keys": [
+                    {
+                        "type": "GlobalReference",
+                        "idType": "IRI",
+                        "value": "http://acplt.org/SpecificAssetId/"
+                    }
+                ]
+            }
+        }
+    ],
+    "billOfMaterial": [
+        {
+            "keys": [
+                {
+                    "type": "Submodel",
+                    "idType": "IRI",
+                    "value": "http://acplt.org/Submodels/Assets/TestAsset/BillOfMaterial"
+                }
+            ]
+        }
+    ]
+}

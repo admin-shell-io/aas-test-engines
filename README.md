@@ -59,8 +59,44 @@ You can query the list of supported versions as follows:
 ```python
 from aas_test_tools import file
 
-print(file.supported_versions)
+print(file.supported_versions())
+print(file.latest_version())
 ```
 
 ## Check AAS Type 2 (HTTP API)
 
+### Check a running server instance
+
+```python
+from aas_test_tools import api
+
+tests = api.generate_tests()
+
+# Check an instance
+api.execute_tests(tests, "http://localhost")
+
+# Check another instance
+api.execute_tests(tests, "http://localhost:3000")
+```
+
+### Checking older versions and specific profiles
+
+By default, the `api.generate_tests` method generate test cases for version 1.0RC03 of the standard and all associated profiles.
+You may want to check against older versions by passing a string containing the version to these methods.
+You can also provide a list of profiles to check against:
+
+```python
+from aas_test_tools import api
+
+tests = api.generate_tests('1.0RC03', ['repository'])
+api.execute_tests(tests, "http://localhost")
+```
+
+You can query the list of supported versions and their associated profiles as follows:
+
+```python
+from aas_test_tools import api
+
+print(api.supported_versions())
+print(api.latest_version())
+```

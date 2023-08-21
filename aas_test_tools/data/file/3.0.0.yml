@@ -844,10 +844,10 @@ $defs:
           - globalAssetId
         - not:
             required:
-            - specificAssetId
+            - specificAssetIds
       - allOf:
         - required:
-          - specificAssetId
+          - specificAssetIds
         - not:
             required:
             - globalAssetId

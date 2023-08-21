@@ -39,21 +39,23 @@ def _find_schemas() -> Dict[str, any]:
 
 
 _schemas = _find_schemas()
+_DEFAULT_VERSION = '3.0.0'
 
-supported_versions = list(_schemas.keys())
+def supported_versions():
+    return list(_schemas.keys())
 
-DEFAULT_VERSION = '3.0.0'
-
+def latest_version():
+    return _DEFAULT_VERSION
 
 def _get_schema(version: str) -> AasSchema:
     try:
         return _schemas[version]
     except KeyError:
         raise AasTestToolsException(
-            f"Unknown version {version}, must be one of {supported_versions}")
+            f"Unknown version {version}, must be one of {supported_versions()}")
 
 
-def check_json_data(data: any, version: str = DEFAULT_VERSION) -> AasTestResult:
+def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult:
     schema = _get_schema(version)
     error = schema.validator.get_error(data, ValidationConfig())
     if error:
@@ -62,12 +64,12 @@ def check_json_data(data: any, version: str = DEFAULT_VERSION) -> AasTestResult:
         return AasTestResult('Valid', '', Level.INFO)
 
 
-def check_json_file(file: TextIO, version: str = DEFAULT_VERSION) -> AasTestResult:
+def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
     data = json.load(file)
     return check_json_data(data, version)
 
 
-def check_xml_data(data: ElementTree, version: str = DEFAULT_VERSION) -> AasTestResult:
+def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTestResult:
     expected_namespace = '{https://admin-shell.io/aas/3/0}'
 
     def preprocess(data: ElementTree.Element, validator: ValidatorCollection) -> JSON:
@@ -108,7 +110,7 @@ def check_xml_data(data: ElementTree, version: str = DEFAULT_VERSION) -> AasTest
         return AasTestResult('Valid', '', Level.INFO)
 
 
-def check_xml_file(file: TextIO, version: str = DEFAULT_VERSION) -> AasTestResult:
+def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
     data = ElementTree.fromstring(file.read())
     return check_xml_data(data, version)
 
@@ -239,7 +241,7 @@ def _check_files(zipfile: ZipFile, root_rel: Relationship, version: str) -> AasT
     return result
 
 
-def check_aasx_data(zipfile: ZipFile, version: str = DEFAULT_VERSION) -> AasTestResult:
+def check_aasx_data(zipfile: ZipFile, version: str = _DEFAULT_VERSION) -> AasTestResult:
 
     result = AasTestResult('Checking AASX package', '')
 
@@ -259,6 +261,6 @@ def check_aasx_data(zipfile: ZipFile, version: str = DEFAULT_VERSION) -> AasTest
     return result
 
 
-def check_aasx_file(file: TextIO, version: str = DEFAULT_VERSION) -> AasTestResult:
+def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
     zipfile = ZipFile(file)
     return check_json_data(zipfile, version)
