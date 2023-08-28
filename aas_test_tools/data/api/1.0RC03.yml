@@ -194,7 +194,7 @@ paths:
   /aas:
     get:
       tags:
-        - Asset Administration Shell API
+        - asset_administration_shell
       summary: Returns the Asset Administration Shell
       operationId: GetAssetAdministrationShell
       x-semanticIds:
@@ -216,7 +216,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Asset Administration Shell API
+        - asset_administration_shell
       summary: Updates the Asset Administration Shell
       operationId: PutAssetAdministrationShell
       x-semanticIds:
@@ -248,7 +248,7 @@ paths:
   /aas/asset-information:
     get:
       tags:
-        - Asset Administration Shell API
+        - asset_administration_shell
       summary: Returns the Asset Information
       operationId: GetAssetInformation
       x-semanticIds:
@@ -268,7 +268,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Asset Administration Shell API
+        - asset_administration_shell
       summary: Updates the Asset Information
       operationId: PutAssetInformation
       x-semanticIds:
@@ -298,7 +298,7 @@ paths:
   /aas/submodels:
     get:
       tags:
-        - Asset Administration Shell API
+        - asset_administration_shell
       summary: Returns all submodel references
       operationId: GetAllSubmodelReferences
       x-semanticIds:
@@ -320,7 +320,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Asset Administration Shell API
+        - asset_administration_shell
       summary: Creates a submodel reference at the Asset Administration Shell
       operationId: PostSubmodelReference
       x-semanticIds:
@@ -354,7 +354,7 @@ paths:
   /aas/submodels/{submodelIdentifier}:
     delete:
       tags:
-        - Asset Administration Shell API
+        - asset_administration_shell
       summary: Deletes the submodel reference from the Asset Administration Shell
       operationId: DeleteSubmodelReferenceById
       x-semanticIds:
@@ -387,7 +387,7 @@ paths:
   /submodels:
     get:
       tags:
-        - Submodel Repository API
+        - submodel_repository
       summary: Returns all Submodels
       operationId: GetAllSubmodels
       x-semanticIds:
@@ -421,7 +421,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Submodel Repository API
+        - submodel_repository
       summary: Creates a new Submodel
       operationId: PostSubmodel
       x-semanticIds:
@@ -455,7 +455,7 @@ paths:
   /submodels/{submodelIdentifier}:
     get:
       tags:
-        - Submodel Repository API
+        - submodel_repository
       summary: Returns a specific Submodel
       operationId: GetSubmodelById
       x-semanticIds:
@@ -491,7 +491,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Submodel Repository API
+        - submodel_repository
       summary: Updates an existing Submodel
       operationId: PutSubmodelById
       x-semanticIds:
@@ -536,7 +536,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - Submodel Repository API
+        - submodel_repository
       summary: Deletes a Submodel
       operationId: DeleteSubmodelById
       x-semanticIds:
@@ -569,7 +569,7 @@ paths:
   /submodel:
     get:
       tags:
-        - Submodel API
+        - submodel
       summary: Returns the Submodel
       operationId: GetSubmodel
       x-semanticIds:
@@ -593,7 +593,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Submodel API
+        - submodel
       summary: Updates the Submodel
       operationId: PutSubmodel
       x-semanticIds:
@@ -627,7 +627,7 @@ paths:
   /submodel/submodel-elements:
     get:
       tags:
-        - Submodel API
+        - submodel
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements
       x-semanticIds:
@@ -655,7 +655,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Submodel API
+        - submodel
       summary: Creates a new submodel element
       operationId: PostSubmodelElement
       x-semanticIds:
@@ -693,7 +693,7 @@ paths:
   /submodel/submodel-elements/{idShortPath}:
     get:
       tags:
-        - Submodel API
+        - submodel
       summary: Returns a specific submodel element from the Submodel at a specified
         path
       operationId: GetSubmodelElementByPath
@@ -732,7 +732,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Submodel API
+        - submodel
       summary: Creates a new submodel element at a specified path within submodel elements hierarchy
       operationId: PostSubmodelElementByPath
       x-semanticIds:
@@ -783,7 +783,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Submodel API
+        - submodel
       summary: Updates an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutSubmodelElementByPath
       x-semanticIds:
@@ -831,7 +831,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - Submodel API
+        - submodel
       summary: Deletes a submodel element at a specified path within the submodel elements hierarchy
       operationId: DeleteSubmodelElementByPath
       x-semanticIds:
@@ -863,7 +863,7 @@ paths:
   /submodel/submodel-elements/{idShortPath}/attachment:
     get:
       tags:
-        - Submodel API
+        - submodel
       summary: Downloads file content from a specific submodel element from the Submodel at a specified path
       operationId: GetFileByPath
       x-semanticIds:
@@ -911,7 +911,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Submodel API
+        - submodel
       summary: Uploads file content to an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutFileByPath
       x-semanticIds:
@@ -971,7 +971,7 @@ paths:
   /submodel/submodel-elements/{idShortPath}/invoke:
     post:
       tags:
-        - Submodel API
+        - submodel
       summary: Synchronously or asynchronously invokes an Operation at a specified path
       operationId: InvokeOperation
       x-semanticIds:
@@ -1034,7 +1034,7 @@ paths:
   /submodel/submodel-elements/{idShortPath}/operation-results/{handleId}:
     get:
       tags:
-        - Submodel API
+        - submodel
       summary: Returns the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult
       x-semanticIds:
@@ -1087,7 +1087,7 @@ paths:
   /shell-descriptors:
     get:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Returns all Asset Administration Shell Descriptors
       operationId: GetAllAssetAdministrationShellDescriptors
       x-semanticIds:
@@ -1109,7 +1109,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Creates a new Asset Administration Shell Descriptor, i.e. registers an AAS
       operationId: PostAssetAdministrationShellDescriptor
       x-semanticIds:
@@ -1143,7 +1143,7 @@ paths:
   /shell-descriptors/{aasIdentifier}:
     get:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Returns a specific Asset Administration Shell Descriptor
       operationId: GetAssetAdministrationShellDescriptorById
       x-semanticIds:
@@ -1179,7 +1179,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Updates an existing Asset Administration Shell Descriptor
       operationId: PutAssetAdministrationShellDescriptorById
       x-semanticIds:
@@ -1224,7 +1224,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Deletes an Asset Administration Shell Descriptor, i.e. de-registers an AAS
       operationId: DeleteAssetAdministrationShellDescriptorById
       x-semanticIds:
@@ -1257,7 +1257,7 @@ paths:
   /shell-descriptors/{aasIdentifier}/submodel-descriptors:
     get:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Returns all Submodel Descriptors
       operationId: GetAllSubmodelDescriptors_AASRegistry
       x-semanticIds:
@@ -1295,7 +1295,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Creates a new Submodel Descriptor, i.e. registers a submodel
       operationId: PostSubmodelDescriptor_AASRegistry
       x-semanticIds:
@@ -1345,7 +1345,7 @@ paths:
   /shell-descriptors/{aasIdentifier}/submodel-descriptors/{submodelIdentifier}:
     get:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Returns a specific Submodel Descriptor
       operationId: GetSubmodelDescriptorById_AASRegistry
       x-semanticIds:
@@ -1388,7 +1388,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Updates an existing Submodel Descriptor
       operationId: PutSubmodelDescriptorById_AASRegistry
       x-semanticIds:
@@ -1440,7 +1440,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - Asset Administration Shell Registry API
+        - registry
       summary: Deletes a Submodel Descriptor, i.e. de-registers a submodel
       operationId: DeleteSubmodelDescriptorById_AASRegistry
       x-semanticIds:
@@ -1480,7 +1480,7 @@ paths:
   /submodel-descriptors:
     get:
       tags:
-        - Submodel Registry API
+        - submodel_registry
       summary: Returns all Submodel Descriptors
       operationId: GetAllSubmodelDescriptors
       x-semanticIds:
@@ -1502,7 +1502,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Submodel Registry API
+        - submodel_registry
       summary: Creates a new Submodel Descriptor, i.e. registers a submodel
       operationId: PostSubmodelDescriptor
       x-semanticIds:
@@ -1536,7 +1536,7 @@ paths:
   /submodel-descriptors/{submodelIdentifier}:
     get:
       tags:
-        - Submodel Registry API
+        - submodel_registry
       summary: Returns a specific Submodel Descriptor
       operationId: GetSubmodelDescriptorById
       x-semanticIds:
@@ -1572,7 +1572,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Submodel Registry API
+        - submodel_registry
       summary: Updates an existing Submodel Descriptor
       operationId: PutSubmodelDescriptorById
       x-semanticIds:
@@ -1617,7 +1617,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - Submodel Registry API
+        - submodel_registry
       summary: Deletes a Submodel Descriptor, i.e. de-registers a submodel
       operationId: DeleteSubmodelDescriptorById
       x-semanticIds:
@@ -1650,7 +1650,7 @@ paths:
   /concept-descriptions:
     get:
       tags:
-        - Concept Description Repository API
+        - concept_description_repository
       summary: Returns all Concept Descriptions
       operationId: GetAllConceptDescriptions
       x-semanticIds:
@@ -1702,7 +1702,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Concept Description Repository API
+        - concept_description_repository
       summary: Creates a new Concept Description
       operationId: PostConceptDescription
       x-semanticIds:
@@ -1736,7 +1736,7 @@ paths:
   /concept-descriptions/{cdIdentifier}:
     get:
       tags:
-        - Concept Description Repository API
+        - concept_description_repository
       summary: Returns a specific Concept Description
       operationId: GetConceptDescriptionById
       x-semanticIds:
@@ -1772,7 +1772,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - Concept Description Repository API
+        - concept_description_repository
       summary: Updates an existing Concept Description
       operationId: PutConceptDescriptionById
       x-semanticIds:
@@ -1817,7 +1817,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - Concept Description Repository API
+        - concept_description_repository
       summary: Deletes a Concept Description
       operationId: DeleteConceptDescriptionById
       x-semanticIds:
@@ -1850,7 +1850,7 @@ paths:
   /packages:
     get:
       tags:
-        - AASX File Server API
+        - aasx_file_server
       summary: Returns a list of available AASX packages at the server
       operationId: GetAllAASXPackageIds
       x-semanticIds:
@@ -1882,7 +1882,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - AASX File Server API
+        - aasx_file_server
       summary: Stores the AASX package at the server
       operationId: PostAASXPackage
       x-semanticIds:
@@ -1929,7 +1929,7 @@ paths:
   /packages/{packageId}:
     get:
       tags:
-        - AASX File Server API
+        - aasx_file_server
       summary: Returns a specific AASX package from the server
       operationId: GetAASXByPackageId
       x-semanticIds:
@@ -1971,7 +1971,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - AASX File Server API
+        - aasx_file_server
       summary: Updates the AASX package at the server
       operationId: PutAASXByPackageId
       x-semanticIds:
@@ -2029,7 +2029,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - AASX File Server API
+        - aasx_file_server
       summary: Deletes a specific AASX package from the server
       operationId: DeleteAASXByPackageId
       x-semanticIds:
@@ -2062,7 +2062,7 @@ paths:
   /serialization:
     get:
       tags:
-        - Asset Administration Shell Serialization API
+        - serialization
       summary: Returns an appropriate serialization based on the specified format (see SerializationFormat)
       operationId: GenerateSerializationByIds
       x-semanticIds:
@@ -2121,7 +2121,7 @@ paths:
   /lookup/shells:
     get:
       tags:
-        - Asset Administration Shell Basic Discovery API
+        - discovery
       summary: Returns a list of Asset Administration Shell ids linked to specific Asset identifiers 
       operationId: GetAllAssetAdministrationShellIdsByAssetLink
       x-semanticIds:
@@ -2156,7 +2156,7 @@ paths:
   /lookup/shells/{aasIdentifier}:
     get:
       tags:
-        - Asset Administration Shell Basic Discovery API
+        - discovery
       summary: Returns a list of specific Asset identifiers based on an Asset Administration Shell id to edit discoverable content
       operationId: GetAllAssetLinksById
       x-semanticIds:
@@ -2194,7 +2194,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - Asset Administration Shell Basic Discovery API
+        - discovery
       summary: Creates specific Asset identifiers linked to an Asset Administration Shell to edit discoverable content
       operationId: PostAllAssetLinksById
       x-semanticIds:
@@ -2247,7 +2247,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     delete:
       tags:
-        - Asset Administration Shell Basic Discovery API
+        - discovery
       summary: Deletes all specific Asset identifiers linked to an Asset Administration Shell to edit discoverable content
       operationId: DeleteAllAssetLinksById
       x-semanticIds:
@@ -2280,7 +2280,7 @@ paths:
   /descriptor:
     get:
       tags:
-        - Descriptor API
+        - descriptor
       summary: Returns the self-describing information of a network resource (Descriptor)
       operationId: GetDescriptor
       x-semanticIds:

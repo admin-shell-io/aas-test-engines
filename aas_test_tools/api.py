@@ -1,4 +1,4 @@
-from typing import Dict, TextIO
+from typing import Dict, Set
 from .exception import AasTestToolsException
 from .result import AasTestResult
 
@@ -13,8 +13,9 @@ from yaml import safe_load
 
 class AasSpec:
 
-    def __init__(self, api: openapi.OpenApi) -> None:
+    def __init__(self, api: openapi.OpenApi, tags: Set[str]) -> None:
         self.api = api
+        self.tags = tags
 
 
 def _find_specs() -> Dict[str, AasSpec]:
@@ -27,7 +28,11 @@ def _find_specs() -> Dict[str, AasSpec]:
             continue
         spec = safe_load(open(path))
         api = openapi.OpenApi.from_dict(spec)
-        result[i[:-4]] = AasSpec(api)
+        profiles = set()
+        for path in api.paths:
+            for operation in path.operations:
+                profiles.update(operation.tags)
+        result[i[:-4]] = AasSpec(api, profiles)
     return result
 
 
@@ -44,9 +49,13 @@ def _get_spec(version: str) -> AasSpec:
             f"Unknown version {version}, must be one of {supported_versions()}")
 
 
-def generate_tests(version: str = _DEFAULT_VERSION) -> runconf.RunConfig:
+def generate_tests(version: str = _DEFAULT_VERSION, profiles: Set[str] = None) -> runconf.RunConfig:
     spec = _get_spec(version)
-    conf = generate.generate(spec.api)
+    if profiles is None:
+        profiles = spec.tags
+    if not spec.tags.issuperset(profiles):
+        raise AasTestToolsException(f"Unknown profiles {profiles}, must be in {spec.tags}")
+    conf = generate.generate(spec.api, profiles)
     return conf
 
 
@@ -55,7 +64,7 @@ def execute_tests(conf: runconf.RunConfig, server: str, dry: bool = False) -> Aa
 
 
 def supported_versions():
-    return list(_specs.keys())
+    return {ver: spec.tags for ver, spec in _specs.items()}
 
 
 def latest_version():

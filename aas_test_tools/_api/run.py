@@ -21,7 +21,8 @@ def _check_server(server: str):
         return False
 
 
-def _check_response(expected: Response, actual: requests.models.Response, data: Optional[dict]) -> bool:
+def _check_response(test_case: TestCase, actual: requests.models.Response, data: Optional[dict], config: RunConfig) -> bool:
+    expected = test_case.response
     if actual.status_code != expected.code:
         print("  invalid status code: expected {}, got {}".format(
             expected.code, actual.status_code))
@@ -56,7 +57,7 @@ class TestResult:
     passed: bool
 
 
-def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[str, str]) -> TestResult:
+def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[str, str], config: RunConfig) -> TestResult:
     url = server + test_case.request.path
     try:
         url = inject_variables(url, variables)
@@ -83,7 +84,7 @@ def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[
             data = response.json()
         except:
             data = None
-        ok = _check_response(test_case.response, response, data)
+        ok = _check_response(test_case, response, data, config)
         for name, expression in test_case.response.variables.items():
             try:
                 variables[name] = expression.lookup(
@@ -104,7 +105,7 @@ def run(config: RunConfig, server: str, dry: bool = False) -> float:
     variables: Dict[str, str] = {}
     num_passed = 0
     for test_case in config.test_cases:
-        result = _run_test_case(test_case, server, dry, variables)
+        result = _run_test_case(test_case, server, dry, variables, config)
         if result.passed:
             num_passed += 1
     return num_passed / len(config.test_cases)

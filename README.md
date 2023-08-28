@@ -110,5 +110,5 @@ You may want to invoke the test tools using the simplified command line interfac
 python -m aas_test_tools file test.aasx
 
 # Check server
-python -m aas_test_tools api https://localhost 
+python -m aas_test_tools api https://localhost --profile registry
 ```

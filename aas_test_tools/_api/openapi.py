@@ -1,4 +1,4 @@
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Set
 from dataclasses import dataclass
 from enum import Enum
 from .parse_util import assert_type, safe_dict_lookup
@@ -152,6 +152,7 @@ class Operation:
     parameters: List[Parameter]
     request_body: Optional[RequestBody]
     responses: List[Response]
+    tags: Set[str]
 
     @classmethod
     def from_dict(cls: "Operation", method: str, data: Any, json_path: str, resolver: Resolver) -> "Operation":
@@ -168,6 +169,7 @@ class Operation:
                 request_body, json_path + '.' + 'requestBody') if request_body is not None else None,
             responses=[Response.from_dict(k, v, json_path + '.' + k)
                        for k, v in safe_dict_lookup(data, 'responses', dict, json_path).items()],
+            tags=set(safe_dict_lookup(data, 'tags', list, json_path))
         )
 
     def get_param_by_name(self, name: str) -> Parameter:

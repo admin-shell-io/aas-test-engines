@@ -286,9 +286,11 @@ def has_all_params(operation: openapi.Operation, already_tested: Set[str]) -> bo
     return True
 
 
-def get_next(api: openapi.OpenApi, already_tested: Set[str]) -> Tuple[openapi.Path, openapi.Operation]:
+def get_next(api: openapi.OpenApi, already_tested: Set[str], tag_filter: Set[str]) -> Tuple[openapi.Path, openapi.Operation]:
     for path in api.paths:
         for operation in path.operations:
+            if not (operation.tags & tag_filter):
+                continue
             if operation.operation_id in already_tested:
                 continue
             if has_all_params(operation, already_tested):
@@ -297,14 +299,16 @@ def get_next(api: openapi.OpenApi, already_tested: Set[str]) -> Tuple[openapi.Pa
         "No more operations whose parameters are available. Maybe you have a cyclic dependency within your links?")
 
 
-def generate(api: openapi.OpenApi):
+def generate(api: openapi.OpenApi, tag_filter=Set[str]):
     test_cases: List[runconf.TestCase] = []
     num_ops = 0
     for path in api.paths:
-        num_ops += len(path.operations)
+        for op in path.operations:
+            if op.tags & tag_filter:
+                num_ops += 1
     already_tested: Set[str] = set()
     while len(already_tested) != num_ops:
-        next_path, next_operation = get_next(api, already_tested)
+        next_path, next_operation = get_next(api, already_tested, tag_filter)
         already_tested.add(next_operation.operation_id)
         generate_tests(test_cases, next_path.path, next_operation)
     return runconf.RunConfig(
