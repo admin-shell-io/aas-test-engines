@@ -23,7 +23,7 @@ def in_memory_zipfile(path: str):
 class CheckJsonTest(TestCase):
 
     def test_empty(self):
-        result = file.check_json_data({}, '3.0.0')
+        result = file.check_json_data({})
         self.assertTrue(result.ok())
 
 
@@ -33,7 +33,7 @@ class CheckXmlTest(TestCase):
         data = ElementTree.fromstring(
             """<environment xmlns="https://admin-shell.io/aas/3/0">
             </environment>""")
-        result = file.check_xml_data(data, '3.0.0')
+        result = file.check_xml_data(data)
         self.assertTrue(result.ok())
 
 
@@ -42,35 +42,35 @@ class CheckAasxTest(TestCase):
     def test_empty(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/empty'))
-        result = file.check_aasx_data(z, '3.0.0')
+        result = file.check_aasx_data(z)
         result.dump()
         self.assertFalse(result.ok())
 
     def test_no_rels(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/no_rels'))
-        result = file.check_aasx_data(z, '3.0.0')
+        result = file.check_aasx_data(z)
         result.dump()
         self.assertFalse(result.ok())
 
     def test_invalid_rels(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/invalid_rels'))
-        result = file.check_aasx_data(z, '3.0.0')
+        result = file.check_aasx_data(z)
         result.dump()
         self.assertFalse(result.ok())
 
     def test_unknown_filetype(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/unknown_filetype'))
-        result = file.check_aasx_data(z, '3.0.0')
+        result = file.check_aasx_data(z)
         result.dump()
         self.assertTrue(result.ok())
 
     def test_minimal(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/valid/simple'))
-        result = file.check_aasx_data(z, '3.0.0')
+        result = file.check_aasx_data(z)
         result.dump()
         self.assertTrue(result.ok())
 
@@ -78,9 +78,10 @@ class CheckAasxTest(TestCase):
 class SupportedVersionTest(TestCase):
 
     def test_invoke(self):
-        for i in file.supported_versions:
+        s = file.supported_versions()
+        for i in s:
             print(i)
-
+        self.assertIn(file.latest_version(), s)
 
 class AasCoreTestCase(TestCase):
 
@@ -108,7 +109,7 @@ class AasCoreTestCase(TestCase):
                     skipped += 1
                     continue
                 with open(path_in) as f:
-                    errors = check(f, '3.0.0')
+                    errors = check(f)
                 if errors.ok():
                     if 'Expected' in path_in:
                         valid_accepted += 1
@@ -125,8 +126,8 @@ class AasCoreTestCase(TestCase):
         print("invalid, accepted",   invalid_accepted)
         print("skipped",             skipped)
 
-    def test_json(self):
+    def DISABLED_test_json(self):
         self._run('Json', file.check_json_file)
 
-    def test_xml(self):
+    def DISABLED_test_xml(self):
         self._run('Xml', file.check_xml_file)

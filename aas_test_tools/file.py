@@ -39,7 +39,7 @@ def _find_schemas() -> Dict[str, any]:
 
 
 _schemas = _find_schemas()
-_DEFAULT_VERSION = '3.0.0'
+_DEFAULT_VERSION = '3.0'
 
 def supported_versions():
     return list(_schemas.keys())

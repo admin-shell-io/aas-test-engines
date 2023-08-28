@@ -51,7 +51,7 @@ file.check_xml_data(aas)
 
 ### Checking older versions
 
-By default, the `file.check...` methods check compliance to version 3.0.0 of the standard.
+By default, the `file.check...` methods check compliance to version 3.0 of the standard.
 You may want to check against older versions by passing a string containing the version to these methods.
 
 You can query the list of supported versions as follows:
