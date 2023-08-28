@@ -4,6 +4,8 @@ from enum import Enum
 from .parse_util import assert_type, safe_dict_lookup
 from .runtime_expression import RuntimeExpression
 
+from .resolver import Resolver
+import warnings
 
 @dataclass
 class Info:
@@ -39,7 +41,10 @@ class Parameter:
     source_link: Optional["BackwardLink"] = None
 
     @classmethod
-    def from_dict(cls: "Parameter", data: Any, json_path: str) -> "Parameter":
+    def from_dict(cls: "Parameter", data: Any, json_path: str, resolver: Resolver) -> "Parameter":
+        if '$ref' in data:
+            ref = safe_dict_lookup(data, '$ref', str, json_path)
+            data = resolver.lookup(ref)
         return cls(
             name=safe_dict_lookup(data, 'name', str, json_path),
             position=ParameterPosition(
@@ -62,11 +67,14 @@ class RequestBody:
     def from_dict(cls: "RequestBody", data: Any, json_path: str) -> "RequestBody":
         assert_type(data, dict, json_path)
         content = safe_dict_lookup(data, 'content', dict, json_path)
-        content_type = 'application/json'
-        if len(content.keys()) != 1 and content_type not in content.keys():
-            raise Exception(
-                "Support for non-json request bodies not implemented, yet ({}".format(json_path))
-        json_content = safe_dict_lookup(content, content_type, dict, json_path)
+        json_content_type = 'application/json'
+        if len(content.keys()) != 1:
+            warnings.warn(f"Ignoring some content types at {json_path}")
+        if json_content_type not in content.keys():
+            warnings.warn(f"Support for non-json request bodies not implemented, at {json_path}")
+            json_content = {}
+        else:
+            json_content = safe_dict_lookup(content, json_content_type, dict, json_path)
         return cls(
             description=safe_dict_lookup(data, 'description', str, json_path),
             required=safe_dict_lookup(data, 'required', bool, json_path, True),
@@ -111,12 +119,14 @@ class Response:
         content = safe_dict_lookup(data, 'content', dict, json_path, None)
         schema = None
         if content is not None:
-            content_type = 'application/json'
-            if len(content.keys()) != 1 and content_type not in content.keys():
-                raise Exception(
-                    "Support for non-json request bodies not implemented, yet ({}".format(json_path))
-            json_content = safe_dict_lookup(
-                content, content_type, dict, json_path)
+            json_content_type = 'application/json'
+            if len(content.keys()) != 1:
+                warnings.warn(f"Ignoring some content types at {json_path}")
+            if json_content_type not in content.keys():
+                warnings.warn(f"Support for non-json request bodies not implemented, at {json_path}")
+                json_content = {}
+            else:
+                json_content = safe_dict_lookup(content, json_content_type, dict, json_path)
             schema = safe_dict_lookup(
                 json_content, 'schema', dict, json_path, None)
 
@@ -128,7 +138,7 @@ class Response:
             links = []
 
         return cls(
-            code=int(code),
+            code= 400 if code == 'default' else int(code),
             schema=schema,
             links=links,
         )
@@ -144,7 +154,7 @@ class Operation:
     responses: List[Response]
 
     @classmethod
-    def from_dict(cls: "Operation", method: str, data: Any, json_path: str) -> "Operation":
+    def from_dict(cls: "Operation", method: str, data: Any, json_path: str, resolver: Resolver) -> "Operation":
         assert_type(data, dict, json_path)
         request_body = safe_dict_lookup(
             data, 'requestBody', dict, json_path, None)
@@ -153,7 +163,7 @@ class Operation:
             summary=safe_dict_lookup(data, 'summary', str, json_path),
             method=method,
             parameters=[Parameter.from_dict(param, json_path + '.parameters.' + str(
-                i)) for i, param in enumerate(safe_dict_lookup(data, 'parameters', list, json_path, []))],
+                i), resolver) for i, param in enumerate(safe_dict_lookup(data, 'parameters', list, json_path, []))],
             request_body=RequestBody.from_dict(
                 request_body, json_path + '.' + 'requestBody') if request_body is not None else None,
             responses=[Response.from_dict(k, v, json_path + '.' + k)
@@ -174,11 +184,11 @@ class Path:
     operations: List[Operation]
 
     @classmethod
-    def from_dict(cls: "Path", path_name: str, data: Any, json_path: str) -> "Path":
+    def from_dict(cls: "Path", path_name: str, data: Any, json_path: str, resolver: Resolver) -> "Path":
         assert_type(data, dict, json_path)
         operations: List[Operation] = []
         for k, v in assert_type(data, dict, json_path).items():
-            operations.append(Operation.from_dict(k, v, json_path + '.' + k))
+            operations.append(Operation.from_dict(k, v, json_path + '.' + k, resolver))
         return cls(
             path=path_name,
             operations=operations
@@ -194,11 +204,12 @@ class OpenApi:
     @classmethod
     def from_dict(cls: "OpenApi", data: Any) -> "OpenApi":
         assert_type(data, dict, '')
+        resolver = Resolver(data)
         api = cls(
             info=Info.from_dict(safe_dict_lookup(
                 data, 'info', dict, ''), 'info'),
             paths=[
-                Path.from_dict(path_name, path_info, 'paths.' + path_name)
+                Path.from_dict(path_name, path_info, 'paths.' + path_name, resolver)
                 for path_name, path_info in safe_dict_lookup(data, 'paths', dict, '').items()
                 if not path_name.startswith('/packages')  # TODO: remove this
             ],
