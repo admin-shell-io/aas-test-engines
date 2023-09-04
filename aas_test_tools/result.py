@@ -40,3 +40,8 @@ class AasTestResult:
         print("   " * indent + self.level.color() + self.message + ENDC)
         for sub_result in self.sub_results:
             sub_result.dump(indent + 1, path + "/" + self.path_fragment)
+
+    def to_json(self):
+        return {
+            self.message: [i.to_json() for i in self.sub_results]
+        }

@@ -1,4 +1,4 @@
-from typing import List, Dict, TextIO, Union, Any, Set
+from typing import List, Dict, TextIO, Union, Any, Set, Optional
 import os
 import json
 from yaml import safe_load
@@ -8,7 +8,7 @@ from .result import AasTestResult, Level
 from .data_types import validators
 
 from xml.etree import ElementTree
-from json_schema_plus.schema import JsonSchemaValidator, ValidatorCollection, ValidationConfig, ParseConfig
+from json_schema_plus.schema import JsonSchemaValidator, ValidatorCollection, ValidationConfig, ParseConfig, ValidationError
 from json_schema_plus.types import JsonType
 from zipfile import ZipFile
 
@@ -54,14 +54,20 @@ def _get_schema(version: str) -> AasSchema:
         raise AasTestToolsException(
             f"Unknown version {version}, must be one of {supported_versions()}")
 
+def _map_error(error: Optional[ValidationError]):
+    if error is None:
+        return AasTestResult('valid', '', Level.INFO)
+    result = AasTestResult(error.message, '', Level.ERROR)
+    result.sub_results = [
+        _map_error(i)
+        for i in error.caused_by
+    ]
+    return result
 
 def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult:
     schema = _get_schema(version)
     error = schema.validator.get_error(data, ValidationConfig())
-    if error:
-        return AasTestResult('Invalid', '', Level.ERROR)
-    else:
-        return AasTestResult('Valid', '', Level.INFO)
+    return _map_error(error)
 
 
 def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
@@ -69,22 +75,44 @@ def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestRes
     return check_json_data(data, version)
 
 
+def _get_model_type(el: ElementTree.Element, expected_namespace: str):
+    model_type = el.tag[len(expected_namespace):]
+    model_type = model_type[0].upper() + model_type[1:]
+    return model_type
+
+def _get_single_child(el: ElementTree.Element) -> ElementTree.Element:
+    if len(el) != 1:
+        raise Exception("DataSpecificationContent must have exactly one child")
+    return el[0]
+
+
+
 def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTestResult:
     expected_namespace = '{https://admin-shell.io/aas/3/0}'
 
     def preprocess(data: ElementTree.Element, validator: ValidatorCollection) -> JSON:
+
         if isinstance(data, (dict, list, str, bool, int, float)) or data is None:
             return data
+        
         types = validator.get_types()
+
         if types == {JsonType.OBJECT}:
+
+            # Special handling for data specification content
+            if data.tag.endswith('dataSpecificationContent'):
+                data = _get_single_child(data)
+
             result = {}
+            result['modelType'] = _get_model_type(data, expected_namespace)
             for child in data:
                 if not child.tag.startswith(expected_namespace):
                     raise Exception(f"invalid namespace, got {child.tag}")
                 tag = child.tag[len(expected_namespace):]
-                result[tag] = child
-            result['modelType'] = data.tag[len(
-                expected_namespace):].capitalize()
+                if result['modelType'] == 'OperationVariable' and tag == 'value':
+                    result[tag] = _get_single_child(child)
+                else:
+                    result[tag] = child
             return result
         elif types == {JsonType.ARRAY}:
             result = []
@@ -92,22 +120,15 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTes
                 result.append(child)
             return result
         elif types == {JsonType.STRING}:
-            return data.text
+            return data.text or ""
         elif types == {JsonType.BOOLEAN}:
             return data.text == 'true'
-        elif data.tag.endswith('}value') or \
-                data.tag.endswith('}min') or \
-                data.tag.endswith('}max'):
-            return data.text or ""
         else:
-            raise Exception(f"Unkown type {types} of {data}")
+            raise Exception(f"Unknown type {types} of {data}")
     schema = _get_schema(version)
     config = ValidationConfig(preprocessor=preprocess)
     error = schema.validator.get_error(data, config)
-    if error:
-        return AasTestResult('Invalid', '', Level.ERROR)
-    else:
-        return AasTestResult('Valid', '', Level.INFO)
+    return _map_error(error)
 
 
 def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:

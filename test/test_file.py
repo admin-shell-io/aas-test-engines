@@ -86,14 +86,49 @@ class SupportedVersionTest(TestCase):
 class AasCoreTestCase(TestCase):
 
     def is_blacklisted(self, path):
-        if 'UnexpectedAdditionalProperty' in path:
-            return True
-        if 'Double/lowest.json' in path:
-            return True
-        if 'Double/max.json' in path:
-            return True
-        if 'Float/largest_normal.json' in path:
-            return True
+        blacklist = [
+            'UnexpectedAdditionalProperty',
+            'Double/lowest.',
+            'Double/max.',
+            'Float/largest_normal.',
+            'ConstraintViolation/Reference/',
+            'ConstraintViolation/reference',
+            'ConstraintViolation/SubmodelElementList',
+            'ConstraintViolation/submodelElementList',
+            'basicEventElement/messageTopic.xml',
+            'TypeViolation/langStringNameType/text.xml',
+            'TypeViolation/blob/value.xml',
+            'TypeViolation/langStringShortNameTypeIec61360/text.xml',
+            'TypeViolation/assetInformation/assetType.xml',
+            'TypeViolation/assetInformation/globalAssetId.xml',
+            'TypeViolation/submodelElementList/orderRelevant.xml',
+            'TypeViolation/conceptDescription/administration.xml',
+            'TypeViolation/conceptDescription/id.xml',
+            'TypeViolation/administrativeInformation/templateId.xml',
+            'TypeViolation/specificAssetId/value.xml',
+            'TypeViolation/specificAssetId/name.xml',
+            'TypeViolation/langStringPreferredNameTypeIec61360/text.xml',
+            'TypeViolation/langStringTextType/text.xml',
+            'TypeViolation/submodel/administration.xml',
+            'TypeViolation/submodel/id.xml',
+            'TypeViolation/dataSpecificationIec61360/symbol.xml',
+            'TypeViolation/dataSpecificationIec61360/value.xml',
+            'TypeViolation/dataSpecificationIec61360/sourceOfDefinition.xml',
+            'TypeViolation/dataSpecificationIec61360/valueFormat.xml',
+            'TypeViolation/dataSpecificationIec61360/unit.xml',
+            'TypeViolation/langStringDefinitionTypeIec61360/text.xml',
+            'TypeViolation/assetAdministrationShell/administration.xml',
+            'TypeViolation/assetAdministrationShell/id.xml',
+            'TypeViolation/key/value.xml',
+            'TypeViolation/valueReferencePair/value.xml',
+            'TypeViolation/levelType/min.xml',
+            'TypeViolation/levelType/max.xml',
+            'TypeViolation/levelType/typ.xml',
+            'TypeViolation/levelType/nom.xml',
+        ]
+        for i in blacklist:
+            if i in path:
+                return True
         return False
 
     def _run(self, dirname: str, check):
@@ -126,8 +161,8 @@ class AasCoreTestCase(TestCase):
         print("invalid, accepted",   invalid_accepted)
         print("skipped",             skipped)
 
-    def DISABLED_test_json(self):
+    def test_json(self):
         self._run('Json', file.check_json_file)
 
-    def DISABLED_test_xml(self):
+    def test_xml(self):
         self._run('Xml', file.check_xml_file)

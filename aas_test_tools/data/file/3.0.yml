@@ -623,9 +623,8 @@ $defs:
             const: globalAssetId
         required:
         - name
-    - properties:
-        name:
-          const: globalAssetId
+    # TODO: if specific_asset_id.name == 'globalAssetId':
+    #            specific_asset_ID.value == self.global_asset_ID
   AssetInformation:
     allOf:
     - $ref: "#/$defs/Constraint_AASd-131"
@@ -1295,19 +1294,20 @@ $defs:
     - path
   Constraint_AASd-133:
     properties:
-      externalSubjectId:
+      type:
         const: ExternalReference
   SpecificAssetId:
     allOf:
     - $ref: "#/$defs/HasSemantics"
-    - $ref: "#/$defs/Constraint_AASd-133"
     - properties:
         name:
           $ref: "#/$defs/LabelType"
         value:
           $ref: "#/$defs/Identifier"
         externalSubjectId:
-          $ref: "#/$defs/Reference"
+          allOf:
+          - $ref: "#/$defs/Constraint_AASd-133"
+          - $ref: "#/$defs/Reference"
       required:
       - name
       - value
