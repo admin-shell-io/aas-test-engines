@@ -1,9 +1,9 @@
-# Test Tools for the Asset Administration Shell
+# Test Engines for the Asset Administration Shell
 
 The Asset Administration Shell (AAS) is a standard for Digital Twins.
-It can be found [here](https://industrialdigitaltwin.org/content-hub/downloads).
+More information can be found [here](https://industrialdigitaltwin.org/content-hub/downloads).
 
-For a given implementation of the AAS standard, these test tools offer measures to ensure compliance.
+The tools in this repository offer measures to validate compliance of AAS implementations against the AAS standard.
 
 ## Check AAS Type 1 (File)
 
