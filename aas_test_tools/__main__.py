@@ -21,15 +21,15 @@ def run_api_test(argv):
     parser.add_argument('--dry',
                         action='store_true',
                         help="dry run, do not send requests")
-    parser.add_argument('--profile',
+    parser.add_argument('--suite',
                         type=str,
-                        help='selected profile')
+                        help='selected test suite')
     args = parser.parse_args(argv)
-    if args.profile:
-        profiles = set([args.profile])
+    if args.suite:
+        suites = set([args.suite])
     else:
-        profiles = None
-    tests = api.generate_tests(profiles=profiles)
+        suites = None
+    tests = api.generate_tests(suites=suites)
     api.execute_tests(tests, args.server, args.dry)
 
 

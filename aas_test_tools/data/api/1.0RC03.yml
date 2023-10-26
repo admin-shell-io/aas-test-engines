@@ -7,7 +7,8 @@ paths:
   /shells:
     get:
       tags:
-        - repository
+        - aas_repository
+        - aas_repository_read
       summary: Returns all Asset Administration Shells
       operationId: GetAllAssetAdministrationShells
       parameters:
@@ -37,7 +38,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/AssetAdministrationShell'
+                  $ref: '#/components/schemas/AssetAdministrationShell'
         default:
           description: Default error handling for unmentioned status codes
           content:
@@ -46,7 +47,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - repository
+        - aas_repository
       summary: Creates a new Asset Administration Shell
       operationId: PostAssetAdministrationShell
       x-semanticIds:
@@ -56,7 +57,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/AssetAdministrationShell'
+              $ref: '#/components/schemas/AssetAdministrationShell'
         required: true
       responses:
         '201':
@@ -64,7 +65,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/AssetAdministrationShell'
+                $ref: '#/components/schemas/AssetAdministrationShell'
         '400':
           description: Bad Request
           content:
@@ -80,7 +81,8 @@ paths:
   /shells/{aasIdentifier}:
     get:
       tags:
-        - repository
+        - aas_repository
+        - aas_repository_read
       summary: Returns a specific Asset Administration Shell
       operationId: GetAssetAdministrationShellById
       x-semanticIds:
@@ -101,7 +103,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/AssetAdministrationShell'
+                $ref: '#/components/schemas/AssetAdministrationShell'
         '404':
           description: Not Found
           content:
@@ -116,7 +118,7 @@ paths:
                 $ref: '#/components/schemas/Result'  
     put:
       tags:
-        - repository
+        - aas_repository
       summary: Updates an existing Asset Administration Shell
       operationId: PutAssetAdministrationShellById
       x-semanticIds:
@@ -136,7 +138,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/AssetAdministrationShell'
+              $ref: '#/components/schemas/AssetAdministrationShell'
         required: true
       responses:
         '204':
@@ -161,7 +163,7 @@ paths:
                 $ref: '#/components/schemas/Result'  
     delete:
       tags:
-        - repository
+        - aas_repository
       summary: Deletes an Asset Administration Shell
       operationId: DeleteAssetAdministrationShellById
       x-semanticIds:
@@ -194,7 +196,8 @@ paths:
   /aas:
     get:
       tags:
-        - asset_administration_shell
+        - aas
+        - aas_read
       summary: Returns the Asset Administration Shell
       operationId: GetAssetAdministrationShell
       x-semanticIds:
@@ -207,7 +210,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/AssetAdministrationShell'
+                $ref: '#/components/schemas/AssetAdministrationShell'
         default:
           description: Default error handling for unmentioned status codes
           content:
@@ -216,7 +219,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - asset_administration_shell
+        - aas
       summary: Updates the Asset Administration Shell
       operationId: PutAssetAdministrationShell
       x-semanticIds:
@@ -228,7 +231,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/AssetAdministrationShell'
+              $ref: '#/components/schemas/AssetAdministrationShell'
         required: true
       responses:
         '204':
@@ -248,7 +251,8 @@ paths:
   /aas/asset-information:
     get:
       tags:
-        - asset_administration_shell
+        - aas
+        - aas_read
       summary: Returns the Asset Information
       operationId: GetAssetInformation
       x-semanticIds:
@@ -268,7 +272,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - asset_administration_shell
+        - aas
       summary: Updates the Asset Information
       operationId: PutAssetInformation
       x-semanticIds:
@@ -298,7 +302,8 @@ paths:
   /aas/submodels:
     get:
       tags:
-        - asset_administration_shell
+        - aas
+        - aas_read
       summary: Returns all submodel references
       operationId: GetAllSubmodelReferences
       x-semanticIds:
@@ -320,7 +325,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - asset_administration_shell
+        - aas
       summary: Creates a submodel reference at the Asset Administration Shell
       operationId: PostSubmodelReference
       x-semanticIds:
@@ -354,7 +359,7 @@ paths:
   /aas/submodels/{submodelIdentifier}:
     delete:
       tags:
-        - asset_administration_shell
+        - aas
       summary: Deletes the submodel reference from the Asset Administration Shell
       operationId: DeleteSubmodelReferenceById
       x-semanticIds:
@@ -388,6 +393,7 @@ paths:
     get:
       tags:
         - submodel_repository
+        - submodel_repository_read
       summary: Returns all Submodels
       operationId: GetAllSubmodels
       x-semanticIds:
@@ -456,6 +462,7 @@ paths:
     get:
       tags:
         - submodel_repository
+        - submodel_repository_read
       summary: Returns a specific Submodel
       operationId: GetSubmodelById
       x-semanticIds:
@@ -570,6 +577,7 @@ paths:
     get:
       tags:
         - submodel
+        - submodel_read
       summary: Returns the Submodel
       operationId: GetSubmodel
       x-semanticIds:
@@ -628,6 +636,7 @@ paths:
     get:
       tags:
         - submodel
+        - submodel_read
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements
       x-semanticIds:
@@ -694,6 +703,7 @@ paths:
     get:
       tags:
         - submodel
+        - submodel_read
       summary: Returns a specific submodel element from the Submodel at a specified
         path
       operationId: GetSubmodelElementByPath
@@ -864,6 +874,7 @@ paths:
     get:
       tags:
         - submodel
+        - submodel_read
       summary: Downloads file content from a specific submodel element from the Submodel at a specified path
       operationId: GetFileByPath
       x-semanticIds:
@@ -1035,6 +1046,7 @@ paths:
     get:
       tags:
         - submodel
+        - submodel_read
       summary: Returns the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult
       x-semanticIds:
@@ -1087,7 +1099,8 @@ paths:
   /shell-descriptors:
     get:
       tags:
-        - registry
+        - aas_registry
+        - aas_registry_read
       summary: Returns all Asset Administration Shell Descriptors
       operationId: GetAllAssetAdministrationShellDescriptors
       x-semanticIds:
@@ -1109,7 +1122,8 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - registry
+        - aas_registry
+        - aas_registry_read
       summary: Creates a new Asset Administration Shell Descriptor, i.e. registers an AAS
       operationId: PostAssetAdministrationShellDescriptor
       x-semanticIds:
@@ -1143,7 +1157,8 @@ paths:
   /shell-descriptors/{aasIdentifier}:
     get:
       tags:
-        - registry
+        - aas_registry
+        - aas_registry_read
       summary: Returns a specific Asset Administration Shell Descriptor
       operationId: GetAssetAdministrationShellDescriptorById
       x-semanticIds:
@@ -1179,7 +1194,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - registry
+        - aas_registry
       summary: Updates an existing Asset Administration Shell Descriptor
       operationId: PutAssetAdministrationShellDescriptorById
       x-semanticIds:
@@ -1224,7 +1239,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - registry
+        - aas_registry
       summary: Deletes an Asset Administration Shell Descriptor, i.e. de-registers an AAS
       operationId: DeleteAssetAdministrationShellDescriptorById
       x-semanticIds:
@@ -1257,7 +1272,8 @@ paths:
   /shell-descriptors/{aasIdentifier}/submodel-descriptors:
     get:
       tags:
-        - registry
+        - aas_registry
+        - aas_registry_read
       summary: Returns all Submodel Descriptors
       operationId: GetAllSubmodelDescriptors_AASRegistry
       x-semanticIds:
@@ -1295,7 +1311,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     post:
       tags:
-        - registry
+        - aas_registry
       summary: Creates a new Submodel Descriptor, i.e. registers a submodel
       operationId: PostSubmodelDescriptor_AASRegistry
       x-semanticIds:
@@ -1345,7 +1361,8 @@ paths:
   /shell-descriptors/{aasIdentifier}/submodel-descriptors/{submodelIdentifier}:
     get:
       tags:
-        - registry
+        - aas_registry
+        - aas_registry_read
       summary: Returns a specific Submodel Descriptor
       operationId: GetSubmodelDescriptorById_AASRegistry
       x-semanticIds:
@@ -1388,7 +1405,7 @@ paths:
                 $ref: '#/components/schemas/Result'
     put:
       tags:
-        - registry
+        - aas_registry
       summary: Updates an existing Submodel Descriptor
       operationId: PutSubmodelDescriptorById_AASRegistry
       x-semanticIds:
@@ -1440,7 +1457,7 @@ paths:
                 $ref: '#/components/schemas/Result' 
     delete:
       tags:
-        - registry
+        - aas_registry
       summary: Deletes a Submodel Descriptor, i.e. de-registers a submodel
       operationId: DeleteSubmodelDescriptorById_AASRegistry
       x-semanticIds:
@@ -1481,6 +1498,7 @@ paths:
     get:
       tags:
         - submodel_registry
+        - submodel_registry_read
       summary: Returns all Submodel Descriptors
       operationId: GetAllSubmodelDescriptors
       x-semanticIds:
@@ -1537,6 +1555,7 @@ paths:
     get:
       tags:
         - submodel_registry
+        - submodel_registry_read
       summary: Returns a specific Submodel Descriptor
       operationId: GetSubmodelDescriptorById
       x-semanticIds:
@@ -1651,6 +1670,7 @@ paths:
     get:
       tags:
         - concept_description_repository
+        - concept_description_repository_read
       summary: Returns all Concept Descriptions
       operationId: GetAllConceptDescriptions
       x-semanticIds:
@@ -1737,6 +1757,7 @@ paths:
     get:
       tags:
         - concept_description_repository
+        - concept_description_repository_read
       summary: Returns a specific Concept Description
       operationId: GetConceptDescriptionById
       x-semanticIds:
@@ -2280,7 +2301,7 @@ paths:
   /descriptor:
     get:
       tags:
-        - descriptor
+        - description
       summary: Returns the self-describing information of a network resource (Descriptor)
       operationId: GetDescriptor
       x-semanticIds:
@@ -2343,3 +2364,475 @@ components:
       description: The value of the semantic id reference (BASE64-URL-encoded)
       schema:
         type: string
+  schemas:
+    AnnotatedRelationshipElementMetadata:
+      "$ref": "#/components/schemas/SubmodelElementAttributes"
+    AnnotatedRelationshipElementValue:
+      properties:
+        first:
+          "$ref": "#/components/schemas/ReferenceValue"
+        second:
+          "$ref": "#/components/schemas/ReferenceValue"
+        annotation:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ValueOnly"
+      required:
+      - first
+      - second
+      type: object
+    AssetAdministrationShellDescriptor:
+      allOf:
+      - "$ref": "#/components/schemas/Descriptor"
+      - properties:
+          administration:
+            "$ref": '#/components/schemas/AdministrativeInformation'
+          descriptions:
+            type: array
+            items:
+              "$ref": '#/components/schemas/LangString'
+          displayNames:
+            type: array
+            items:
+              "$ref": '#/components/schemas/LangString'
+          globalAssetId:
+            "$ref": '#/components/schemas/Reference'
+          idShort:
+            type: string
+          identification:
+            type: string
+          specificAssetIds:
+            "$ref": '#/components/schemas/SpecificAssetId'
+          submodelDescriptors:
+            items:
+              "$ref": "#/components/schemas/SubmodelDescriptor"
+            type: array
+      required:
+      - identification
+      - endpoints
+      type: object
+      example: '{ "identification": "https://example.org/aas/motor", "endpoints":
+        [ { "protocolInformation": { "endpointAddress": "https://localhost:1234",
+        "endpointProtocolVersion": "1.1" }, "interface": "AAS-1.0" }, { "protocolInformation":
+        { "endpointAddress": "opc.tcp://localhost:4840" }, "interface": "AAS-1.0"
+        }, { "protocolInformation": { "endpointAddress": "https://localhost:5678",
+        "endpointProtocolVersion": "1.1", "subprotocol": "OPC UA Basic SOAP", "subprotocolBody":
+        "ns=2;s=MyAAS", "subprotocolBodyEncoding": "application/soap+xml" }, "interface":
+        "AAS-1.0" } ] }'
+    AssetAdministrationShellMetadata:
+      allOf:
+      - "$ref": '#/components/schemas/Identifiable'
+      - "$ref": '#/components/schemas/HasDataSpecification'
+      - properties:
+          derivedFrom:
+            "$ref": '#/components/schemas/Reference'
+    BasicEventElementMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+      - properties:
+          direction:
+            "$ref": '#/components/schemas/Direction'
+          state:
+            "$ref": '#/components/schemas/StateOfEvent'
+          messageTopic:
+            type: string
+          messageBroker:
+            "$ref": '#/components/schemas/Reference'
+          lastUpdate:
+            type: string
+          minInterval:
+            type: string
+          maxInterval:
+            type: string
+    BasicEventElementValue:
+      properties:
+        observed:
+          "$ref": "#/components/schemas/ReferenceValue"
+      required:
+      - observed
+      type: object
+    BlobMetadata:
+      "$ref": "#/components/schemas/SubmodelElementAttributes"
+    BlobValue:
+      properties:
+        contentType:
+          type: string
+        value:
+          type: string
+      required:
+      - contentType
+      - value
+      type: object
+    BooleanValue:
+      type: boolean
+    CapabilityMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    Descriptor:
+      example: '{ "endpoints": [ { "protocolInformation": { "endpointAddress": "https://localhost:1234",
+        "endpointProtocolVersion": "1.1" }, "interface": "AAS-1.0" }, { "protocolInformation":
+        { "endpointAddress": "opc.tcp://localhost:4840" }, "interface": "AAS-1.0"
+        }, { "protocolInformation": { "endpointAddress": "https://localhost:5678",
+        "endpointProtocolVersion": "1.1", "subprotocol": "OPC UA Basic SOAP", "subprotocolBody":
+        "ns=2;s=MyAAS", "subprotocolBodyEncoding": "application/soap+xml" }, "interface":
+        "AAS-1.0" } ] }'
+      properties:
+        endpoints:
+          items:
+            "$ref": "#/components/schemas/Endpoint"
+          type: array
+      type: object
+    Endpoint:
+      properties:
+        interface:
+          type: string
+        protocolInformation:
+          "$ref": "#/components/schemas/ProtocolInformation"
+      required:
+      - protocolInformation
+      - interface
+      type: object
+    EntityMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    EntityValue:
+      properties:
+        entityType:
+          "$ref": '#/components/schemas/EntityType'
+        globalAssetId:
+          "$ref": "#/components/schemas/ReferenceValue"
+        specificAssetIds:
+          type: array
+          items:
+            "$ref": "#/components/schemas/SpecificAssetIdValue"
+        statements:
+          items:
+            "$ref": "#/components/schemas/ValueOnly"
+          type: array
+      required:
+      - statements
+      - entityType
+      type: object
+    ExecutionState:
+      enum:
+      - Initiated
+      - Running
+      - Completed
+      - Canceled
+      - Failed
+      - Timeout
+      type: string
+    FileValue:
+      properties:
+        contentType:
+          type: string
+        value:
+          type: string
+      required:
+      - contentType
+      - value
+      type: object
+    FileMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    SpecificAssetIdValue:
+      type: object
+      description: Since patternProperties and propertyNames are not supported by
+        OpenApi yet, the ValueOnly serialization for this elements works with the
+        key-attribute as the JSON-property name and the value-attribute as the corresponding
+        value.
+    Message:
+      properties:
+        code:
+          type: string
+        messageType:
+          enum:
+          - Undefined
+          - Info
+          - Warning
+          - Error
+          - Exception
+          type: string
+        text:
+          type: string
+        timestamp:
+          type: string
+      type: object
+    MultiLanguagePropertyMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    MultiLanguagePropertyValue:
+      type: object
+      description: Since patternProperties and propertyNames are not supported by
+        OpenApi yet, the ValueOnly serialization for this elements works with the
+        key-attribute as the JSON-property name and the value-attribute as the corresponding
+        value.
+    NumberValue:
+      type: number
+    OperationHandle:
+      properties:
+        handleId:
+          type: string
+        requestId:
+          type: string
+      type: object
+    OperationMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    OperationRequest:
+      properties:
+        inoutputArguments:
+          items:
+            "$ref": '#/components/schemas/OperationVariable'
+          type: array
+        inputArguments:
+          items:
+            "$ref": '#/components/schemas/OperationVariable'
+          type: array
+        requestId:
+          type: string
+        timeout:
+          type: integer
+      type: object
+    OperationRequestValueOnly:
+      properties:
+        inoutputArguments:
+          "$ref": "#/components/schemas/ValueOnly"
+        inputArguments:
+          "$ref": "#/components/schemas/ValueOnly"
+        requestId:
+          type: string
+        timeout:
+          type: integer
+      type: object
+    OperationResult:
+      properties:
+        executionResult:
+          "$ref": "#/components/schemas/Result"
+        executionState:
+          "$ref": "#/components/schemas/ExecutionState"
+        inoutputArguments:
+          items:
+            "$ref": '#/components/schemas/OperationVariable'
+          type: array
+        outputArguments:
+          items:
+            "$ref": '#/components/schemas/OperationVariable'
+          type: array
+        requestId:
+          type: string
+      type: object
+    OperationResultValueOnly:
+      properties:
+        executionResult:
+          "$ref": "#/components/schemas/Result"
+        executionState:
+          "$ref": "#/components/schemas/ExecutionState"
+        inoutputArguments:
+          "$ref": "#/components/schemas/ValueOnly"
+        outputArguments:
+          "$ref": "#/components/schemas/ValueOnly"
+        requestId:
+          type: string
+      type: object
+    PackageDescription:
+      properties:
+        aasIds:
+          items:
+            type: string
+          type: array
+        packageId:
+          type: string
+      type: object
+    PropertyMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+      properties:
+        valueType:
+          "$ref": '#/components/schemas/DataTypeDefXsd'
+    PropertyValue:
+      oneOf:
+      - "$ref": "#/components/schemas/StringValue"
+      - "$ref": "#/components/schemas/NumberValue"
+      - "$ref": "#/components/schemas/BooleanValue"
+    ProtocolInformation:
+      properties:
+        endpointAddress:
+          type: string
+        endpointProtocol:
+          type: string
+        endpointProtocolVersion:
+          type: string
+        subprotocol:
+          type: string
+        subprotocolBody:
+          type: string
+        subprotocolBodyEncoding:
+          type: string
+      required:
+      - endpointAddress
+      type: object
+    RangeMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+      properties:
+        valueType:
+          "$ref": '#/components/schemas/DataTypeDefXsd'
+    RangeValue:
+      properties:
+        max:
+          type: number
+        min:
+          type: number
+      required:
+      - min
+      - max
+      type: object
+    ReferenceElementMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    ReferenceElementValue:
+      "$ref": "#/components/schemas/ReferenceValue"
+    ReferenceValue:
+      type: object
+      properties:
+        type:
+          "$ref": '#/components/schemas/ReferenceTypes'
+        keys:
+          type: array
+          items:
+            "$ref": '#/components/schemas/Key'
+    RelationshipElementMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    RelationshipElementValue:
+      properties:
+        first:
+          "$ref": "#/components/schemas/ReferenceValue"
+        second:
+          "$ref": "#/components/schemas/ReferenceValue"
+      required:
+      - first
+      - second
+      type: object
+    Result:
+      properties:
+        messages:
+          items:
+            "$ref": "#/components/schemas/Message"
+          type: array
+        success:
+          type: boolean
+      type: object
+    StringValue:
+      type: string
+    SubmodelDescriptor:
+      allOf:
+      - "$ref": "#/components/schemas/Descriptor"
+      properties:
+        administration:
+          "$ref": '#/components/schemas/AdministrativeInformation'
+        descriptions:
+          type: array
+          items:
+            "$ref": '#/components/schemas/LangString'
+        displayNames:
+          type: array
+          items:
+            "$ref": '#/components/schemas/LangString'
+        idShort:
+          type: string
+        identification:
+          type: string
+        semanticId:
+          "$ref": '#/components/schemas/Reference'
+      required:
+      - identification
+      - endpoints
+      type: object
+      example: '{ "identification": "https://admin-shell.io/zvei/nameplate/1/0/Nameplate",
+        "endpoints": [ { "protocolInformation": { "endpointAddress": "https://localhost:1234",
+        "endpointProtocolVersion": "1.1" }, "interface": "AAS-1.0" }, { "protocolInformation":
+        { "endpointAddress": "opc.tcp://localhost:4840" }, "interface": "AAS-1.0"
+        }, { "protocolInformation": { "endpointAddress": "https://localhost:5678",
+        "endpointProtocolVersion": "1.1", "subprotocol": "OPC UA Basic SOAP", "subprotocolBody":
+        "ns=2;s=MyAAS", "subprotocolBodyEncoding": "application/soap+xml" }, "interface":
+        "AAS-1.0" } ] }'
+    SubmodelElementAttributes:
+      allOf:
+      - "$ref": '#/components/schemas/Referable'
+      - "$ref": '#/components/schemas/HasDataSpecification'
+      - "$ref": '#/components/schemas/HasSemantics'
+      - "$ref": '#/components/schemas/Qualifiable'
+      - "$ref": '#/components/schemas/HasKind'
+    SubmodelElementListMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+      properties:
+        orderRelevant:
+          type: boolean
+        semanticIdListElement:
+          "$ref": '#/components/schemas/Reference'
+        typeValueListElement:
+          "$ref": '#/components/schemas/ModelType'
+        valueTypeListElement:
+          "$ref": '#/components/schemas/DataTypeDefXsd'
+    SubmodelElementListValue:
+      type: array
+      items:
+        "$ref": "#/components/schemas/SubmodelElementValue"
+    SubmodelElementCollectionMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+    SubmodelElementCollectionValue:
+      type: object
+      description: Since patternProperties and propertyNames are not supported by
+        OpenApi yet, the ValueOnly serialization for this elements works with the
+        key-attribute as the JSON-property name and the value-attribute as the corresponding
+        value.
+    SubmodelElementMetadata:
+      allOf:
+      - "$ref": "#/components/schemas/SubmodelElementAttributes"
+      oneOf:
+      - "$ref": "#/components/schemas/BlobMetadata"
+      - "$ref": "#/components/schemas/FileMetadata"
+      - "$ref": "#/components/schemas/CapabilityMetadata"
+      - "$ref": "#/components/schemas/EntityMetadata"
+      - "$ref": "#/components/schemas/BasicEventElementMetadata"
+      - "$ref": "#/components/schemas/MultiLanguagePropertyMetadata"
+      - "$ref": "#/components/schemas/OperationMetadata"
+      - "$ref": "#/components/schemas/PropertyMetadata"
+      - "$ref": "#/components/schemas/RangeMetadata"
+      - "$ref": "#/components/schemas/ReferenceElementMetadata"
+      - "$ref": "#/components/schemas/AnnotatedRelationshipElementMetadata"
+      - "$ref": "#/components/schemas/RelationshipElementMetadata"
+      - "$ref": "#/components/schemas/SubmodelElementListMetadata"
+      - "$ref": "#/components/schemas/SubmodelElementCollectionMetadata"
+    SubmodelElementValue:
+      oneOf:
+      - "$ref": "#/components/schemas/BasicEventElementValue"
+      - "$ref": "#/components/schemas/PropertyValue"
+      - "$ref": "#/components/schemas/MultiLanguagePropertyValue"
+      - "$ref": "#/components/schemas/FileValue"
+      - "$ref": "#/components/schemas/BlobValue"
+      - "$ref": "#/components/schemas/RangeValue"
+      - "$ref": "#/components/schemas/ReferenceElementValue"
+      - "$ref": "#/components/schemas/RelationshipElementValue"
+      - "$ref": "#/components/schemas/AnnotatedRelationshipElementValue"
+      - "$ref": "#/components/schemas/EntityValue"
+      - "$ref": "#/components/schemas/SubmodelElementCollectionValue"
+      - "$ref": "#/components/schemas/SubmodelElementListValue"
+    SubmodelMetadata:
+      allOf:
+      - "$ref": '#/components/schemas/Identifiable'
+      - "$ref": '#/components/schemas/HasDataSpecification'
+      - "$ref": '#/components/schemas/Qualifiable'
+      - "$ref": '#/components/schemas/HasSemantics'
+      - "$ref": '#/components/schemas/HasKind'
+    ValueOnly:
+      description: 'The ValueOnly serialization of submodel elements (patternProperties
+        and propertyNames will be supported propably with OpenApi 3.1). The full description
+        of the generic JSON validation schema for the ValueOnly-serialization can
+        be found in chapter 9.4.3 in Details of the Asset Administration Shell Part
+        2.'
+      type: object

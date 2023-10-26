@@ -28,17 +28,17 @@ def _find_specs() -> Dict[str, AasSpec]:
             continue
         spec = safe_load(open(path))
         api = openapi.OpenApi.from_dict(spec)
-        profiles = set()
+        suites = set()
         for path in api.paths:
             for operation in path.operations:
-                profiles.update(operation.tags)
-        result[i[:-4]] = AasSpec(api, profiles)
+                suites.update(operation.tags)
+        result[i[:-4]] = AasSpec(api, suites)
     return result
 
 
 _specs = _find_specs()
 
-_DEFAULT_VERSION = '1.0RC01'
+_DEFAULT_VERSION = '1.0RC03'
 
 
 def _get_spec(version: str) -> AasSpec:
@@ -49,13 +49,13 @@ def _get_spec(version: str) -> AasSpec:
             f"Unknown version {version}, must be one of {supported_versions()}")
 
 
-def generate_tests(version: str = _DEFAULT_VERSION, profiles: Set[str] = None) -> runconf.RunConfig:
+def generate_tests(version: str = _DEFAULT_VERSION, suites: Set[str] = None) -> runconf.RunConfig:
     spec = _get_spec(version)
-    if profiles is None:
-        profiles = spec.tags
-    if not spec.tags.issuperset(profiles):
-        raise AasTestToolsException(f"Unknown profiles {profiles}, must be in {spec.tags}")
-    conf = generate.generate(spec.api, profiles)
+    if suites is None:
+        suites = spec.tags
+    if not spec.tags.issuperset(suites):
+        raise AasTestToolsException(f"Unknown suites {suites}, must be in {spec.tags}")
+    conf = generate.generate(spec.api, suites)
     return conf
 
 

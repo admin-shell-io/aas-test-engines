@@ -79,11 +79,11 @@ api.execute_tests(tests, "http://localhost")
 api.execute_tests(tests, "http://localhost:3000")
 ```
 
-### Checking older versions and specific profiles
+### Checking older versions and specific test suites
 
-By default, the `api.generate_tests` method generate test cases for version 1.0RC03 of the standard and all associated profiles.
+By default, the `api.generate_tests` method generate test cases for version 1.0RC03 of the standard and all associated test suites.
 You may want to check against older versions by passing a string containing the version to these methods.
-You can also provide a list of profiles to check against:
+You can also provide a list of test suites to check against:
 
 ```python
 from aas_test_tools import api
@@ -92,7 +92,7 @@ tests = api.generate_tests('1.0RC03', ['repository'])
 api.execute_tests(tests, "http://localhost")
 ```
 
-You can query the list of supported versions and their associated profiles as follows:
+You can query the list of supported versions and their associated test suites as follows:
 
 ```python
 from aas_test_tools import api
@@ -100,6 +100,21 @@ from aas_test_tools import api
 print(api.supported_versions())
 print(api.latest_version())
 ```
+For version 1.0RC03 the following test suites are available:
+
+| API Name                                       | Test Suite Read                     | Test Suite Read and Write      |
+| ---------------------------------------------- | ----------------------------------- | ------------------------------ |
+| Asset Administration Shell API                 | aas_read                            | aas                            |
+| Submodel API                                   | submodel_read                       | submodel                       |
+| AASX File Server API                           | aasx_read                           | aasx                           |
+| Asset Administration Shell Registry API        | aas_registry_read                   | aas_registry                   |
+| Submodel Registry API                          | submodel_registry_read              | submodel_registry              |
+| Asset Administration Shell Repository API      | aas_repository_read                 | aas_repository                 |
+| Submodel Repository API                        | submodel_repository_read            | submodel_repository            |
+| Concept Description Repository API             | concept_description_repository_read | concept_description_repository |
+| Asset Administration Shell Basic Discovery API | aas_discovery_read                  | aas_discvoery                  |
+| Serialization API                              | serialization                       | -                              |
+| Description API                                | description                         | -                              |
 
 ## Command line interface
 
@@ -110,5 +125,5 @@ You may want to invoke the test tools using the simplified command line interfac
 python -m aas_test_tools file test.aasx
 
 # Check server
-python -m aas_test_tools api https://localhost --profile registry
+python -m aas_test_tools api https://localhost --suite registry
 ```
