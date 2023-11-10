@@ -8,7 +8,7 @@ from .result import AasTestResult, Level
 from .data_types import validators
 
 from xml.etree import ElementTree
-from json_schema_plus.schema import JsonSchemaValidator, ValidatorCollection, ValidationConfig, ParseConfig, ValidationError
+from json_schema_plus.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, parse_schema
 from json_schema_plus.types import JsonType
 from zipfile import ZipFile
 
@@ -17,7 +17,7 @@ JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
 class AasSchema:
 
-    def __init__(self, validator: JsonSchemaValidator):
+    def __init__(self, validator: SchemaValidator):
         self.validator = validator
 
 
@@ -33,7 +33,7 @@ def _find_schemas() -> Dict[str, any]:
         config = ParseConfig(
             format_validators=validators
         )
-        validator = JsonSchemaValidator(schema, config)
+        validator = parse_schema(schema, config)
         result[i[:-4]] = AasSchema(validator)
     return result
 
@@ -54,19 +54,21 @@ def _get_schema(version: str) -> AasSchema:
         raise AasTestToolsException(
             f"Unknown version {version}, must be one of {supported_versions()}")
 
-def _map_error(error: Optional[ValidationError]):
-    if error is None:
+def _map_error(error: SchemaValidationResult):
+    if error.ok:
         return AasTestResult('valid', '', Level.INFO)
-    result = AasTestResult(error.message, '', Level.ERROR)
-    result.sub_results = [
-        _map_error(i)
-        for i in error.caused_by
-    ]
-    return result
+    else:
+        causes = []
+        for i in error.keyword_results:
+            entry = AasTestResult(i, '', Level.ERROR)
+            entry.sub_results = [_map_error(i) for i in error.keyword_results]
+        result = AasTestResult('invalid', '', Level.ERROR)
+        result.sub_results = causes
+        return result
 
 def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult:
     schema = _get_schema(version)
-    error = schema.validator.get_error(data, ValidationConfig())
+    error = schema.validator.validate(data, ValidationConfig())
     return _map_error(error)
 
 
@@ -90,7 +92,7 @@ def _get_single_child(el: ElementTree.Element) -> ElementTree.Element:
 def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTestResult:
     expected_namespace = '{https://admin-shell.io/aas/3/0}'
 
-    def preprocess(data: ElementTree.Element, validator: ValidatorCollection) -> JSON:
+    def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
 
         if isinstance(data, (dict, list, str, bool, int, float)) or data is None:
             return data
@@ -124,10 +126,10 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTes
         elif types == {JsonType.BOOLEAN}:
             return data.text == 'true'
         else:
-            raise Exception(f"Unknown type {types} of {data}")
+            raise Exception(f"Unknown type {types} at {validator.pointer}")
     schema = _get_schema(version)
     config = ValidationConfig(preprocessor=preprocess)
-    error = schema.validator.get_error(data, config)
+    error = schema.validator.validate(data, config)
     return _map_error(error)
 
 

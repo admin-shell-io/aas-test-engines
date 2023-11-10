@@ -37,7 +37,7 @@ class Request:
 class MatchType(Enum):
     JSON_SCHEMA = 'json_schema'
     EQUALITY = 'equality'
-    ONLY_CODE = 'only_code'
+    STATUS_CODE_ONLY = 'only_code'
 
 
 @dataclass

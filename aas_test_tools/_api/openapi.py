@@ -161,7 +161,7 @@ class Operation:
             data, 'requestBody', dict, json_path, None)
         return cls(
             operation_id=safe_dict_lookup(data, 'operationId', str, json_path),
-            summary=safe_dict_lookup(data, 'summary', str, json_path),
+            summary=safe_dict_lookup(data, 'summary', str, json_path, ''),
             method=method,
             parameters=[Parameter.from_dict(param, json_path + '.parameters.' + str(
                 i), resolver) for i, param in enumerate(safe_dict_lookup(data, 'parameters', list, json_path, []))],

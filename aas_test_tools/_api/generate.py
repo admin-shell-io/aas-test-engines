@@ -5,6 +5,7 @@ import hashlib
 import json
 from urllib.parse import urlencode
 import os
+import base64
 
 from . import runconf
 from . import openapi
@@ -23,11 +24,13 @@ class RequestParams:
     def to_request(self, path: str, method: str) -> runconf.Request:
         for key, value in self.path_params.items():
             path = path.replace('{' + key + '}', value)
-        path += "/" + urlencode(self.query_params)
+        if self.query_params:
+            path += "?" + urlencode(self.query_params)
         return runconf.Request(
             path=path,
             method=method,
-            headers=self.headers,
+            # TODO: content type should not be hardcoded
+            headers={**self.headers, 'content-type': 'application/json'},
             body=self.body,
         )
 
@@ -86,11 +89,16 @@ def generate_valid_samples(schema: Optional[dict]):
             '#/components/schemas/Submodel': 'submodel.json',
             '#/components/schemas/SubmodelElement': 'submodel_element.json',
             '#/components/schemas/OperationRequest': 'operation_request.json',
-            '#/components/schemas/AssetAdministrationShellDescriptor': 'empty.json',
-            '#/components/schemas/SubmodelDescriptor': 'empty.json',
+            '#/components/schemas/AssetAdministrationShellDescriptor': 'shell_descriptor.json',
+            '#/components/schemas/SubmodelDescriptor': 'submodel_descriptor.json',
             '#/components/schemas/ConceptDescription': 'empty.json',
             '#/components/schemas/Identifier': 'empty.json',
-            '#/components/schemas/IdentifierKeyValuePair': 'empty.json'
+            '#/components/schemas/IdentifierKeyValuePair': 'empty.json',
+            '#/components/schemas/SubmodelMetadata': 'empty.json',
+            '#/components/schemas/SubmodelValue': 'empty.json',
+            '#/components/schemas/SubmodelElementMetadata': 'empty.json',
+            '#/components/schemas/SubmodelElementValue': 'empty.json',
+            '#/components/schemas/OperationRequestValueOnly': 'empty.json',
         }.get(ref)
         if path:
             # TODO: check if example matches the schema
@@ -102,6 +110,8 @@ def generate_valid_samples(schema: Optional[dict]):
         return [generate_valid_samples(schema['items'])]
     elif type_ == 'boolean':
         return [True, False]
+    elif type_ == 'string':
+        return ["random_string"]
     else:
         # Note we could pick random values for types 'string' and 'integer', too.
         # However, these are in most cases ids, which should be captured from other requests.
@@ -138,9 +148,13 @@ def generate_positive_tests(test_cases: List[runconf.TestCase], path: str, opera
             ))
             continue
         if i.source_link:
-            id_ = generate_link_id(
-                i.source_link.source_operation, i.name, operation)
-            values = ['${' + id_ + '}']
+            id_ = generate_link_id(i.source_link.source_operation, i.name, operation)
+            base64url_encoded = i.schema.get('format') == 'byte'
+            if base64url_encoded:
+                values = ['${' + id_ + '_base64}']
+            else:
+                values = ['${' + id_ + '}']
+            # TODO: if base64_urlencoded, add negative test which does not encode
         else:
             # TODO: escape strings of the form ${*}, to avoid clash with variables above
             values = generate_valid_samples(i.schema)
@@ -177,12 +191,20 @@ def generate_positive_tests(test_cases: List[runconf.TestCase], path: str, opera
                     option.inject(params, value)
 
             req = params.to_request(path, operation.method)
-            res = runconf.Response(
-                code=response.code,
-                content=json.dumps(response.schema),
-                match=runconf.MatchType.JSON_SCHEMA,
-                variables=variables
-            )
+            if response.schema is not None:
+                res = runconf.Response(
+                    code=response.code,
+                    content=json.dumps(response.schema),
+                    match=runconf.MatchType.JSON_SCHEMA,
+                    variables=variables
+                )
+            else:
+                res = runconf.Response(
+                    code=response.code,
+                    content='',
+                    match=runconf.MatchType.STATUS_CODE_ONLY,
+                    variables=variables
+                )
             test_cases.append(runconf.TestCase(req, res))
             all_params.append(params)
     else:
@@ -287,16 +309,27 @@ def has_all_params(operation: openapi.Operation, already_tested: Set[str]) -> bo
 
 
 def get_next(api: openapi.OpenApi, already_tested: Set[str], tag_filter: Set[str]) -> Tuple[openapi.Path, openapi.Operation]:
-    for path in api.paths:
-        for operation in path.operations:
-            if not (operation.tags & tag_filter):
-                continue
-            if operation.operation_id in already_tested:
-                continue
-            if has_all_params(operation, already_tested):
-                return path, operation
-    raise Exception(
-        "No more operations whose parameters are available. Maybe you have a cyclic dependency within your links?")
+
+    def find(delete_only: bool):
+        it = reversed(api.paths) if delete_only else api.paths
+        for path in it:
+            for operation in path.operations:
+                if (operation.method == 'delete') != delete_only:
+                    continue
+                if not (operation.tags & tag_filter):
+                    continue
+                if operation.operation_id in already_tested:
+                    continue
+                if has_all_params(operation, already_tested):
+                    return path, operation
+
+    result = find(False)
+    if result:
+        return result
+    result = find(True)
+    if result:
+        return result
+    raise Exception("No more operations whose parameters are available. Maybe you have a cyclic dependency within your links?")
 
 
 def generate(api: openapi.OpenApi, tag_filter=Set[str]):

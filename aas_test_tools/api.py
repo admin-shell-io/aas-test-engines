@@ -38,7 +38,7 @@ def _find_specs() -> Dict[str, AasSpec]:
 
 _specs = _find_specs()
 
-_DEFAULT_VERSION = '1.0RC03'
+_DEFAULT_VERSION = '3.0'
 
 
 def _get_spec(version: str) -> AasSpec:

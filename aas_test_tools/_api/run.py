@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import argparse
 from dataclasses import dataclass
 from .runconf import RunConfig, TestCase, Response, MatchType
 import json
@@ -11,6 +10,7 @@ from .runtime_expression import RuntimeExpressionException
 
 import requests
 import jsonschema
+import base64
 
 def _check_server(server: str):
     try:
@@ -37,6 +37,8 @@ def _check_response(test_case: TestCase, actual: requests.models.Response, data:
             print("  response does not match json schema:")
             print("  {}".format(e.args[0]))
             return False
+    elif expected.match == MatchType.STATUS_CODE_ONLY:
+        pass
     else:
         print("Unknown match type {}".format(expected.match))
         return False
@@ -45,7 +47,7 @@ def _check_response(test_case: TestCase, actual: requests.models.Response, data:
 
 
 class TemplateWithNumericIds(Template):
-    idpattern = r'(?a:[a-z0-9]+)'
+    idpattern = r'(?a:[a-z0-9]+?(_base64))'
 
 
 def inject_variables(value: str, variables: Dict[str, str]) -> str:
@@ -87,15 +89,21 @@ def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[
         ok = _check_response(test_case, response, data, config)
         for name, expression in test_case.response.variables.items():
             try:
-                variables[name] = expression.lookup(
-                    url, method, response.status_code, data)
+                # TODO: str() will fail for non primitive types
+                value = str(expression.lookup(url, method, response.status_code, data))
+                variables[name] = value
+                # TODO: we actually do not need ALL variables as encoded b64, later
+                variables[name+'_base64'] = base64.urlsafe_b64encode(value.encode()).decode().replace('=', '')
+
             except RuntimeExpressionException:
-                print(
-                    "  Failed to fetch variable {}, subsequent test cases might fail".format(name))
+                print("  Failed to fetch variable {}, subsequent test cases might fail".format(name))
         if ok:
             print("  -> Passed")
         else:
             print("  -> Failed")
+            print("--- Additional info:")
+            print(response.content)
+            print("---")
         return TestResult(passed=ok)
 
 

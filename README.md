@@ -81,7 +81,7 @@ api.execute_tests(tests, "http://localhost:3000")
 
 ### Checking older versions and specific test suites
 
-By default, the `api.generate_tests` method generate test cases for version 1.0RC03 of the standard and all associated test suites.
+By default, the `api.generate_tests` method generate test cases for version 3.0 of the standard and all associated test suites.
 You may want to check against older versions by passing a string containing the version to these methods.
 You can also provide a list of test suites to check against:
 

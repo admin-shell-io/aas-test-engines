@@ -132,6 +132,7 @@ class AasCoreTestCase(TestCase):
         return False
 
     def _run(self, dirname: str, check):
+        print(f"Testing {dirname}, this might take a few minutes...")
         valid_accepted = 0
         valid_rejected = 0
         invalid_accepted = 0
