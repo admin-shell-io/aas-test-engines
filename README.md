@@ -9,7 +9,7 @@ The tools in this repository offer measures to validate compliance of AAS implem
 
 ### Check AASX:
 ```python
-from aas_test_tools import file
+from aas_test_engines import file
 from xml.etree import ElementTree
 
 with open('aas.aasx') as f:
@@ -19,7 +19,7 @@ with open('aas.aasx') as f:
 ### Check JSON:
 
 ```python
-from aas_test_tools import file
+from aas_test_engines import file
 
 # Check file
 with open('aas.json') as f:
@@ -36,7 +36,7 @@ file.check_json_data(aas)
 
 ### Check XML:
 ```python
-from aas_test_tools import file
+from aas_test_engines import file
 from xml.etree import ElementTree
 
 # Check file
@@ -57,7 +57,7 @@ You may want to check against older versions by passing a string containing the 
 You can query the list of supported versions as follows:
 
 ```python
-from aas_test_tools import file
+from aas_test_engines import file
 
 print(file.supported_versions())
 print(file.latest_version())
@@ -68,7 +68,7 @@ print(file.latest_version())
 ### Check a running server instance
 
 ```python
-from aas_test_tools import api
+from aas_test_engines import api
 
 tests = api.generate_tests()
 
@@ -86,7 +86,7 @@ You may want to check against older versions by passing a string containing the 
 You can also provide a list of test suites to check against:
 
 ```python
-from aas_test_tools import api
+from aas_test_engines import api
 
 tests = api.generate_tests('1.0RC03', ['repository'])
 api.execute_tests(tests, "http://localhost")
@@ -95,7 +95,7 @@ api.execute_tests(tests, "http://localhost")
 You can query the list of supported versions and their associated test suites as follows:
 
 ```python
-from aas_test_tools import api
+from aas_test_engines import api
 
 print(api.supported_versions())
 print(api.latest_version())
@@ -122,8 +122,8 @@ You may want to invoke the test tools using the simplified command line interfac
 
 ```sh
 # Check file
-python -m aas_test_tools file test.aasx
+python -m aas_test_engines file test.aasx
 
 # Check server
-python -m aas_test_tools api https://localhost --suite registry
+python -m aas_test_engines api https://localhost --suite registry
 ```

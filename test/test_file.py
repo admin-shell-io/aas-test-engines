@@ -4,7 +4,7 @@ import zipfile
 import io
 from xml.etree import ElementTree
 
-from aas_test_tools import file
+from aas_test_engines import file
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
