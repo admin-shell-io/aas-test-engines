@@ -2,3 +2,4 @@ requests>=2.31
 pyyaml>=6.0
 json_schema_tool>=0.1
 jsonpath_ng>=1.5
+jsonschema>=4.19
