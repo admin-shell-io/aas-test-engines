@@ -8,9 +8,9 @@ from .result import AasTestResult, Level
 from .data_types import validators
 
 from xml.etree import ElementTree
-from json_schema_plus.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, KeywordValidationResult, parse_schema
-from json_schema_plus.types import JsonType
-from json_schema_plus.exception import PreprocessorException
+from json_schema_tool.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, KeywordValidationResult, parse_schema
+from json_schema_tool.types import JsonType
+from json_schema_tool.exception import PreprocessorException
 from zipfile import ZipFile
 
 JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
