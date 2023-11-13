@@ -43,5 +43,17 @@ class AasTestResult:
 
     def to_json(self):
         return {
-            self.message: [i.to_json() for i in self.sub_results]
+            'm': self.message,
+            'f': self.path_fragment,
+            'l': self.level.value,
+            's': [i.to_json() for i in self.sub_results]
         }
+
+    @classmethod
+    def from_json(self, data: dict) -> "AasTestResult":
+        v = AasTestResult(
+            data['m'], data['f'], Level(data['l'])
+        )
+        for i in data['s']:
+            v.append(AasTestResult.from_json(i))
+        return v

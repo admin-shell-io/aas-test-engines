@@ -8,8 +8,9 @@ from .result import AasTestResult, Level
 from .data_types import validators
 
 from xml.etree import ElementTree
-from json_schema_plus.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, parse_schema
+from json_schema_plus.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, KeywordValidationResult, parse_schema
 from json_schema_plus.types import JsonType
+from json_schema_plus.exception import PreprocessorException
 from zipfile import ZipFile
 
 JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
@@ -29,7 +30,7 @@ def _find_schemas() -> Dict[str, any]:
         path = os.path.join(data_dir, i)
         if not i.endswith('.yml'):
             continue
-        schema = safe_load(open(path))
+        schema = safe_load(open(path, "rb"))
         config = ParseConfig(
             format_validators=validators
         )
@@ -54,22 +55,20 @@ def _get_schema(version: str) -> AasSchema:
         raise AasTestToolsException(
             f"Unknown version {version}, must be one of {supported_versions()}")
 
-def _map_error(error: SchemaValidationResult):
-    if error.ok:
-        return AasTestResult('valid', '', Level.INFO)
-    else:
-        causes = []
-        for i in error.keyword_results:
-            entry = AasTestResult(i, '', Level.ERROR)
-            entry.sub_results = [_map_error(i) for i in error.keyword_results]
-        result = AasTestResult('invalid', '', Level.ERROR)
-        result.sub_results = causes
-        return result
+def _map_error(parent: AasTestResult, error: SchemaValidationResult):
+    for i in error.keyword_results:
+        if i.ok(): continue
+        kw_result = AasTestResult(i.error_message, '', Level.ERROR)
+        for j in i.sub_schema_results:
+            _map_error(kw_result, j)
+        parent.append(kw_result)
 
 def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult:
     schema = _get_schema(version)
-    error = schema.validator.validate(data, ValidationConfig())
-    return _map_error(error)
+    result = AasTestResult('Check JSON', '', Level.INFO)
+    error = schema.validator.validate(data)
+    _map_error(result, error)
+    return result
 
 
 def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
@@ -96,7 +95,10 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTes
 
         if isinstance(data, (dict, list, str, bool, int, float)) or data is None:
             return data
-        
+
+        if not data.tag.startswith(expected_namespace):
+            raise PreprocessorException(f"invalid namespace, got '{data.tag}'")
+
         types = validator.get_types()
 
         if types == {JsonType.OBJECT}:
@@ -109,7 +111,7 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTes
             result['modelType'] = _get_model_type(data, expected_namespace)
             for child in data:
                 if not child.tag.startswith(expected_namespace):
-                    raise Exception(f"invalid namespace, got {child.tag}")
+                    raise PreprocessorException(f"invalid namespace, got {child.tag}")
                 tag = child.tag[len(expected_namespace):]
                 if result['modelType'] == 'OperationVariable' and tag == 'value':
                     result[tag] = _get_single_child(child)
@@ -130,7 +132,9 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTes
     schema = _get_schema(version)
     config = ValidationConfig(preprocessor=preprocess)
     error = schema.validator.validate(data, config)
-    return _map_error(error)
+    result = AasTestResult('Check XML', '', Level.INFO)
+    _map_error(result, error)
+    return result
 
 
 def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
@@ -246,18 +250,17 @@ def _check_relationships(zipfile: ZipFile, root_rel: Relationship) -> AasTestRes
 def _check_files(zipfile: ZipFile, root_rel: Relationship, version: str) -> AasTestResult:
     result = AasTestResult('Checking files', '')
     for aasx_origin in root_rel.sub_rels_by_type(TYPE_AASX_ORIGIN):
-        sub_result = AasTestResult(
-            f'Checking {aasx_origin.target}', aasx_origin.target)
+        sub_result = AasTestResult(f'Checking {aasx_origin.target}', aasx_origin.target)
         for aasx_spec in aasx_origin.sub_rels_by_type(TYPE_AASX_SPEC):
             try:
                 with zipfile.open(aasx_spec.target) as f:
                     if aasx_spec.target.endswith('.xml'):
-                        check_xml_file(f, version)
+                        r = check_xml_file(f, version)
                     elif aasx_spec.target.endswith('.json'):
-                        check_json_file(f, version)
+                        r = check_json_file(f, version)
                     else:
-                        sub_result.append(AasTestResult(
-                            'Unknown filetype', aasx_spec.target))
+                        r = AasTestResult('Unknown filetype', aasx_spec.target, Level.WARNING)
+                    sub_result.append(r)
             except KeyError:
                 return AasTestResult("File does not exist")
         result.append(sub_result)
@@ -286,4 +289,4 @@ def check_aasx_data(zipfile: ZipFile, version: str = _DEFAULT_VERSION) -> AasTes
 
 def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
     zipfile = ZipFile(file)
-    return check_json_data(zipfile, version)
+    return check_aasx_data(zipfile, version)

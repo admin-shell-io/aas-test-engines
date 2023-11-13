@@ -3,8 +3,9 @@
 from dataclasses import dataclass
 from .runconf import RunConfig, TestCase, Response, MatchType
 import json
-from typing import Dict, Optional
+from typing import Dict, Optional, Generator
 from string import Template
+from aas_test_engines.result import AasTestResult, Level
 
 from .runtime_expression import RuntimeExpressionException
 
@@ -12,21 +13,25 @@ import requests
 import jsonschema
 import base64
 
-def _check_server(server: str):
+from aas_test_engines.exception import AasTestToolsException
+
+
+def _check_server(server: str) -> AasTestResult:
+    result = AasTestResult(f'Check {server}')
     try:
         requests.get(server)
-        return True
+        result.append(AasTestResult('OK', '', Level.INFO))
     except requests.exceptions.RequestException as e:
-        print('Failed to reach "{}": {}'.format(server, e))
-        return False
+        result.append(AasTestResult('Failed to reach: {}'.format(e), '', Level.ERROR))
+    return result
 
 
-def _check_response(test_case: TestCase, actual: requests.models.Response, data: Optional[dict], config: RunConfig) -> bool:
+def _check_response(test_case: TestCase, actual: requests.models.Response, data: Optional[dict], config: RunConfig, result: AasTestResult):
     expected = test_case.response
-    if actual.status_code != expected.code:
-        print("  invalid status code: expected {}, got {}".format(
-            expected.code, actual.status_code))
-        return False
+    if actual.status_code == expected.code:
+        result.append(AasTestResult(f'Got status code {expected.code}'))
+    else:
+        result.append(AasTestResult(f"invalid status code: expected {expected.code}, got {actual.status_code}", '', Level.ERROR))
 
     if expected.match == MatchType.JSON_SCHEMA:
         schema = json.loads(test_case.response.content)
@@ -34,47 +39,40 @@ def _check_response(test_case: TestCase, actual: requests.models.Response, data:
         try:
             jsonschema.validate(instance=data, schema=schema)
         except jsonschema.exceptions.ValidationError as e:
-            print("  response does not match json schema:")
-            print("  {}".format(e.args[0]))
-            return False
+            result.append(AasTestResult(f"Invalid response: {e.args[0]}", '', Level.ERROR))
     elif expected.match == MatchType.STATUS_CODE_ONLY:
         pass
     else:
-        print("Unknown match type {}".format(expected.match))
-        return False
-
-    return True
+        raise AasTestToolsException(f"Unknown match type {expected.match}")
 
 
 class TemplateWithNumericIds(Template):
     idpattern = r'(?a:[a-z0-9]+?(_base64))'
+    delimiter = '!'
 
 
 def inject_variables(value: str, variables: Dict[str, str]) -> str:
     return TemplateWithNumericIds(value).substitute(variables)
 
 
-@dataclass
-class TestResult:
-    passed: bool
-
-
-def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[str, str], config: RunConfig) -> TestResult:
+def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[str, str], config: RunConfig) -> AasTestResult:
     url = server + test_case.request.path
+    method = test_case.request.method
+
     try:
         url = inject_variables(url, variables)
         data = inject_variables(test_case.request.body, variables)
     except KeyError as e:
-        print("Failed to substitute variable {}, considering test cases as failed".format(
-            e.args[0]))
-        return TestResult(passed=False)
-    method = test_case.request.method
-    print("{} {}".format(test_case.request.method.upper(), url))
+        m = "Failed to substitute variable {}, considering test case as failed".format(e.args[0])
+        return AasTestResult(m, '', Level.ERROR)
+
+    result = AasTestResult("{} {}".format(test_case.request.method.upper(), url))
+
     if dry:
         for name in test_case.response.variables.keys():
             variables[name] = 'dummy_value'
-        print(" --> Skipped")
-        return TestResult(passed=True)
+        result.append(AasTestResult('Skipped', '', Level.WARNING))
+        return result
     else:
         response = requests.request(
             method=method,
@@ -86,7 +84,8 @@ def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[
             data = response.json()
         except:
             data = None
-        ok = _check_response(test_case, response, data, config)
+
+        _check_response(test_case, response, data, config, result)
         for name, expression in test_case.response.variables.items():
             try:
                 # TODO: str() will fail for non primitive types
@@ -94,26 +93,21 @@ def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[
                 variables[name] = value
                 # TODO: we actually do not need ALL variables as encoded b64, later
                 variables[name+'_base64'] = base64.urlsafe_b64encode(value.encode()).decode().replace('=', '')
-
             except RuntimeExpressionException:
-                print("  Failed to fetch variable {}, subsequent test cases might fail".format(name))
-        if ok:
-            print("  -> Passed")
-        else:
-            print("  -> Failed")
-            print("--- Additional info:")
-            print(response.content)
-            print("---")
-        return TestResult(passed=ok)
+                m = f"Failed to fetch variable {name}, subsequent test cases might fail"
+                result.append(AasTestResult(m, '', Level.WARNING))
 
+        # print("--- Additional info:")
+        # print(response.content)
+        # print("---")
+    return result
 
-def run(config: RunConfig, server: str, dry: bool = False) -> float:
+def run(config: RunConfig, server: str, dry: bool = False) -> Generator[AasTestResult, None, None]:
     if not dry:
-        _check_server(server)
+        result = _check_server(server)
+        yield result
+        if not result.ok():
+            return
     variables: Dict[str, str] = {}
-    num_passed = 0
     for test_case in config.test_cases:
-        result = _run_test_case(test_case, server, dry, variables, config)
-        if result.passed:
-            num_passed += 1
-    return num_passed / len(config.test_cases)
+        yield _run_test_case(test_case, server, dry, variables, config)

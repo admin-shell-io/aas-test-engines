@@ -30,7 +30,8 @@ def run_api_test(argv):
     else:
         suites = None
     tests = api.generate_tests(suites=suites)
-    api.execute_tests(tests, args.server, args.dry)
+    for result in api.execute_tests(tests, args.server, args.dry):
+        result.dump()
 
 
 commands = {

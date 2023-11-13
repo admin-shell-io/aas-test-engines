@@ -1,4 +1,4 @@
-from typing import Dict, Set
+from typing import Dict, Set, Generator
 from .exception import AasTestToolsException
 from .result import AasTestResult
 
@@ -26,7 +26,7 @@ def _find_specs() -> Dict[str, AasSpec]:
         path = os.path.join(data_dir, i)
         if not i.endswith('.yml'):
             continue
-        spec = safe_load(open(path))
+        spec = safe_load(open(path, "rb"))
         api = openapi.OpenApi.from_dict(spec)
         suites = set()
         for path in api.paths:
@@ -59,8 +59,8 @@ def generate_tests(version: str = _DEFAULT_VERSION, suites: Set[str] = None) -> 
     return conf
 
 
-def execute_tests(conf: runconf.RunConfig, server: str, dry: bool = False) -> AasTestResult:
-    return run.run(conf, server, dry)
+def execute_tests(conf: runconf.RunConfig, server: str, dry: bool = False) -> Generator[AasTestResult, None, None]:
+    yield from run.run(conf, server, dry)
 
 
 def supported_versions():

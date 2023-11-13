@@ -36,6 +36,13 @@ class CheckXmlTest(TestCase):
         result = file.check_xml_data(data)
         self.assertTrue(result.ok())
 
+    def test_invalid_namespace(self):
+        data = ElementTree.fromstring(
+            """<environment xmlns="invalid">
+            </environment>""")
+        result = file.check_xml_data(data)
+        self.assertFalse(result.ok())
+        result.dump()
 
 class CheckAasxTest(TestCase):
 
@@ -65,7 +72,7 @@ class CheckAasxTest(TestCase):
             script_dir, 'fixtures/aasx/invalid/unknown_filetype'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertTrue(result.ok())
+        self.assertFalse(result.ok())
 
     def test_minimal(self):
         z = in_memory_zipfile(os.path.join(

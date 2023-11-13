@@ -151,12 +151,12 @@ def generate_positive_tests(test_cases: List[runconf.TestCase], path: str, opera
             id_ = generate_link_id(i.source_link.source_operation, i.name, operation)
             base64url_encoded = i.schema.get('format') == 'byte'
             if base64url_encoded:
-                values = ['${' + id_ + '_base64}']
+                values = ['!{' + id_ + '_base64}']
             else:
-                values = ['${' + id_ + '}']
+                values = ['!{' + id_ + '}']
             # TODO: if base64_urlencoded, add negative test which does not encode
         else:
-            # TODO: escape strings of the form ${*}, to avoid clash with variables above
+            # TODO: escape strings of the form !{*}, to avoid clash with variables above
             values = generate_valid_samples(i.schema)
         if i.position == openapi.ParameterPosition.PATH:
             options.append(PathParameterOption(
