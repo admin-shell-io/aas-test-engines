@@ -1,9 +1,19 @@
 # Test Engines for the Asset Administration Shell
 
+[![Tests](https://github.com/admin-shell-io/aas-test-engines/actions/workflows/check.yml/badge.svg)](https://github.com/admin-shell-io/aas-test-engines/actions/workflows/check.yml)
+
 The Asset Administration Shell (AAS) is a standard for Digital Twins.
 More information can be found [here](https://industrialdigitaltwin.org/content-hub/downloads).
 
 The tools in this repository offer measures to validate compliance of AAS implementations against the AAS standard.
+
+## Installation
+
+You can install the AAS Test Engines via pip:
+
+```sh
+python -m pip install aas_test_engines
+```
 
 ## Check AAS Type 1 (File)
 
