@@ -1,2 +1,2 @@
 def version() -> str:
-    return "0.2"
+    return "__VERSION__"

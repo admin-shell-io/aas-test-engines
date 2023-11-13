@@ -31,6 +31,7 @@ jobs:
       run: |
         echo "Version: $RELEASE_VERSION"
         sed "s/__VERSION__/$RELEASE_VERSION/g" -i pyproject.toml
+        sed "s/__VERSION__/$RELEASE_VERSION/g" -i aas_test_engines/__init__.py
     - name: Build package
       run: python -m build
     - name: Publish package

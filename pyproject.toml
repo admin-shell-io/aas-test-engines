@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aas_test_engines"
-version = "0.2"
+version = "__VERSION__"
 description = "Official test tooling for the Asset Administration Shell"
 readme = "README.md"
 classifiers = [
@@ -13,6 +13,7 @@ classifiers = [
 ]
 keywords = ["asset administration shell", "aas", "test"]
 requires-python = ">=3.6"
+dynamic = ["dependencies"]
 
 [project.urls]
 Homepage = "https://github.com/admin-shell-io/aas-test-engines"
@@ -21,4 +22,7 @@ Homepage = "https://github.com/admin-shell-io/aas-test-engines"
 realpython = "reader.__main__:main"
 
 [tool.setuptools.package-data]
-"*" = ["*.yml"]
+"*" = ["*.yml", "*.json"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
