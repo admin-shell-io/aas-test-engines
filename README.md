@@ -23,7 +23,10 @@ from aas_test_engines import file
 from xml.etree import ElementTree
 
 with open('aas.aasx') as f:
-    file.check_aasx_file(f)
+    result = file.check_aasx_file(f)
+# result.ok() == True
+
+result.dump()
 ```
 
 ### Check JSON:
@@ -33,7 +36,8 @@ from aas_test_engines import file
 
 # Check file
 with open('aas.json') as f:
-    file.check_json_file(f)
+    result = file.check_json_file(f)
+# result.ok() == True
 
 # Or check data directly
 aas = {
@@ -41,7 +45,10 @@ aas = {
     'submodels': [],
     'conceptDescriptions': []
 }
-file.check_json_data(aas)
+result = file.check_json_data(aas)
+# result.ok() == True
+
+result.dump()
 ```
 
 ### Check XML:
@@ -51,12 +58,16 @@ from xml.etree import ElementTree
 
 # Check file
 with open('aas.xml') as f:
-    file.check_xml_file(f)
+    result = file.check_xml_file(f)
+# result.ok() == True
 
 # Or check data directly
 data = ElementTree.fromstring(
     '<environment xmlns="https://admin-shell.io/aas/3/0" />')
-file.check_xml_data(aas)
+result = file.check_xml_data(aas)
+# result.ok() == True
+
+result.dump()
 ```
 
 ### Checking older versions
