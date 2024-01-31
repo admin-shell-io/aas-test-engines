@@ -99,12 +99,15 @@ def generate_valid_samples(schema: Optional[dict]):
             '#/components/schemas/SubmodelElementMetadata': 'empty.json',
             '#/components/schemas/SubmodelElementValue': 'empty.json',
             '#/components/schemas/OperationRequestValueOnly': 'empty.json',
+            '#/components/schemas/GetSubmodelElementsMetadataResult': 'empty.json',
+            '#/components/schemas/GetSubmodelElementsValueResult': 'empty.json',
+            '#/components/schemas/SpecificAssetId': 'empty.json',
         }.get(ref)
         if path:
             # TODO: check if example matches the schema
             return [json.load(open(samples_dir + path, "rb"))]
         else:
-            raise Exception("Unknown ref " + schema['$ref'])
+            raise Exception("Failed to generate valid samples for " + schema['$ref'])
     type_ = schema.get('type', 'object')
     if type_ == 'array':
         return [generate_valid_samples(schema['items'])]
