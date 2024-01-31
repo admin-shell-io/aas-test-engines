@@ -74,12 +74,29 @@ class CheckAasxTest(TestCase):
         result.dump()
         self.assertFalse(result.ok())
 
-    def test_minimal(self):
-        z = in_memory_zipfile(os.path.join(
-            script_dir, 'fixtures/aasx/valid/simple'))
+    def test_valid_xml(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/xml'))
         result = file.check_aasx_data(z)
         result.dump()
         self.assertTrue(result.ok())
+
+    def test_valid_json(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/json'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertTrue(result.ok())
+
+    def test_invalid_xml(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/invalid/invalid_xml'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertFalse(result.ok())
+
+    def test_invalid_json(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/invalid/invalid_json'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertFalse(result.ok())
 
 
 class SupportedVersionTest(TestCase):
