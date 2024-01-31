@@ -145,9 +145,9 @@ def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResu
 NS_CONTENT_TYPES = "{http://schemas.openxmlformats.org/package/2006/content-types}"
 NS_RELATIONSHIPS = "{http://schemas.openxmlformats.org/package/2006/relationships}"
 
-TYPE_AASX_ORIGIN = 'http://www.admin-shell.io/aasx/relationships/aasx-origin'
-TYPE_AASX_SPEC = 'http://www.admin-shell.io/aasx/relationships/aas-spec'
-TYPE_AASX_SUPPL = 'http://www.admin-shell.io/aasx/relationships/aas-suppl'
+TYPE_AASX_ORIGIN = 'http://admin-shell.io/aasx/relationships/aasx-origin'
+TYPE_AASX_SPEC = 'http://admin-shell.io/aasx/relationships/aas-spec'
+TYPE_AASX_SUPPL = 'http://admin-shell.io/aasx/relationships/aas-suppl'
 TYPE_THUMBNAIL = 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail'
 
 
