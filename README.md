@@ -133,7 +133,7 @@ For version 1.0RC03 the following test suites are available:
 | Asset Administration Shell Repository API      | aas_repository_read                 | aas_repository                 |
 | Submodel Repository API                        | submodel_repository_read            | submodel_repository            |
 | Concept Description Repository API             | concept_description_repository_read | concept_description_repository |
-| Asset Administration Shell Basic Discovery API | aas_discovery_read                  | aas_discvoery                  |
+| Asset Administration Shell Basic Discovery API | aas_discovery_read                  | aas_discovery                  |
 | Serialization API                              | serialization                       | -                              |
 | Description API                                | description                         | -                              |
 
