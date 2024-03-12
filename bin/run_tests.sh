@@ -9,3 +9,5 @@ cd "$SCRIPT_DIR/.."
 coverage run \
          --source=aas_test_engines \
          -m unittest
+
+PYTHONPATH=. ./test/acceptance/file.py
