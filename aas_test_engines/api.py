@@ -59,8 +59,8 @@ def generate_tests(version: str = _DEFAULT_VERSION, suites: Set[str] = None) -> 
     return conf
 
 
-def execute_tests(conf: runconf.RunConfig, server: str, dry: bool = False) -> Generator[AasTestResult, None, None]:
-    yield from run.run(conf, server, dry)
+def execute_tests(conf: runconf.RunConfig, exec_conf: run.ExecConf) -> Generator[AasTestResult, None, None]:
+    yield from run.run(conf, exec_conf)
 
 
 def supported_versions():

@@ -43,13 +43,21 @@ def run_api_test(argv):
     parser.add_argument('--suite',
                         type=str,
                         help='selected test suite')
+    parser.add_argument('--no-verify',
+                        action='store_true',
+                        help='do not check TLS certificate')
     args = parser.parse_args(argv)
     if args.suite:
         suites = set([args.suite])
     else:
         suites = None
     tests = api.generate_tests(suites=suites)
-    for result in api.execute_tests(tests, args.server, args.dry):
+    exec_conf = api.run.ExecConf(
+        server = args.server,
+        dry = args.dry,
+        verify = not args.no_verify,
+    )
+    for result in api.execute_tests(tests, exec_conf):
         result.dump()
 
 

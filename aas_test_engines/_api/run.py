@@ -10,16 +10,27 @@ from aas_test_engines.result import AasTestResult, Level
 from .runtime_expression import RuntimeExpressionException
 
 import requests
-import jsonschema
 import base64
 
 from aas_test_engines.exception import AasTestToolsException
+from json_schema_tool import parse_schema
+from json_schema_tool.schema import ParseConfig
+from aas_test_engines.file import _map_error
+
+from dataclasses import dataclass
 
 
-def _check_server(server: str) -> AasTestResult:
-    result = AasTestResult(f'Check {server}')
+@dataclass
+class ExecConf:
+    server: str = ''
+    dry: bool = False
+    verify: bool = True
+
+
+def _check_server(exec_conf: ExecConf) -> AasTestResult:
+    result = AasTestResult(f'Check {exec_conf.server}')
     try:
-        requests.get(server)
+        requests.get(exec_conf.server, verify=exec_conf.verify)
         result.append(AasTestResult('OK', '', Level.INFO))
     except requests.exceptions.RequestException as e:
         result.append(AasTestResult('Failed to reach: {}'.format(e), '', Level.ERROR))
@@ -35,11 +46,13 @@ def _check_response(test_case: TestCase, actual: requests.models.Response, data:
 
     if expected.match == MatchType.JSON_SCHEMA:
         schema = json.loads(test_case.response.content)
+        if schema is None:
+            return
         schema['components'] = config.components
-        try:
-            jsonschema.validate(instance=data, schema=schema)
-        except jsonschema.exceptions.ValidationError as e:
-            result.append(AasTestResult(f"Invalid response: {e.args[0]}", '', Level.ERROR))
+        schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
+        validator = parse_schema(schema, ParseConfig(raise_on_unknown_format=False))
+        error = validator.validate(data)
+        _map_error(result, error)
     elif expected.match == MatchType.STATUS_CODE_ONLY:
         pass
     else:
@@ -55,8 +68,8 @@ def inject_variables(value: str, variables: Dict[str, str]) -> str:
     return TemplateWithNumericIds(value).substitute(variables)
 
 
-def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[str, str], config: RunConfig) -> AasTestResult:
-    url = server + test_case.request.path
+def _run_test_case(test_case: TestCase, exec_conf: ExecConf, variables: Dict[str, str], config: RunConfig) -> AasTestResult:
+    url = exec_conf.server + test_case.request.path
     method = test_case.request.method
 
     try:
@@ -68,7 +81,7 @@ def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[
 
     result = AasTestResult("{} {}".format(test_case.request.method.upper(), url))
 
-    if dry:
+    if exec_conf.dry:
         for name in test_case.response.variables.keys():
             variables[name] = 'dummy_value'
         result.append(AasTestResult('Skipped', '', Level.WARNING))
@@ -78,7 +91,8 @@ def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[
             method=method,
             url=url,
             data=data,
-            headers=test_case.request.headers
+            headers=test_case.request.headers,
+            verify=exec_conf.verify,
         )
         try:
             data = response.json()
@@ -102,12 +116,13 @@ def _run_test_case(test_case: TestCase, server: str, dry: bool, variables: Dict[
         # print("---")
     return result
 
-def run(config: RunConfig, server: str, dry: bool = False) -> Generator[AasTestResult, None, None]:
-    if not dry:
-        result = _check_server(server)
+
+def run(config: RunConfig, exec_conf: ExecConf) -> Generator[AasTestResult, None, None]:
+    if not exec_conf.dry:
+        result = _check_server(exec_conf)
         yield result
         if not result.ok():
             return
     variables: Dict[str, str] = {}
     for test_case in config.test_cases:
-        yield _run_test_case(test_case, server, dry, variables, config)
+        yield _run_test_case(test_case, exec_conf, variables, config)
