@@ -109,9 +109,14 @@ You can also provide a list of test suites to check against:
 ```python
 from aas_test_engines import api
 
-tests = api.generate_tests('1.0RC03', ['repository'])
+tests = api.generate_tests('3.0', ['Asset Administration Shell API'])
 api.execute_tests(tests, "http://localhost")
 ```
+
+For the naming of test suites we follow the names given by the specification. These are:
+* **APIs:** Asset Administration Shell API, Submodel API, ...
+* **Service Specifications:** Asset Administration Shell Service Specification, Submodel Service Specification, ...
+* **Profiles:**  AssetAdministrationShellServiceSpecification/SSP-001, ...
 
 You can query the list of supported versions and their associated test suites as follows:
 
@@ -121,21 +126,6 @@ from aas_test_engines import api
 print(api.supported_versions())
 print(api.latest_version())
 ```
-For version 1.0RC03 the following test suites are available:
-
-| API Name                                       | Test Suite Read                     | Test Suite Read and Write      |
-| ---------------------------------------------- | ----------------------------------- | ------------------------------ |
-| Asset Administration Shell API                 | aas_read                            | aas                            |
-| Submodel API                                   | submodel_read                       | submodel                       |
-| AASX File Server API                           | aasx_read                           | aasx                           |
-| Asset Administration Shell Registry API        | aas_registry_read                   | aas_registry                   |
-| Submodel Registry API                          | submodel_registry_read              | submodel_registry              |
-| Asset Administration Shell Repository API      | aas_repository_read                 | aas_repository                 |
-| Submodel Repository API                        | submodel_repository_read            | submodel_repository            |
-| Concept Description Repository API             | concept_description_repository_read | concept_description_repository |
-| Asset Administration Shell Basic Discovery API | aas_discovery_read                  | aas_discovery                  |
-| Serialization API                              | serialization                       | -                              |
-| Description API                                | description                         | -                              |
 
 ## Command line interface
 
@@ -146,5 +136,5 @@ You may want to invoke the test tools using the simplified command line interfac
 python -m aas_test_engines file test.aasx
 
 # Check server
-python -m aas_test_engines api https://localhost --suite registry
+python -m aas_test_engines api https://localhost --suite 'Asset Administration Shell API'
 ```
