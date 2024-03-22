@@ -22,7 +22,7 @@ python -m pip install aas_test_engines
 from aas_test_engines import file
 from xml.etree import ElementTree
 
-with open('aas.aasx') as f:
+with open('aas.aasx', 'rb') as f:
     result = file.check_aasx_file(f)
 # result.ok() == True
 

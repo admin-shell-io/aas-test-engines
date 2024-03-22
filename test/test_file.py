@@ -46,6 +46,12 @@ class CheckXmlTest(TestCase):
 
 class CheckAasxTest(TestCase):
 
+    def test_not_a_zip(self):
+        with open(os.path.join(script_dir, 'fixtures/aasx/invalid/invalid_json/[Content_Types].xml'), "rb") as f:
+            result = file.check_aasx_file(f)
+        result.dump()
+        self.assertFalse(result.ok())
+
     def test_empty(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/empty'))

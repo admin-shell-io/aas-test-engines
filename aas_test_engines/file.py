@@ -11,7 +11,7 @@ from xml.etree import ElementTree
 from json_schema_tool.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, KeywordValidationResult, parse_schema
 from json_schema_tool.types import JsonType
 from json_schema_tool.exception import PreprocessorException
-from zipfile import ZipFile
+import zipfile
 
 JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
@@ -168,7 +168,7 @@ class Relationship:
             sub_rel.dump(indent + 1)
 
 
-def _check_content_type(zipfile: ZipFile) -> AasTestResult:
+def _check_content_type(zipfile: zipfile.ZipFile) -> AasTestResult:
     content_types_xml = '[Content_Types].xml'
     result = AasTestResult(f'Checking {content_types_xml}', content_types_xml)
     try:
@@ -185,7 +185,7 @@ def _check_content_type(zipfile: ZipFile) -> AasTestResult:
     return result
 
 
-def _scan_relationships(zipfile: ZipFile, parent_rel: Relationship, rels_file: TextIO, visited_targets: Set[str]) -> AasTestResult:
+def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, rels_file: TextIO, visited_targets: Set[str]) -> AasTestResult:
     relationships = ElementTree.parse(rels_file).getroot()
     expected_tag = f"{NS_RELATIONSHIPS}Relationships"
     if relationships.tag != expected_tag:
@@ -233,7 +233,7 @@ def _scan_relationships(zipfile: ZipFile, parent_rel: Relationship, rels_file: T
     return result
 
 
-def _check_relationships(zipfile: ZipFile, root_rel: Relationship) -> AasTestResult:
+def _check_relationships(zipfile: zipfile.ZipFile, root_rel: Relationship) -> AasTestResult:
     result = AasTestResult('Checking relationships', '')
     visited_targets = set()
     try:
@@ -247,7 +247,7 @@ def _check_relationships(zipfile: ZipFile, root_rel: Relationship) -> AasTestRes
     return result
 
 
-def _check_files(zipfile: ZipFile, root_rel: Relationship, version: str) -> AasTestResult:
+def _check_files(zipfile: zipfile.ZipFile, root_rel: Relationship, version: str) -> AasTestResult:
     result = AasTestResult('Checking files', '')
     for aasx_origin in root_rel.sub_rels_by_type(TYPE_AASX_ORIGIN):
         sub_result = AasTestResult(f'Checking {aasx_origin.target}', aasx_origin.target)
@@ -267,7 +267,7 @@ def _check_files(zipfile: ZipFile, root_rel: Relationship, version: str) -> AasT
     return result
 
 
-def check_aasx_data(zipfile: ZipFile, version: str = _DEFAULT_VERSION) -> AasTestResult:
+def check_aasx_data(zipfile: zipfile.ZipFile, version: str = _DEFAULT_VERSION) -> AasTestResult:
 
     result = AasTestResult('Checking AASX package', '')
 
@@ -288,5 +288,9 @@ def check_aasx_data(zipfile: ZipFile, version: str = _DEFAULT_VERSION) -> AasTes
 
 
 def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
-    zipfile = ZipFile(file)
-    return check_aasx_data(zipfile, version)
+    try:
+        zip = zipfile.ZipFile(file)
+    except zipfile.BadZipFile as e:
+        return AasTestResult(f"Cannot read: {e}", Level.ERROR)
+
+    return check_aasx_data(zip, version)

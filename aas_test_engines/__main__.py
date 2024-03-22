@@ -14,7 +14,7 @@ class Formats(Enum):
 def run_file_test(argv):
     parser = argparse.ArgumentParser(description='Checks a file for compliance with the AAS meta-model')
     parser.add_argument('file',
-                        type=argparse.FileType('r'),
+                        type=argparse.FileType('rb'),
                         help='the file to check')
     parser.add_argument('--format',
                         type=Formats,
