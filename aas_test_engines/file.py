@@ -291,6 +291,6 @@ def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestRes
     try:
         zip = zipfile.ZipFile(file)
     except zipfile.BadZipFile as e:
-        return AasTestResult(f"Cannot read: {e}", Level.ERROR)
+        return AasTestResult(f"Cannot read: {e}", level=Level.ERROR)
 
     return check_aasx_data(zip, version)
