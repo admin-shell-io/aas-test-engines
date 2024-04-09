@@ -104,6 +104,12 @@ class CheckAasxTest(TestCase):
         result.dump()
         self.assertFalse(result.ok())
 
+    def test_relative_paths(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/relative_paths'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertTrue(result.ok())
+
 
 class SupportedVersionTest(TestCase):
 
