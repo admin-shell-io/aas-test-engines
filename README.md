@@ -27,6 +27,7 @@ with open('aas.aasx', 'rb') as f:
 # result.ok() == True
 
 result.dump()
+# try result.to_html() to get an interactive representation
 ```
 
 ### Check JSON:

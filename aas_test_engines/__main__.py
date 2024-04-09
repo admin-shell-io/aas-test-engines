@@ -20,6 +20,9 @@ def run_file_test(argv):
                         type=Formats,
                         default=Formats.aasx,
                         choices=list(Formats))
+    parser.add_argument('--html',
+                        type=argparse.FileType('w'),
+                        default=None)
     args = parser.parse_args(argv)
     if args.format == Formats.aasx:
         result = file.check_aasx_file(args.file)
@@ -29,7 +32,10 @@ def run_file_test(argv):
         result = file.check_xml_file(args.file)
     else:
         raise Exception(f"Invalid format {args.format}")
-    result.dump()
+    if args.html:
+        args.html.write(result.to_html())
+    else:
+        result.dump()
 
 
 def run_api_test(argv):

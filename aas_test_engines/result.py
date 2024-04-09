@@ -1,5 +1,8 @@
 from typing import List
 from enum import Enum
+import os
+
+script_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class Level(Enum):
@@ -22,7 +25,7 @@ class Level(Enum):
 
 class AasTestResult:
 
-    def __init__(self, message: str, path_fragment: str = '', level = Level.INFO):
+    def __init__(self, message: str, path_fragment: str = '', level=Level.INFO):
         self.message = message
         self.path_fragment = path_fragment
         self.level = level
@@ -36,10 +39,41 @@ class AasTestResult:
         return self.level == Level.INFO
 
     def dump(self, indent=0, path=''):
+        """Outputs the result to console"""
         ENDC = '\033[0m'
         print("   " * indent + self.level.color() + self.message + ENDC)
         for sub_result in self.sub_results:
             sub_result.dump(indent + 1, path + "/" + self.path_fragment)
+
+    def _to_html(self) -> str:
+        cls = {
+            Level.INFO: 'info',
+            Level.WARNING: 'warning',
+            Level.ERROR: 'error'
+        }[self.level]
+        s = "<div>\n"
+        if self.sub_results:
+            s += f'<div class="{cls}">{self.message}<span class="caret"/></div>\n'
+            s += '<div class="sub-results">\n'
+            for sub_result in self.sub_results:
+                s += sub_result._to_html()
+            s += "</div>\n"
+        else:
+            s += f'<div class="{cls}">{self.message}</div>\n'
+        s += "</div>\n"
+        return s
+
+    def to_html(self) -> str:
+        """Generates an interactive view of the result as HTML.
+        You should write the result into a file:
+            content = self.result.to_html()
+            with open("result.html", "w") as file:
+                file.write(content)
+        Then open result.html in your browser.
+        """
+        with open(os.path.join(script_dir, 'data', 'template.html'), 'r') as f:
+            content = f.read()
+        return content.replace("<!-- CONTENT -->", self._to_html())
 
     def to_json(self):
         return {
