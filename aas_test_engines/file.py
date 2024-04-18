@@ -72,7 +72,10 @@ def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult
 
 
 def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
-    data = json.load(file)
+    try:
+        data = json.load(file)
+    except json.decoder.JSONDecodeError as e:
+        return AasTestResult(f"Invalid JSON: {e}", '', Level.ERROR)
     return check_json_data(data, version)
 
 
@@ -138,7 +141,10 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTes
 
 
 def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
-    data = ElementTree.fromstring(file.read())
+    try:
+        data = ElementTree.fromstring(file.read())
+    except ElementTree.ParseError as e:
+        return AasTestResult(f"Invalid xml: {e}", '', Level.ERROR)
     return check_xml_data(data, version)
 
 

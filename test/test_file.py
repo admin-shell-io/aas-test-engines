@@ -26,6 +26,10 @@ class CheckJsonTest(TestCase):
         result = file.check_json_data({})
         self.assertTrue(result.ok())
 
+    def test_no_json(self):
+        result = file.check_json_file(io.StringIO("no json"))
+        self.assertFalse(result.ok())
+
 
 class CheckXmlTest(TestCase):
 
@@ -43,6 +47,10 @@ class CheckXmlTest(TestCase):
         result = file.check_xml_data(data)
         self.assertFalse(result.ok())
         result.dump()
+
+    def test_no_xml(self):
+        result = file.check_xml_file(io.StringIO("no xml"))
+        self.assertFalse(result.ok())
 
 class CheckAasxTest(TestCase):
 
