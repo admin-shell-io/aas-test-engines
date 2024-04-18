@@ -33,6 +33,7 @@ servers:
       enum:
       - v3.0
 paths:
+# Asset Administration Shell API
   /aas:
     get:
       tags:
@@ -549,10 +550,9 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelReference/3/0
+# Submodel API (through Asset Administration Shell API)
   /aas/submodels/{submodelIdentifier}:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Submodel
       operationId: GetSubmodel_AAS
       parameters:
@@ -625,8 +625,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
     put:
-      tags:
-      - Asset Administration Shell API
       summary: Updates the Submodel
       operationId: PutSubmodel_AAS
       parameters:
@@ -693,8 +691,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
     delete:
-      tags:
-      - Asset Administration Shell API
       summary: Deletes the submodel from the Asset Administration Shell.
       operationId: DeleteSubmodelById_AAS
       parameters:
@@ -743,8 +739,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelById/3/0
     patch:
-      tags:
-      - Asset Administration Shell API
       summary: Updates the Submodel
       operationId: PatchSubmodel_AAS
       parameters:
@@ -812,8 +806,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
   /aas/submodels/{submodelIdentifier}/$metadata:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Submodel's metadata elements
       operationId: GetSubmodel-Metadata_AAS
       parameters:
@@ -876,8 +868,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
     patch:
-      tags:
-      - Asset Administration Shell API
       summary: Updates the metadata attributes of the Submodel
       operationId: PatchSubmodelMetadata_AAS
       parameters:
@@ -945,8 +935,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
   /aas/submodels/{submodelIdentifier}/$value:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Submodel's ValueOnly representation
       operationId: GetSubmodel-ValueOnly_AAS
       parameters:
@@ -1019,8 +1007,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
     patch:
-      tags:
-      - Asset Administration Shell API
       summary: Updates teh values of the Submodel
       operationId: PatchSubmodel-ValueOnly_AAS
       parameters:
@@ -1088,8 +1074,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
   /aas/submodels/{submodelIdentifier}/$reference:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Submodel as a Reference
       operationId: GetSubmodelMetadata-Reference_AAS
       parameters:
@@ -1154,8 +1138,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
   /aas/submodels/{submodelIdentifier}/$path:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Submodel's metadata elements
       operationId: GetSubmodel-Path_AAS
       parameters:
@@ -1221,8 +1203,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements_AAS
       parameters:
@@ -1308,8 +1288,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
     post:
-      tags:
-      - Asset Administration Shell API
       summary: Creates a new submodel element
       operationId: PostSubmodelElement_AAS
       parameters:
@@ -1396,8 +1374,6 @@ paths:
       - https://admin-shell.io/aas/API/PostSubmodelElement/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/$metadata:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements-Metadata_AAS
       parameters:
@@ -1474,8 +1450,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/$value:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns all submodel elements including their hierarchy in the ValueOnly representation
       operationId: GetAllSubmodelElements-ValueOnly_AAS
       parameters:
@@ -1562,8 +1536,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/$reference:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns all submodel elements as a list of References
       operationId: GetAllSubmodelElementsReference_AAS
       parameters:
@@ -1641,8 +1613,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/$path:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElementsPath_AAS
       parameters:
@@ -1719,8 +1689,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath_AAS
       parameters:
@@ -1814,8 +1782,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     put:
-      tags:
-      - Asset Administration Shell API
       summary: Updates an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutSubmodelElementByPath_AAS
       parameters:
@@ -1880,8 +1846,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodelElementByPath/3/0
       - https://admin-shell.io/aas/API/SetSubmodelElementValueByPath/3/0
     post:
-      tags:
-      - Asset Administration Shell API
       summary: Creates a new submodel element at a specified path within submodel elements hierarchy
       operationId: PostSubmodelElementByPath_AAS
       parameters:
@@ -1955,8 +1919,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PostSubmodelElementByPath/3/0
     delete:
-      tags:
-      - Asset Administration Shell API
       summary: Deletes a submodel element at a specified path within the submodel elements hierarchy
       operationId: DeleteSubmodelElementByPath_AAS
       parameters:
@@ -2013,8 +1975,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Asset Administration Shell API
       summary: Updates an existing submodel element value at a specified path within submodel elements hierarchy
       operationId: PatchSubmodelElementValueByPath_AAS
       parameters:
@@ -2089,8 +2049,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$metadata:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the metadata attributes if a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath-Metadata_AAS
       parameters:
@@ -2174,8 +2132,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Asset Administration Shell API
       summary: Updates the metadata attributes of an existing submodel element value at a specified path within submodel elements hierarchy
       operationId: PatchSubmodelElementValueByPath-Metadata_AAS
       parameters:
@@ -2250,8 +2206,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$value:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns a specific submodel element from the Submodel at a specified path in the ValueOnly representation
       operationId: GetSubmodelElementByPath-ValueOnly_AAS
       parameters:
@@ -2335,8 +2289,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Asset Administration Shell API
       summary: Updates the value of an existing submodel element value at a specified path within submodel elements hierarchy
       operationId: PatchSubmodelElementValueByPathValueOnly_AAS
       parameters:
@@ -2411,8 +2363,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$reference:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Reference of a specific submodel element from the Submodel at a specified path in the ValueOnly representation
       operationId: GetSubmodelElementByPath-Reference_AAS
       parameters:
@@ -2498,8 +2448,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$path:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns a specific submodel element from the Submodel at a specified path in the Path notation
       operationId: GetSubmodelElementByPath-Path_AAS
       parameters:
@@ -2584,8 +2532,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/attachment:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Downloads file content from a specific submodel element from the Submodel at a specified path
       operationId: GetFileByPath_AAS
       parameters:
@@ -2655,8 +2601,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetFileByPath/3/0
     put:
-      tags:
-      - Asset Administration Shell API
       summary: Uploads file content to an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutFileByPath_AAS
       parameters:
@@ -2724,8 +2668,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutFileByPath/3/0
     delete:
-      tags:
-      - Asset Administration Shell API
       summary: Deletes file content of an existing submodel element at a specified path within submodel elements hierarchy
       operationId: DeleteFileByPath_AAS
       parameters:
@@ -2783,8 +2725,6 @@ paths:
       - https://admin-shell.io/aas/API/DeleteFileByPath/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke:
     post:
-      tags:
-      - Asset Administration Shell API
       summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperationSync_AAS
       parameters:
@@ -2853,8 +2793,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke/$value:
     post:
-      tags:
-      - Asset Administration Shell API
       summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperationSync-ValueOnly_AAS
       parameters:
@@ -2923,8 +2861,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async:
     post:
-      tags:
-      - Asset Administration Shell API
       summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperationAsync_AAS
       parameters:
@@ -2994,8 +2930,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-asnyc/$value:
     post:
-      tags:
-      - Asset Administration Shell API
       summary: Asynchronously invokes an Operation at a specified path
       operationId: InvokeOperationAsync-ValueOnly_AAS
       parameters:
@@ -3065,8 +2999,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-status/{handleId}:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Operation status of an asynchronous invoked Operation
       operationId: GetOperationAsyncStatus_AAS
       parameters:
@@ -3153,8 +3085,6 @@ paths:
       - https://admin-shell.io/aas/API/GetOperationAsyncStatus/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult_AAS
       parameters:
@@ -3234,8 +3164,6 @@ paths:
       - https://admin-shell.io/aas/API/GetOperationAsyncResult/3/0
   /aas/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}/$value:
     get:
-      tags:
-      - Asset Administration Shell API
       summary: Returns the value of the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult-ValueOnly_AAS
       parameters:
@@ -3313,6 +3241,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetOperationAsyncResult/3/0
+# Submodel API
   /submodel:
     get:
       tags:
@@ -5664,6 +5593,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetOperationAsyncResult/3/0
+# Asset Administration Shell Repository API
   /shells:
     get:
       tags:
@@ -6116,10 +6046,9 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetAssetAdministrationShellById/3/0
+# Asset Administration Shell API (through Asset Administration Shell Repository API)
   /shells/{aasIdentifier}/asset-information:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Asset Information
       operationId: GetAssetInformation_AasRepository
       parameters:
@@ -6178,8 +6107,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetAssetInformation/3/0
     put:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates the Asset Information
       operationId: PutAssetInformation_AasRepository
       parameters:
@@ -6242,8 +6169,6 @@ paths:
       - https://admin-shell.io/aas/API/PutAssetInformation/3/0
   /shells/{aasIdentifier}/asset-information/thumbnail:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       operationId: GetThumbnail_AasRepository
       parameters:
       - name: aasIdentifier
@@ -6302,8 +6227,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetThumbnail/3/0
     put:
-      tags:
-      - Asset Administration Shell Repository API
       operationId: PutThumbnail_AasRepository
       parameters:
       - name: aasIdentifier
@@ -6368,8 +6291,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutThumbnail/3/0
     delete:
-      tags:
-      - Asset Administration Shell Repository API
       operationId: DeleteThumbnail_AasRepository
       parameters:
       - name: aasIdentifier
@@ -6424,8 +6345,6 @@ paths:
       - https://admin-shell.io/aas/API/DeleteThumbnail/3/0
   /shells/{aasIdentifier}/submodel-refs:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns all submodel references
       operationId: GetAllSubmodelReferences_AasRepository
       parameters:
@@ -6499,8 +6418,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetAllSubmodelReferences/3/0
     post:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Creates a submodel reference at the Asset Administration Shell
       operationId: PostSubmodelReference_AasRepository
       parameters:
@@ -6573,8 +6490,6 @@ paths:
       - https://admin-shell.io/aas/API/PostSubmodelReference/3/0
   /shells/{aasIdentifier}/submodel-refs/{submodelIdentifier}:
     delete:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Deletes the submodel reference from the Asset Administration Shell. Does not delete the submodel itself!
       operationId: DeleteSubmodelReferenceById_AasRepository
       parameters:
@@ -6637,10 +6552,9 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelReference/3/0
+# Submodel API (through Asset Administration Shell Repository API)
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Submodel
       operationId: GetSubmodelById_AasRepository
       parameters:
@@ -6728,8 +6642,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
     put:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates the Submodel
       operationId: PutSubmodelById_AasRepository
       parameters:
@@ -6811,8 +6723,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
     patch:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates the Submodel
       operationId: PatchSubmodel_AasRepository
       parameters:
@@ -6895,8 +6805,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$metadata:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Submodel's metadata elements
       operationId: GetSubmodelById-Metadata_AasRepository
       parameters:
@@ -6974,8 +6882,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
     delete:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Deletes the submodel from the Asset Administration Shell and the Repository.
       operationId: DeleteSubmodelById_AasRepository
       parameters:
@@ -7039,8 +6945,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelById/3/0
     patch:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates the metadata attributes of the Submodel
       operationId: PatchSubmodelById-Metadata_AasRepository
       parameters:
@@ -7123,8 +7027,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$value:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Submodel's ValueOnly representation
       operationId: GetSubmodelById-ValueOnly_AasRepository
       parameters:
@@ -7212,8 +7114,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
     patch:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates teh values of the Submodel
       operationId: PatchSubmodelById-ValueOnly_AasRepository
       parameters:
@@ -7296,8 +7196,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodel/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$reference:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Submodel as a Reference
       operationId: GetSubmodelById-Reference_AasRepository
       parameters:
@@ -7377,8 +7275,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$path:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Submodel's metadata elements
       operationId: GetSubmodelById-Path_AasRepository
       parameters:
@@ -7459,8 +7355,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements_AasRepository
       parameters:
@@ -7561,8 +7455,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
     post:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Creates a new submodel element
       operationId: PostSubmodelElement_AasRepository
       parameters:
@@ -7664,8 +7556,6 @@ paths:
       - https://admin-shell.io/aas/API/PostSubmodelElement/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$metadata:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements-Metadata_AasRepository
       parameters:
@@ -7759,8 +7649,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$value:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns all submodel elements including their hierarchy in the ValueOnly representation
       operationId: GetAllSubmodelElements-ValueOnly_AasRepository
       parameters:
@@ -7854,8 +7742,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$reference:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns all submodel elements as a list of References
       operationId: GetAllSubmodelElements-Reference_AasRepository
       parameters:
@@ -7950,8 +7836,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$path:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements-Path_AasRepository
       parameters:
@@ -8053,8 +7937,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath_AasRepository
       parameters:
@@ -8163,8 +8045,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     put:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutSubmodelElementByPath_AasRepository
       parameters:
@@ -8244,8 +8124,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodelElementByPath/3/0
       - https://admin-shell.io/aas/API/SetSubmodelElementValueByPath/3/0
     post:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Creates a new submodel element at a specified path within submodel elements hierarchy
       operationId: PostSubmodelElementByPath_AasRepository
       parameters:
@@ -8334,8 +8212,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PostSubmodelElementByPath/3/0
     delete:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Deletes a submodel element at a specified path within the submodel elements hierarchy
       operationId: DeleteSubmodelElementByPath_AasRepository
       parameters:
@@ -8407,8 +8283,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates an existing submodel element value at a specified path within submodel elements hierarchy
       operationId: PatchSubmodelElementValueByPath_AasRepository
       parameters:
@@ -8498,8 +8372,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$metadata:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the metadata attributes if a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath-Metadata_AasRepository
       parameters:
@@ -8598,8 +8470,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates the metadata attributes of an existing submodel element value at a specified path within submodel elements hierarchy
       operationId: PatchSubmodelElementValueByPath-Metadata
       parameters:
@@ -8689,8 +8559,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$value:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns a specific submodel element from the Submodel at a specified path in the ValueOnly representation
       operationId: GetSubmodelElementByPath-ValueOnly_AasRepository
       parameters:
@@ -8799,8 +8667,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Updates the value of an existing submodel element value at a specified path within submodel elements hierarchy
       operationId: PatchSubmodelElementValueByPath-ValueOnly
       parameters:
@@ -8890,8 +8756,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$reference:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Reference of a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath-Reference_AasRepository
       parameters:
@@ -8979,8 +8843,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$path:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns a specific submodel element from the Submodel at a specified path in the Path notation
       operationId: GetSubmodelElementByPath-Path_AasRepository
       parameters:
@@ -9067,8 +8929,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/attachment:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Downloads file content from a specific submodel element from the Submodel at a specified path
       operationId: GetFileByPath_AasRepository
       parameters:
@@ -9153,8 +9013,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetFileByPath/3/0
     put:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Uploads file content to an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutFileByPath_AasRepository
       parameters:
@@ -9237,8 +9095,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutFileByPath/3/0
     delete:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Deletes file content of an existing submodel element at a specified path within submodel elements hierarchy
       operationId: DeleteFileByPath_AasRepository
       parameters:
@@ -9311,8 +9167,6 @@ paths:
       - https://admin-shell.io/aas/API/DeleteFileByPath/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke:
     post:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperation_AasRepository
       parameters:
@@ -9396,8 +9250,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke/$value:
     post:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperation-ValueOnly_AasRepository
       parameters:
@@ -9481,8 +9333,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async:
     post:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Asynchronously invokes an Operation at a specified path
       operationId: InvokeOperationAsync_AasRepository
       parameters:
@@ -9567,8 +9417,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async/$value:
     post:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Asynchronously invokes an Operation at a specified path
       operationId: InvokeOperationAsync-ValueOnly_AasRepository
       parameters:
@@ -9653,8 +9501,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-status/{handleId}:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Operation status of an asynchronous invoked Operation
       operationId: GetOperationAsyncStatus_AasRepository
       parameters:
@@ -9747,8 +9593,6 @@ paths:
       - https://admin-shell.io/aas/API/GetOperationAsyncStatus/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult_AasRepository
       parameters:
@@ -9834,8 +9678,6 @@ paths:
       - https://admin-shell.io/aas/API/GetOperationAsyncResult/3/0
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}/$value:
     get:
-      tags:
-      - Asset Administration Shell Repository API
       summary: Returns the ValueOnly notation of the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult-ValueOnly_AasRepository
       parameters:
@@ -9919,6 +9761,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetOperationAsyncResult/3/0
+# Submodel Repository API
   /submodels:
     get:
       tags:
@@ -10438,10 +10281,9 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelsBySemanticId/3/0
       - https://admin-shell.io/aas/API/GetAllSubmodelsBySupplementalSemanticId/3/0
       - https://admin-shell.io/aas/API/GetAllSubmodelsByIdShort/3/0
+  # Submodel API (through Submodel Repository API)
   /submodels/{submodelIdentifier}:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns a specific Submodel
       operationId: GetSubmodelById
       parameters:
@@ -10520,8 +10362,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelById/3/0
     put:
-      tags:
-      - Submodel Repository API
       summary: Updates an existing Submodel
       operationId: PutSubmodelById
       parameters:
@@ -10594,8 +10434,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutSubmodelById/3/0
     delete:
-      tags:
-      - Submodel Repository API
       summary: Deletes a Submodel
       operationId: DeleteSubmodelById
       parameters:
@@ -10650,8 +10488,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelById/3/0
     patch:
-      tags:
-      - Submodel Repository API
       summary: Updates an existing Submodel
       operationId: PatchSubmodelById
       parameters:
@@ -10725,8 +10561,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelById/3/0
   /submodels/{submodelIdentifier}/$metadata:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the metadata attributes of a specific Submodel
       operationId: GetSubmodelById-Metadata
       parameters:
@@ -10795,8 +10629,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelById/3/0
     patch:
-      tags:
-      - Submodel Repository API
       summary: Updates the metadata attributes of an existing Submodel
       operationId: PatchSubmodelById-Metadata
       parameters:
@@ -10870,8 +10702,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelById/3/0
   /submodels/{submodelIdentifier}/$value:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns a specific Submodel in the ValueOnly representation
       operationId: GetSubmodelById-ValueOnly
       parameters:
@@ -10950,8 +10780,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelById/3/0
     patch:
-      tags:
-      - Submodel Repository API
       summary: Updates the values of an existing Submodel
       operationId: PatchSubmodelById-ValueOnly
       parameters:
@@ -11025,8 +10853,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelById/3/0
   /submodels/{submodelIdentifier}/$reference:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the Reference of a specific Submodel
       operationId: GetSubmodelById-Reference
       parameters:
@@ -11097,8 +10923,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelById/3/0
   /submodels/{submodelIdentifier}/$path:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns a specific Submodel in the Path notation
       operationId: GetSubmodelById-Path
       parameters:
@@ -11170,8 +10994,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelById/3/0
   /submodels/{submodelIdentifier}/submodel-elements:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements_SubmodelRepository
       parameters:
@@ -11263,8 +11085,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
     post:
-      tags:
-      - Submodel Repository API
       summary: Creates a new submodel element
       operationId: PostSubmodelElement_SubmodelRepository
       parameters:
@@ -11337,8 +11157,6 @@ paths:
       - https://admin-shell.io/aas/API/PostSubmodelElement/3/0
   /submodels/{submodelIdentifier}/submodel-elements/$metadata:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the metadata attributes of all submodel elements including their hierarchy
       operationId: GetAllSubmodelElements-Metadata_SubmodelRepository
       parameters:
@@ -11421,8 +11239,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /submodels/{submodelIdentifier}/submodel-elements/$value:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns all submodel elements including their hierarchy in the ValueOnly representation
       operationId: GetAllSubmodelElements-ValueOnly_SubmodelRepo
       parameters:
@@ -11515,8 +11331,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /submodels/{submodelIdentifier}/submodel-elements/$reference:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the References of all submodel elements
       operationId: GetAllSubmodelElements-Reference_SubmodelRepo
       parameters:
@@ -11600,8 +11414,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /submodels/{submodelIdentifier}/submodel-elements/$path:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns all submodel elements including their hierarchy in the Path notation
       operationId: GetAllSubmodelElements-Path_SubmodelRepo
       parameters:
@@ -11686,8 +11498,6 @@ paths:
       - https://admin-shell.io/aas/API/GetAllSubmodelElements/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath_SubmodelRepo
       parameters:
@@ -11774,8 +11584,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     put:
-      tags:
-      - Submodel Repository API
       summary: Updates an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutSubmodelElementByPath_SubmodelRepo
       parameters:
@@ -11857,8 +11665,6 @@ paths:
       - https://admin-shell.io/aas/API/PutSubmodelElementByPath/3/0
       - https://admin-shell.io/aas/API/SetSubmodelElementValueByPath/3/0
     post:
-      tags:
-      - Submodel Repository API
       summary: Creates a new submodel element at a specified path within submodel elements hierarchy
       operationId: PostSubmodelElementByPath_SubmodelRepo
       parameters:
@@ -11958,8 +11764,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PostSubmodelElementByPath/3/0
     delete:
-      tags:
-      - Submodel Repository API
       summary: Deletes a submodel element at a specified path within the submodel elements hierarchy
       operationId: DeleteSubmodelElementByPath_SubmodelRepo
       parameters:
@@ -12022,8 +11826,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Submodel Repository API
       summary: Updates an existing SubmodelElement
       operationId: PatchSubmodelElementByPath_SubmodelRepo
       parameters:
@@ -12105,8 +11907,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelById/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$metadata:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the matadata attributes of a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath-Metadata_SubmodelRepo
       parameters:
@@ -12183,8 +11983,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Submodel Repository API
       summary: Updates the metadata attributes an existing SubmodelElement
       operationId: PatchSubmodelElementByPath-Metadata_SubmodelRepo
       parameters:
@@ -12266,8 +12064,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$value:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns a specific submodel element from the Submodel at a specified path in the ValueOnly representation
       operationId: GetSubmodelElementByPath-ValueOnly_SubmodelRepo
       parameters:
@@ -12354,8 +12150,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
     patch:
-      tags:
-      - Submodel Repository API
       summary: Updates the value of an existing SubmodelElement
       operationId: PatchSubmodelElementByPath-ValueOnly_SubmodelRepo
       parameters:
@@ -12437,8 +12231,6 @@ paths:
       - https://admin-shell.io/aas/API/PatchSubmodelElementByPath/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$reference:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the Referene of a specific submodel element from the Submodel at a specified path
       operationId: GetSubmodelElementByPath-Reference_SubmodelRepo
       parameters:
@@ -12517,8 +12309,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$path:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns a specific submodel element from the Submodel at a specified path in the Path notation
       operationId: GetSubmodelElementByPath-Path_SubmodelRepo
       parameters:
@@ -12598,8 +12388,6 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodelElementByPath/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/attachment:
     get:
-      tags:
-      - Submodel Repository API
       summary: Downloads file content from a specific submodel element from the Submodel at a specified path
       operationId: GetFileByPath_SubmodelRepo
       parameters:
@@ -12681,8 +12469,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetFileByPath/3/0
     put:
-      tags:
-      - Submodel Repository API
       summary: Uploads file content to an existing submodel element at a specified path within submodel elements hierarchy
       operationId: PutFileByPath_SubmodelRepo
       parameters:
@@ -12762,8 +12548,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutFileByPath/3/0
     delete:
-      tags:
-      - Submodel Repository API
       summary: Deletes file content of an existing submodel element at a specified path within submodel elements hierarchy
       operationId: DeleteFileByPath_SubmodelRepo
       parameters:
@@ -12827,8 +12611,6 @@ paths:
       - https://admin-shell.io/aas/API/DeleteFileByPath/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke:
     post:
-      tags:
-      - Submodel Repository API
       summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperation_SubmodelRepo
       parameters:
@@ -12918,8 +12700,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke/$value:
     post:
-      tags:
-      - Submodel Repository API
       summary: Synchronously invokes an Operation at a specified path
       operationId: InvokeOperation-ValueOnly_SubmodelRepo
       parameters:
@@ -13012,8 +12792,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationSync/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async:
     post:
-      tags:
-      - Submodel Repository API
       summary: Asynchronously invokes an Operation at a specified path
       operationId: InvokeOperationAsync_SubmodelRepo
       parameters:
@@ -13095,8 +12873,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async/$value:
     post:
-      tags:
-      - Submodel Repository API
       summary: Asynchronously invokes an Operation at a specified path
       operationId: InvokeOperationAsync-ValueOnly_SubmodelRepo
       parameters:
@@ -13181,8 +12957,6 @@ paths:
       - https://admin-shell.io/aas/API/InvokeOperationAsync/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-status/{handleId}:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the Operation status of an asynchronous invoked Operation
       operationId: GetOperationAsyncStatus_SubmodelRepo
       parameters:
@@ -13266,8 +13040,6 @@ paths:
       - https://admin-shell.io/aas/API/GetOperationAsyncStatus/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult_SubmodelRepo
       parameters:
@@ -13344,8 +13116,6 @@ paths:
       - https://admin-shell.io/aas/API/GetOperationAsyncResult/3/0
   /submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}/$value:
     get:
-      tags:
-      - Submodel Repository API
       summary: Returns the Operation result of an asynchronous invoked Operation
       operationId: GetOperationAsyncResult-ValueOnly_SubmodelRepo
       parameters:
@@ -13420,6 +13190,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetOperationAsyncResult/3/0
+# Concept Description Repository API
   /concept-descriptions:
     get:
       tags:
@@ -13715,6 +13486,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteConceptDescriptionById/3/0
+# Asset Administration Shell Registry API
   /shell-descriptors:
     get:
       tags:
@@ -14025,10 +13797,9 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteAssetAdministrationShellDescriptorById/3/0
+# Submodel Registry API (through Asset Administration Shell Registry API)
   /shell-descriptors/{aasIdentifier}/submodel-descriptors:
     get:
-      tags:
-      - Asset Administration Shell Registry API
       summary: Returns all Submodel Descriptors
       operationId: GetAllSubmodelDescriptorsThroughSuperpath
       parameters:
@@ -14094,8 +13865,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetAllSubmodelDescriptors/3/0
     post:
-      tags:
-      - Asset Administration Shell Registry API
       summary: "Creates a new Submodel Descriptor, i.e. registers a submodel"
       operationId: PostSubmodelDescriptorThroughSuperpath
       parameters:
@@ -14175,8 +13944,6 @@ paths:
       - https://admin-shell.io/aas/API/PostSubmodelDescriptor/3/0
   /shell-descriptors/{aasIdentifier}/submodel-descriptors/{submodelIdentifier}:
     get:
-      tags:
-      - Asset Administration Shell Registry API
       summary: Returns a specific Submodel Descriptor
       operationId: GetSubmodelDescriptorByIdThroughSuperpath
       parameters:
@@ -14238,8 +14005,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/GetSubmodelDescriptorById/3/0
     put:
-      tags:
-      - Asset Administration Shell Registry API
       summary: Updates an existing Submodel Descriptor
       operationId: PutSubmodelDescriptorByIdThroughSuperpath
       parameters:
@@ -14304,8 +14069,6 @@ paths:
       x-semanticIds:
       - https://admin-shell.io/aas/API/PutSubmodelDescriptorById/3/0
     delete:
-      tags:
-      - Asset Administration Shell Registry API
       summary: "Deletes a Submodel Descriptor, i.e. de-registers a submodel"
       operationId: DeleteSubmodelDescriptorByIdThroughSuperpath
       parameters:
@@ -14356,6 +14119,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelDescriptorById/3/0
+# Submodel Registry API
   /submodel-descriptors:
     get:
       tags:
@@ -14616,6 +14380,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteSubmodelDescriptorById/3/0
+# Asset Administration Shell Basic Discovery API
   /lookup/shells:
     get:
       tags:
@@ -14794,6 +14559,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteAllAssetLinksById/3/0
+# AASX File Server API
   /packages:
     get:
       tags:
@@ -15115,6 +14881,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/DeleteAASXByPackageId/3/0
+# Serialization API
   /serialization:
     get:
       tags:
@@ -15198,6 +14965,7 @@ paths:
                 $ref: '#/components/schemas/Result'
       x-semanticIds:
       - https://admin-shell.io/aas/API/GenerateSerializationByIds/3/0
+# Description API
   /description:
     get:
       tags:

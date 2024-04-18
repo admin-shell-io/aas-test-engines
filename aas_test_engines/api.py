@@ -54,7 +54,7 @@ def generate_tests(version: str = _DEFAULT_VERSION, suites: Set[str] = None) -> 
     if suites is None:
         suites = spec.tags
     if not spec.tags.issuperset(suites):
-        raise AasTestToolsException(f"Unknown suites {suites}, must be in {spec.tags}")
+        raise AasTestToolsException(f"Unknown suites {suites}, must be in {sorted(spec.tags)}")
     conf = generate.generate(spec.api, suites)
     return conf
 

@@ -169,7 +169,7 @@ class Operation:
                 request_body, json_path + '.' + 'requestBody') if request_body is not None else None,
             responses=[Response.from_dict(k, v, json_path + '.' + k)
                        for k, v in safe_dict_lookup(data, 'responses', dict, json_path).items()],
-            tags=set(safe_dict_lookup(data, 'tags', list, json_path))
+            tags=set(safe_dict_lookup(data, 'tags', list, json_path, []))
         )
 
     def get_param_by_name(self, name: str) -> Parameter:
@@ -213,7 +213,6 @@ class OpenApi:
             paths=[
                 Path.from_dict(path_name, path_info, 'paths.' + path_name, resolver)
                 for path_name, path_info in safe_dict_lookup(data, 'paths', dict, '').items()
-                if not path_name.startswith('/packages')  # TODO: remove this
             ],
             components=safe_dict_lookup(data, 'components', dict, ''),
         )
