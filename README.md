@@ -128,14 +128,29 @@ print(api.supported_versions())
 print(api.latest_version())
 ```
 
+## Generating test data for software testing
+
+If you develop an AAS application like an AAS editor you may want to use test data to verify correctness of your application.
+The test engines allow to generate a set of AAS files which are compliant with the standard and you can therefore use to assess your application as follows:
+
+```python
+from aas_test_engines import file
+
+for sample in file.generate():
+    print(sample) # or whatever you want to do with it
+```
+
 ## Command line interface
 
 You may want to invoke the test tools using the simplified command line interface:
 
 ```sh
 # Check file
-python -m aas_test_engines file test.aasx
+python -m aas_test_engines check_file test.aasx
 
 # Check server
-python -m aas_test_engines api https://localhost --suite 'Asset Administration Shell API'
+python -m aas_test_engines check_server https://localhost --suite 'Asset Administration Shell API'
+
+# Generate test data
+python -m aas_test_engines generate_files output_dir
 ```

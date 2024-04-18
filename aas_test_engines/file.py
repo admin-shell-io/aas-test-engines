@@ -1,4 +1,4 @@
-from typing import List, Dict, TextIO, Union, Any, Set, Optional
+from typing import List, Dict, TextIO, Union, Any, Set, Optional, Generator
 import os
 import json
 from yaml import safe_load
@@ -6,6 +6,7 @@ from yaml import safe_load
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
 from .data_types import validators
+from ._file.generate import generate_graph, FlowGraph
 
 from xml.etree import ElementTree
 from json_schema_tool.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, KeywordValidationResult, parse_schema
@@ -18,8 +19,9 @@ JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
 class AasSchema:
 
-    def __init__(self, validator: SchemaValidator):
+    def __init__(self, validator: SchemaValidator, graph: FlowGraph):
         self.validator = validator
+        self.graph = graph
 
 
 def _find_schemas() -> Dict[str, any]:
@@ -35,7 +37,8 @@ def _find_schemas() -> Dict[str, any]:
             format_validators=validators
         )
         validator = parse_schema(schema, config)
-        result[i[:-4]] = AasSchema(validator)
+        graph = generate_graph(schema)
+        result[i[:-4]] = AasSchema(validator, graph)
     return result
 
 
@@ -303,3 +306,10 @@ def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestRes
         return AasTestResult(f"Cannot read: {e}", level=Level.ERROR)
 
     return check_aasx_data(zip, version)
+
+
+def generate(version: str = _DEFAULT_VERSION) -> Generator[str, None, None]:
+    graph = _get_schema(version).graph
+    for i in graph.generate_paths():
+        sample = graph.execute(i.path)
+        yield json.dumps(sample)

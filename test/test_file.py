@@ -52,6 +52,7 @@ class CheckXmlTest(TestCase):
         result = file.check_xml_file(io.StringIO("no xml"))
         self.assertFalse(result.ok())
 
+
 class CheckAasxTest(TestCase):
 
     def test_not_a_zip(self):
@@ -126,3 +127,13 @@ class SupportedVersionTest(TestCase):
         for i in s:
             print(i)
         self.assertIn(file.latest_version(), s)
+
+
+class GenerateTest(TestCase):
+
+    def test_a_few(self):
+        i = 0
+        for sample in file.generate():
+            i += 1
+            if i > 100:
+                break

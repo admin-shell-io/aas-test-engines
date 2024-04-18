@@ -2,3 +2,4 @@ requests>=2.31
 pyyaml>=6.0
 json_schema_tool>=0.2
 jsonpath_ng>=1.5
+fences==1.1.0

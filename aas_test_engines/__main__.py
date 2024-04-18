@@ -1,7 +1,9 @@
 import argparse
 import sys
+import os
 from aas_test_engines import api, file
 from enum import Enum
+
 
 class Formats(Enum):
     xml = 'xml'
@@ -10,6 +12,7 @@ class Formats(Enum):
 
     def __str__(self):
         return self.value
+
 
 def run_file_test(argv):
     parser = argparse.ArgumentParser(description='Checks a file for compliance with the AAS meta-model')
@@ -59,24 +62,44 @@ def run_api_test(argv):
         suites = None
     tests = api.generate_tests(suites=suites)
     exec_conf = api.run.ExecConf(
-        server = args.server,
-        dry = args.dry,
-        verify = not args.no_verify,
+        server=args.server,
+        dry=args.dry,
+        verify=not args.no_verify,
     )
     for result in api.execute_tests(tests, exec_conf):
         result.dump()
 
 
+def generate_files(argv):
+    parser = argparse.ArgumentParser(description='Generates aas files which can be used to test your software')
+    parser.add_argument('directory',
+                        type=str,
+                        help='Directory to place files in')
+    args = parser.parse_args(argv)
+    if os.path.exists(args.directory):
+        print(f"Directory '{args.directory}' already exists, please remove it")
+        exit(1)
+    os.mkdir(args.directory)
+    i = 0
+    for sample in file.generate():
+        with open(os.path.join(args.directory, f"{i}.json"), "w") as f:
+            f.write(sample)
+        i += 1
+        if i > 100:
+            break
+
 commands = {
-    'file': run_file_test,
-    'api': run_api_test,
+    'check_file': run_file_test,
+    'check_server': run_api_test,
+    'generate_files': generate_files,
 }
 
 if len(sys.argv) <= 1:
     print(f"Usage: {sys.argv[0]} COMMAND OPTIONS...")
     print("Available commands:")
-    print("  file     Check a file for compliance.")
-    print("  api      Check a server instance for compliance.")
+    print("  check_file      Check a file for compliance.")
+    print("  check_server    Check a server instance for compliance.")
+    print("  generate_files  Generate files for testing")
     exit(1)
 
 command = sys.argv[1]
