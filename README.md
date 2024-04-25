@@ -15,6 +15,21 @@ You can install the AAS Test Engines via pip:
 python -m pip install aas_test_engines
 ```
 
+## Command line interface
+
+You may want to invoke the test tools using the simplified command line interface:
+
+```sh
+# Check file
+python -m aas_test_engines check_file test.aasx
+
+# Check server
+python -m aas_test_engines check_server https://localhost --suite 'Asset Administration Shell API'
+
+# Generate test data
+python -m aas_test_engines generate_files output_dir
+```
+
 ## Check AAS Type 1 (File)
 
 ### Check AASX:
@@ -138,19 +153,4 @@ from aas_test_engines import file
 
 for sample in file.generate():
     print(sample) # or whatever you want to do with it
-```
-
-## Command line interface
-
-You may want to invoke the test tools using the simplified command line interface:
-
-```sh
-# Check file
-python -m aas_test_engines check_file test.aasx
-
-# Check server
-python -m aas_test_engines check_server https://localhost --suite 'Asset Administration Shell API'
-
-# Generate test data
-python -m aas_test_engines generate_files output_dir
 ```
