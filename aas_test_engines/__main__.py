@@ -23,14 +23,23 @@ def run_file_test(argv):
                         type=Formats,
                         default=Formats.aasx,
                         choices=list(Formats))
+    parser.add_argument('--submodel_template',
+                        type=str,
+                        default=None,
+                        help="Additionally check for compliance to a submodel template")
     parser.add_argument('--html',
                         type=argparse.FileType('w'),
                         default=None)
     args = parser.parse_args(argv)
+    if args.submodel_template is None:
+        submodel_templates = set()
+    else:
+        submodel_templates = set([args.submodel_template])
+
     if args.format == Formats.aasx:
         result = file.check_aasx_file(args.file)
     elif args.format == Formats.json:
-        result = file.check_json_file(args.file)
+        result = file.check_json_file(args.file, submodel_templates=submodel_templates)
     elif args.format == Formats.xml:
         result = file.check_xml_file(args.file)
     else:

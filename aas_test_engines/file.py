@@ -19,12 +19,13 @@ JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
 class AasSchema:
 
-    def __init__(self, validator: SchemaValidator, graph: FlowGraph):
+    def __init__(self, validator: SchemaValidator, graph: FlowGraph, submodel_templates: Dict[str, SchemaValidator]):
         self.validator = validator
         self.graph = graph
+        self.submodel_templates = submodel_templates
 
 
-def _find_schemas() -> Dict[str, any]:
+def _find_schemas() -> Dict[str, AasSchema]:
     result = {}
     script_dir = os.path.dirname(os.path.realpath(__file__))
     data_dir = os.path.join(script_dir, 'data', 'file')
@@ -38,48 +39,100 @@ def _find_schemas() -> Dict[str, any]:
         )
         validator = parse_schema(schema, config)
         graph = generate_graph(schema)
-        result[i[:-4]] = AasSchema(validator, graph)
+        submodel_templates = {}
+        for key, submodel_schema in schema['$defs']['SubmodelTemplates'].items():
+            submodel_schema['$defs'] = schema['$defs']
+            submodel_schema['$schema'] = 'https://json-schema.org/draft/2020-12/schema'
+            submodel_templates[key] = parse_schema(submodel_schema, config)
+        result[i[:-4]] = AasSchema(validator, graph, submodel_templates)
     return result
 
 
 _schemas = _find_schemas()
 _DEFAULT_VERSION = '3.0'
 
-def supported_versions():
-    return list(_schemas.keys())
+
+def supported_versions() -> Dict[str, List[str]]:
+    return {
+        i: list(aas.submodel_templates.keys())
+        for i, aas in _schemas.items()
+    }
+
 
 def latest_version():
     return _DEFAULT_VERSION
 
-def _get_schema(version: str) -> AasSchema:
+
+def _get_schema(version: str, submodel_templates: Set[str]) -> AasSchema:
     try:
-        return _schemas[version]
+        schema = _schemas[version]
     except KeyError:
-        raise AasTestToolsException(
-            f"Unknown version {version}, must be one of {supported_versions()}")
+        raise AasTestToolsException(f"Unknown version {version}, must be one of {supported_versions()}")
+    all_templates = schema.submodel_templates.keys()
+    unknown = submodel_templates - all_templates
+    if unknown:
+        raise AasTestToolsException(f"Unknown submodel templates {unknown}, must be in {sorted(all_templates)}")
+    return schema
+
 
 def _map_error(parent: AasTestResult, error: SchemaValidationResult):
     for i in error.keyword_results:
-        if i.ok(): continue
+        if i.ok():
+            continue
         kw_result = AasTestResult(i.error_message, '', Level.ERROR)
         for j in i.sub_schema_results:
             _map_error(kw_result, j)
         parent.append(kw_result)
 
-def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult:
-    schema = _get_schema(version)
+
+def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
+    schema = _get_schema(version, submodel_templates)
     result = AasTestResult('Check JSON', '', Level.INFO)
     error = schema.validator.validate(data)
     _map_error(result, error)
+    if submodel_templates:
+
+        def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
+            try:
+                group_by = validator.schema['groupBy']
+            except KeyError:
+                return data
+            result: Dict[str, List[any]] = {}
+            if not isinstance(data, list):
+                raise PreprocessorException("Expected an array")
+            for idx, value in enumerate(data):
+                try:
+                    key = value[group_by]
+                except KeyError:
+                    raise PreprocessorException(f"Property {group_by} is missing at idx {idx}")
+                if not isinstance(key, str):
+                    raise PreprocessorException(f"{key} must be a string at idx {idx}")
+                try:
+                    result[key].append(value)
+                except KeyError:
+                    result[key] = [value]
+            return result
+
+        submodels_result = AasTestResult('Checking submodel templates')
+        for name in submodel_templates:
+            submodel_result = AasTestResult(f"Checking for {name}")
+            validator = schema.submodel_templates[name]
+            config = ValidationConfig(
+                preprocessor=preprocess
+            )
+            error = validator.validate(data, config)
+            _map_error(submodel_result, error)
+            submodels_result.append(submodel_result)
+        result.append(submodels_result)
     return result
 
 
-def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
+def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
     try:
         data = json.load(file)
     except json.decoder.JSONDecodeError as e:
         return AasTestResult(f"Invalid JSON: {e}", '', Level.ERROR)
-    return check_json_data(data, version)
+    return check_json_data(data, version, submodel_templates)
 
 
 def _get_model_type(el: ElementTree.Element, expected_namespace: str):
@@ -87,14 +140,14 @@ def _get_model_type(el: ElementTree.Element, expected_namespace: str):
     model_type = model_type[0].upper() + model_type[1:]
     return model_type
 
+
 def _get_single_child(el: ElementTree.Element) -> ElementTree.Element:
     if len(el) != 1:
         raise Exception("DataSpecificationContent must have exactly one child")
     return el[0]
 
 
-
-def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTestResult:
+def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION, submodel_templates: Set[str] = set()) -> AasTestResult:
     expected_namespace = '{https://admin-shell.io/aas/3/0}'
 
     def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
@@ -135,7 +188,7 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION) -> AasTes
             return data.text == 'true'
         else:
             raise Exception(f"Unknown type {types} at {validator.pointer}")
-    schema = _get_schema(version)
+    schema = _get_schema(version, submodel_templates)
     config = ValidationConfig(preprocessor=preprocess)
     error = schema.validator.validate(data, config)
     result = AasTestResult('Check XML', '', Level.INFO)
@@ -309,7 +362,7 @@ def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestRes
 
 
 def generate(version: str = _DEFAULT_VERSION) -> Generator[str, None, None]:
-    graph = _get_schema(version).graph
+    graph = _get_schema(version, set()).graph
     for i in graph.generate_paths():
         sample = graph.execute(i.path)
         yield json.dumps(sample)

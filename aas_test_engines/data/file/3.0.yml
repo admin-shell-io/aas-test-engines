@@ -1416,3 +1416,257 @@ $defs:
     required:
     - value
     - valueId
+  SubmodelTemplates:
+    ContactInformation:
+      required:
+      - submodels
+      properties:
+        submodels:
+          contains:
+            required:
+            - submodelElements
+            - idShort
+            properties:
+              idShort:
+                const: ContactInformations
+              submodelElements:
+                contains:
+                  $ref: '#/$defs/Internal/ContactInformationEntry'
+  Internal:
+    ContactInformationEntry:
+      $ref: '#/$defs/SubmodelElementCollection'
+      required:
+      - idShort
+      - value
+      properties:
+        idShort:
+          const: ContactInformation
+        value:
+          groupBy: idShort
+          properties:
+            RoleOfContactPerson:
+              items:
+                $ref: '#/$defs/Property'
+                properties:
+                  valueType:
+                    const: xs:string
+                  value:
+                    enum:
+                      - 0173-1#07-AAS927#001
+                      - 0173-1#07-AAS928#001
+                      - 0173-1#07-AAS929#001
+                      - 0173-1#07-AAS930#001
+                      - 0173-1#07-AAS931#001
+              maxItems: 1
+            NationalCode:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            Language:
+              items:
+                $ref: '#/$defs/Property'
+                properties:
+                  valueType:
+                    const: xs:string
+            TimeZone:
+              items:
+                $ref: '#/$defs/Property'
+                properties:
+                  valueType:
+                    const: xs:string
+            CityTown:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            Company:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            Department:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            Phone:
+              items:
+                $ref: '#/$defs/Internal/Phone'
+              maxItems: 1
+            Fax:
+              items:
+                $ref: '#/$defs/Internal/Fax'
+              maxItems: 1
+            Email:
+              items:
+                $ref: '#/$defs/Internal/Email'
+              maxItems: 1
+            IPCommunication:
+              items:
+                $ref: '#/$defs/Internal/IPCommunication'
+              maxItems: 1
+            Street:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            Zipcode:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            POBox:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            ZipCodeOfPOBox:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            StateCounty:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            NameOfContact:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            FirstName:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            MiddleName:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            Title:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            AcademicTitle:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            FurtherDetailsOfContact:
+              items:
+                $ref: '#/$defs/MultiLanguageProperty'
+              maxItems: 1
+            AddressOfAdditionalLink:
+              items:
+                $ref: '#/$defs/Property'
+                properties:
+                  valueType:
+                    const: xs:string
+              maxItems: 1
+    Phone:
+      $ref: '#/$defs/SubmodelElementCollection'
+      value:
+        groupBy: idShort
+        required:
+          TelephoneNumber
+        properties:
+          TelephoneNumber:
+            items:
+              $ref: '#/$defs/MultiLanguageProperty'
+            minItems: 1
+            maxItems: 1
+          TypeOfTelephone:
+            items:
+              $ref: '#/$defs/Property'
+              properties:
+                valueType:
+                  const: xs:string
+                value:
+                  enum:
+                  - 0173-1#07-AAS754#001
+                  - 0173-1#07-AAS755#001
+                  - 0173-1#07-AAS756#001
+                  - 0173-1#07-AAS757#001
+                  - 0173-1#07-AAS758#001
+                  - 0173-1#07-AAS759#001
+            maxItems: 1
+          AvailableTime:
+            items:
+              $ref: '#/$defs/MultiLanguageProperty'
+            maxItems: 1
+    Fax:
+      $ref: '#/$defs/SubmodelElementCollection'
+      value:
+        groupBy: idShort
+        required:
+          - FaxNumber
+        properties:
+          FaxNumber:
+            items:
+              $ref: '#/$defs/MultiLanguageProperty'
+            minItems: 1
+            maxItems: 1
+          TypeOfFaxNumber:
+            items:
+              $ref: '#/$defs/Property'
+              properties:
+                valueType:
+                  const: xs:string
+                value:
+                  enum:
+                  - 0173-1#07-AAS754#001
+                  - 0173-1#07-AAS756#001
+                  - 0173-1#07-AAS758#001
+              maxItems: 1
+    Email:
+      $ref: '#/$defs/SubmodelElementCollection'
+      value:
+        groupBy: idShort
+        required:
+          - EmailAddress
+        properties:
+          EmailAddress:
+            items:
+              $ref: '#/$defs/Property'
+              properties:
+                valueType:
+                  const: xs:string
+            minItems: 1
+            maxItems: 1
+          PublicKey:
+            items:
+              $ref: '#/$defs/MultiLanguageProperty'
+            maxItems: 1
+          TypeOfFEmailAddress:
+            items:
+              $ref: '#/$defs/Property'
+              properties:
+                valueType:
+                  const: xs:string
+                value:
+                  enum:
+                  - 0173-1#07-AAS754#001
+                  - 0173-1#07-AAS756#001
+                  - 0173-1#07-AAS757#001
+                  - 0173-1#07-AAS758#001
+              maxItems: 1
+          TypeOfPublicKey:
+            items:
+              $ref: '#/$defs/MultiLanguageProperty'
+            maxItems: 1
+    IPCommunication:
+      $ref: '#/$defs/SubmodelElementCollection'
+      value:
+        groupBy: idShort
+        required:
+        - AddressOfAdditionalLink
+        properties:
+          AddressOfAdditionalLink:
+            items:
+              $ref: '#/$defs/Property'
+              properties:
+                valueType:
+                  const: xs:string
+              minItems: 1
+              maxItems: 1
+          TypeOfCommunicatin:
+            items:
+              $ref: '#/$defs/Property'
+              properties:
+                valueType:
+                  const: xs:string
+              maxItems: 1
+          AvailableTime:
+            items:
+              $ref: '#/$defs/MultiLanguageProperty'
+            maxItems: 1

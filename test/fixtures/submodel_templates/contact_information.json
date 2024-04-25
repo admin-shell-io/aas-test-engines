@@ -1,0 +1,310 @@
+{
+    "submodels": [
+        {
+            "id": "example",
+            "modelType": "Submodel",
+            "idShort": "ContactInformations",
+            "semanticId": {
+                "keys": [
+                    {
+                        "type": "ConceptDescription",
+                        "value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations"
+                    }
+                ],
+                "type": "ExternalReference"
+            },
+            "submodelElements": [
+                {
+                    "modelType": "SubmodelElementCollection",
+                    "idShort": "ContactInformation",
+                    "value": [
+                        {
+                            "modelType": "Property",
+                            "idShort": "RoleOfContactPerson",
+                            "valueType": "xs:string",
+                            "value": "0173-1#07-AAS931#001"
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "NationalCode",
+                            "value": [
+                                {
+                                    "language": "en",
+                                    "text": "DE"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "Property",
+                            "idShort": "Language",
+                            "valueType": "xs:string",
+                            "value": "de"
+                        },
+                        {
+                            "modelType": "Property",
+                            "idShort": "TimeZone",
+                            "valueType": "xs:string",
+                            "value": "Z"
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "CityTown",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Musterstadt"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "Company",
+                            "value": [
+                                {
+                                    "language": "en",
+                                    "text": "ABC Company"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "Department",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Vertrieb"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "idShort": "Phone",
+                            "value": [
+                                {
+                                    "modelType": "MultiLanguageProperty",
+                                    "idShort": "TelephoneNumber",
+                                    "value": [
+                                        {
+                                            "language": "en",
+                                            "text": "+491234567890"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "TypeOfTelephone",
+                                    "valueType": "xs:string",
+                                    "value": "0173-1#07-AAS754#001"
+                                },
+                                {
+                                    "modelType": "MultiLanguageProperty",
+                                    "idShort": "AvailableTime",
+                                    "value": [
+                                        {
+                                            "language": "de",
+                                            "text": "Montag - Freitag 08:00 bis 16:00"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "idShort": "Fax",
+                            "value": [
+                                {
+                                    "modelType": "MultiLanguageProperty",
+                                    "idShort": "FaxNumber",
+                                    "value": [
+                                        {
+                                            "language": "de",
+                                            "text": "+491234567890"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "TypeOfFaxNumber",
+                                    "valueType": "xs:string",
+                                    "value": "0173-1#07-AAS754#001"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "idShort": "Email",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "EmailAddress",
+                                    "valueType": "xs:string",
+                                    "value": "email@muster-ag.de"
+                                },
+                                {
+                                    "modelType": "MultiLanguageProperty",
+                                    "idShort": "PublicKey",
+                                    "value": [
+                                        {
+                                            "language": "de",
+                                            "text": "-----BEGIN RSA PUBLIC KEY-----\nMEgCQQCo9+BpMRYQ/dL3DS2CyJxRF+j6ctbT3/Qp84+KeFhnii7NT7fELilKUSnx\nS30WAvQCCo2yU1orfgqr41mM70MBAgMBAAE=\n-----END RSA PUBLIC KEY-----"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "TypeOfEmailAddress",
+                                    "valueType": "xs:string",
+                                    "value": "0173-1#07-AAS754#001"
+                                },
+                                {
+                                    "modelType": "MultiLanguageProperty",
+                                    "idShort": "TypeOfPublicKey",
+                                    "value": [
+                                        {
+                                            "language": "de",
+                                            "text": "RSA"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "idShort": "IPCommunication",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "AddressOfAdditionalLink",
+                                    "valueType": "xs:string",
+                                    "value": ""
+                                },
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "TypeOfCommunication",
+                                    "valueType": "xs:string",
+                                    "value": "Chat"
+                                },
+                                {
+                                    "modelType": "MultiLanguageProperty",
+                                    "idShort": "AvailableTime",
+                                    "value": [
+                                        {
+                                            "language": "de",
+                                            "text": "Montag - Freitag 08:00 bis 16:00"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "Street",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Musterstraße 1"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "Zipcode",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "12345"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "POBox",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "PF 1234"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "ZipCodeOfPOBox",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "12345"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "StateCounty",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Muster-Bundesland"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "NameOfContact",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Dr. Peter Pan"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "FirstName",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Peter"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "Title",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Dr."
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "AcademicTitle",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "Dr."
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "MultiLanguageProperty",
+                            "idShort": "FurtherDetailsOfContact",
+                            "value": [
+                                {
+                                    "language": "de",
+                                    "text": "x"
+                                }
+                            ]
+                        },
+                        {
+                            "modelType": "Property",
+                            "idShort": "AddressOfAdditionalLink",
+                            "valueType": "xs:string",
+                            "value": "x"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

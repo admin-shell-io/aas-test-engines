@@ -2,6 +2,7 @@ from unittest import TestCase
 import os
 import zipfile
 import io
+import json
 from xml.etree import ElementTree
 
 from aas_test_engines import file
@@ -124,8 +125,8 @@ class SupportedVersionTest(TestCase):
 
     def test_invoke(self):
         s = file.supported_versions()
-        for i in s:
-            print(i)
+        for version, templates in s.items():
+            print(f"{version}: {', '.join(templates)}")
         self.assertIn(file.latest_version(), s)
 
 
@@ -137,3 +138,28 @@ class GenerateTest(TestCase):
             i += 1
             if i > 100:
                 break
+
+
+class CheckSubmodelTemplate(TestCase):
+
+    def test_contact_info(self):
+        templates = set(['ContactInformation'])
+        with open(os.path.join(script_dir, 'fixtures', 'submodel_templates', 'contact_information.json')) as f:
+            data = json.load(f)
+        result = file.check_json_data(data, submodel_templates=templates)
+        result.dump()
+        self.assertTrue(result.ok())
+        data['submodels'][0]['submodelElements'][0]['value'][0]['value'] = 'invalid'
+        result = file.check_json_data(data, submodel_templates=templates)
+        result.dump()
+        self.assertFalse(result.ok())
+    
+    def test_no_submodels(self):
+        data = {}
+        # is compliant to meta-model...
+        result = file.check_json_data(data)
+        self.assertTrue(result.ok())
+        # ...but does not contain any submodels
+        result = file.check_json_data(data, submodel_templates=set(['ContactInformation']))
+        result.dump()
+        self.assertFalse(result.ok())
