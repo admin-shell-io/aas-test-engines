@@ -24,7 +24,7 @@ You may want to invoke the test tools using the simplified command line interfac
 python -m aas_test_engines check_file test.aasx
 
 # Check file including submodel template
-python -m aas_test_engines check_file test.aasx --submodel_teamplate ContactInformation
+python -m aas_test_engines check_file test.aasx --submodel_template ContactInformation
 
 # Check server
 python -m aas_test_engines check_server https://localhost --suite 'Asset Administration Shell API'
@@ -90,7 +90,7 @@ result.dump()
 ```
 
 ### Checking for submodel templates
-By passing a set of submodel template names you can check a file to compliance to these:
+By passing a set of submodel template names you can check a file for compliance to these:
 
 ```python
 from aas_test_engines import file
