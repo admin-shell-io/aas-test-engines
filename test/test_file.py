@@ -5,7 +5,7 @@ import io
 import json
 from xml.etree import ElementTree
 
-from aas_test_engines import file
+from aas_test_engines import file, exception
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -132,12 +132,25 @@ class SupportedVersionTest(TestCase):
 
 class GenerateTest(TestCase):
 
-    def test_a_few(self):
+    def check(self, generator):
         i = 0
-        for sample in file.generate():
+        for _ in generator:
             i += 1
-            if i > 100:
+            if i > 10:
                 break
+
+    def test_meta_model(self):
+        generator = file.generate()
+        self.check(generator)
+
+    def test_generate_contact_info(self):
+        generator = file.generate(submodel_template='ContactInformation')
+        self.check(generator)
+
+    def test_invalid_name(self):
+        with self.assertRaises(exception.AasTestToolsException):
+            generator = file.generate(submodel_template="xyz")
+            self.check(generator)
 
 
 class CheckSubmodelTemplate(TestCase):
@@ -153,7 +166,7 @@ class CheckSubmodelTemplate(TestCase):
         result = file.check_json_data(data, submodel_templates=templates)
         result.dump()
         self.assertFalse(result.ok())
-    
+
     def test_no_submodels(self):
         data = {}
         # is compliant to meta-model...

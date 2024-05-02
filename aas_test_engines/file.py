@@ -19,10 +19,11 @@ JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
 class AasSchema:
 
-    def __init__(self, validator: SchemaValidator, graph: FlowGraph, submodel_templates: Dict[str, SchemaValidator]):
+    def __init__(self, validator: SchemaValidator, schema: JSON, submodel_templates: Dict[str, SchemaValidator], submodel_schemas: Dict[str, any]):
         self.validator = validator
-        self.graph = graph
+        self.schema = schema
         self.submodel_templates = submodel_templates
+        self.submodel_schemas = submodel_schemas
 
 
 def _find_schemas() -> Dict[str, AasSchema]:
@@ -38,13 +39,14 @@ def _find_schemas() -> Dict[str, AasSchema]:
             format_validators=validators
         )
         validator = parse_schema(schema, config)
-        graph = generate_graph(schema)
         submodel_templates = {}
+        submodel_schemas = {}
         for key, submodel_schema in schema['$defs']['SubmodelTemplates'].items():
             submodel_schema['$defs'] = schema['$defs']
             submodel_schema['$schema'] = 'https://json-schema.org/draft/2020-12/schema'
             submodel_templates[key] = parse_schema(submodel_schema, config)
-        result[i[:-4]] = AasSchema(validator, graph, submodel_templates)
+            submodel_schemas[key] = submodel_schema
+        result[i[:-4]] = AasSchema(validator, schema, submodel_templates, submodel_schemas)
     return result
 
 
@@ -361,8 +363,13 @@ def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestRes
     return check_aasx_data(zip, version)
 
 
-def generate(version: str = _DEFAULT_VERSION) -> Generator[str, None, None]:
-    graph = _get_schema(version, set()).graph
+def generate(version: str = _DEFAULT_VERSION, submodel_template: Optional[str] = None) -> Generator[str, None, None]:
+    if submodel_template is None:
+        aas = _get_schema(version, set())
+        graph = generate_graph(aas.schema)
+    else:
+        aas = _get_schema(version, set([submodel_template]))
+        graph = generate_graph(aas.submodel_schemas[submodel_template])
     for i in graph.generate_paths():
         sample = graph.execute(i.path)
         yield json.dumps(sample)
