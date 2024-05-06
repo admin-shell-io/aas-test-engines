@@ -1,0 +1,203 @@
+{
+    "submodels": [
+        {
+            "id": "example",
+            "idShort": "DigitalNameplate",
+            "modelType": "Submodel",
+            "semanticId": {
+                "keys": [
+                    {
+                        "type": "ConceptDescription",
+                        "value": "https://admin-shell.io/zvei/nameplate/2/0/Nameplate"
+                    }
+                ],
+                "type": "ExternalReference"
+            },
+            "submodelElements": [
+                {
+                    "modelType": "Property",
+                    "valueType": "xs:string",
+                    "value": "https://www.domain-abc.com/Model-Nr-1234/Serial-Nr-5678",
+                    "idShort": "URIOfTheProduct"
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "ManufacturerName",
+                    "value": [
+                        {
+                            "language": "de",
+                            "text": "Muster AG"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "ManufacturerProductDesignation",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "ABC-123"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "SubmodelElementCollection",
+                    "idShort": "ContactInformation",
+                    "value": [
+                        {
+                            "modelType": "Property",
+                            "idShort": "RoleOfContactPerson",
+                            "valueType": "xs:string",
+                            "value": "0173-1#07-AAS931#001"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "ManufacturerProductRoot",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "flow meter"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "ManufacturerProductFamily",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "Type ABC"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "ManufacturerProductType",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "FM-ABC-1234"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "OrderCodeOfManufacturer",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "FMABC1234"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "ProductArticleNumberOfManufacturer",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "FM11-ABC22-123456"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "Property",
+                    "idShort": "SerialNumber",
+                    "value": "12345678",
+                    "valueType": "xs:string"
+                },
+                {
+                    "modelType": "Property",
+                    "idShort": "YearOfConstruction",
+                    "value": "2022",
+                    "valueType": "xs:string"
+                },
+                {
+                    "modelType": "Property",
+                    "idShort": "DateOfManufacture",
+                    "value": "2022-01-01",
+                    "valueType": "xs:date"
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "HardwareVersion",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "1.0.0"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "FirmwareVersion",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "1.0"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "MultiLanguageProperty",
+                    "idShort": "SoftwareVersion",
+                    "value": [
+                        {
+                            "language": "en",
+                            "text": "1.0.0"
+                        }
+                    ]
+                },
+                {
+                    "modelType": "Property",
+                    "idShort": "CountryOfOrigin",
+                    "value": "DE",
+                    "valueType": "xs:string"
+                },
+                {
+                    "modelType": "File",
+                    "idShort": "CompanyLogo",
+                    "contentType": "image/png"
+                },
+                {
+                    "modelType": "SubmodelElementCollection",
+                    "idShort": "Markings",
+                    "value": [
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "idShort": "Marking",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "MarkingName",
+                                    "valueType": "xs:string",
+                                    "value": "0173-1#07-DAA603#004"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "modelType": "SubmodelElementCollection",
+                    "idShort": "AssetSpecificProperties",
+                    "value": [
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "idShort": "GuidelineSpecificProperties",
+                            "value": [
+                                {
+                                    "modelType": "Property",
+                                    "idShort": "MarkingName",
+                                    "valueType": "xs:string",
+                                    "value": "GuidelineForConformityDeclaration"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

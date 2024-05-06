@@ -14,6 +14,8 @@ from json_schema_tool.types import JsonType
 from json_schema_tool.exception import PreprocessorException
 import zipfile
 
+from ._util import un_group
+
 JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
 
@@ -35,6 +37,9 @@ def _find_schemas() -> Dict[str, AasSchema]:
         if not i.endswith('.yml'):
             continue
         schema = safe_load(open(path, "rb"))
+        # TODO: remove these after fixing fences.core.exception.InternalException: Decision without valid leaf detected
+        del schema['$defs']['AssetInformation']['allOf'][1]['properties']['specificAssetIds']['items']['allOf'][0]
+        del schema['$defs']['Entity']['allOf'][1]
         config = ParseConfig(
             format_validators=validators
         )
@@ -92,7 +97,7 @@ def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templat
     result = AasTestResult('Check JSON', '', Level.INFO)
     error = schema.validator.validate(data)
     _map_error(result, error)
-    if submodel_templates:
+    if submodel_templates and result.ok():
 
         def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
             try:
@@ -367,9 +372,13 @@ def generate(version: str = _DEFAULT_VERSION, submodel_template: Optional[str] =
     if submodel_template is None:
         aas = _get_schema(version, set())
         graph = generate_graph(aas.schema)
+        for i in graph.generate_paths():
+            sample = graph.execute(i.path)
+            yield json.dumps(sample)
     else:
         aas = _get_schema(version, set([submodel_template]))
         graph = generate_graph(aas.submodel_schemas[submodel_template])
-    for i in graph.generate_paths():
-        sample = graph.execute(i.path)
-        yield json.dumps(sample)
+        for i in graph.generate_paths():
+            sample = graph.execute(i.path)
+            sample = un_group(sample)
+            yield json.dumps(sample, indent=4)

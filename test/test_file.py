@@ -132,19 +132,23 @@ class SupportedVersionTest(TestCase):
 
 class GenerateTest(TestCase):
 
-    def check(self, generator):
+    def check(self, generator, limit = float('inf')):
         i = 0
         for _ in generator:
             i += 1
-            if i > 10:
+            if i > limit:
                 break
 
     def test_meta_model(self):
         generator = file.generate()
-        self.check(generator)
+        self.check(generator, 10)
 
     def test_generate_contact_info(self):
         generator = file.generate(submodel_template='ContactInformation')
+        self.check(generator)
+
+    def test_generate_digital_nameplate(self):
+        generator = file.generate(submodel_template='DigitalNameplate')
         self.check(generator)
 
     def test_invalid_name(self):
@@ -163,6 +167,22 @@ class CheckSubmodelTemplate(TestCase):
         result.dump()
         self.assertTrue(result.ok())
         data['submodels'][0]['submodelElements'][0]['value'][0]['value'] = 'invalid'
+        result = file.check_json_data(data, submodel_templates=templates)
+        result.dump()
+        self.assertFalse(result.ok())
+
+    def test_digital_nameplate(self):
+        templates = set(['DigitalNameplate'])
+        with open(os.path.join(script_dir, 'fixtures', 'submodel_templates', 'digital_nameplate.json')) as f:
+            data = json.load(f)
+        result = file.check_json_data(data, submodel_templates=templates)
+        result.dump()
+        self.assertTrue(result.ok())
+        # either family or type must be present
+        elements = data['submodels'][0]['submodelElements']
+        indices = [idx for idx, value in enumerate(elements) if value['idShort'] in ['ManufacturerProductFamily', 'ManufacturerProductType']]
+        for idx in indices:
+            elements[idx]['idShort'] = 'invalid'
         result = file.check_json_data(data, submodel_templates=templates)
         result.dump()
         self.assertFalse(result.ok())
