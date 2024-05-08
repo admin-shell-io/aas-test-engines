@@ -121,13 +121,14 @@ print(file.latest_version())
 ```python
 from aas_test_engines import api
 
-tests = api.generate_tests()
+tests = api.generate_tests(suites=set(['Asset Administration Shell API']))
 
-# Check an instance
-api.execute_tests(tests, "http://localhost")
+conf = api.run.ExecConf(
+    server = "http://localhost",
+)
 
-# Check another instance
-api.execute_tests(tests, "http://localhost:3000")
+for result in api.execute_tests(tests, conf):
+    result.dump()
 ```
 
 ### Checking older versions and specific test suites
