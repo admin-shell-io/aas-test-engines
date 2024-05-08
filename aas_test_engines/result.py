@@ -36,7 +36,7 @@ class AasTestResult:
         self.level = self.level | result.level
 
     def ok(self) -> bool:
-        return self.level == Level.INFO
+        return self.level != Level.ERROR
 
     def dump(self, indent=0, path=''):
         """Outputs the result to console"""

@@ -16,7 +16,7 @@ class ResultTest(TestCase):
 
     def test_ok(self):
         self.assertTrue(AasTestResult('', '', Level.INFO).ok())
-        self.assertFalse(AasTestResult('', '', Level.WARNING).ok())
+        self.assertTrue(AasTestResult('', '', Level.WARNING).ok())
         self.assertFalse(AasTestResult('', '', Level.ERROR).ok())
 
     def test_append(self):

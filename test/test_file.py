@@ -61,35 +61,35 @@ class CheckAasxTest(TestCase):
         with open(os.path.join(script_dir, 'fixtures/aasx/invalid/invalid_json/[Content_Types].xml'), "rb") as f:
             result = file.check_aasx_file(f)
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertEqual(result.level, Level.ERROR)
 
     def test_empty(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/empty'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertEqual(result.level, Level.ERROR)
 
     def test_no_rels(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/no_rels'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertEqual(result.level, Level.ERROR)
 
     def test_invalid_rels(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/invalid_rels'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertEqual(result.level, Level.ERROR)
 
     def test_unknown_filetype(self):
         z = in_memory_zipfile(os.path.join(
             script_dir, 'fixtures/aasx/invalid/unknown_filetype'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertEqual(result.level, Level.WARNING)
 
     def test_no_aas(self):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/no_aas1'))
@@ -105,31 +105,31 @@ class CheckAasxTest(TestCase):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/xml'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertTrue(result.ok())
+        self.assertEqual(result.level, Level.INFO)
 
     def test_valid_json(self):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/json'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertTrue(result.ok())
+        self.assertEqual(result.level, Level.INFO)
 
     def test_invalid_xml(self):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/invalid/invalid_xml'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertEqual(result.level, Level.ERROR)
 
     def test_invalid_json(self):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/invalid/invalid_json'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertEqual(result.level, Level.ERROR)
 
     def test_relative_paths(self):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/relative_paths'))
         result = file.check_aasx_data(z)
         result.dump()
-        self.assertTrue(result.ok())
+        self.assertEqual(result.level, Level.INFO)
 
 
 class SupportedVersionTest(TestCase):
@@ -143,7 +143,7 @@ class SupportedVersionTest(TestCase):
 
 class GenerateTest(TestCase):
 
-    def check(self, generator, limit = float('inf')):
+    def check(self, generator, limit=float('inf')):
         i = 0
         for _ in generator:
             i += 1
