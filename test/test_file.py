@@ -6,6 +6,7 @@ import json
 from xml.etree import ElementTree
 
 from aas_test_engines import file, exception
+from aas_test_engines.result import Level
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -89,6 +90,16 @@ class CheckAasxTest(TestCase):
         result = file.check_aasx_data(z)
         result.dump()
         self.assertFalse(result.ok())
+
+    def test_no_aas(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/no_aas1'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertEqual(result.level, Level.WARNING)
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/no_aas2'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertEqual(result.level, Level.WARNING)
 
     def test_valid_xml(self):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/xml'))

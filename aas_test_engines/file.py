@@ -321,8 +321,14 @@ def _check_relationships(zipfile: zipfile.ZipFile, root_rel: Relationship) -> Aa
 
 def _check_files(zipfile: zipfile.ZipFile, root_rel: Relationship, version: str) -> AasTestResult:
     result = AasTestResult('Checking files', '')
-    for aasx_origin in root_rel.sub_rels_by_type(TYPE_AASX_ORIGIN):
-        for aasx_spec in aasx_origin.sub_rels_by_type(TYPE_AASX_SPEC):
+    origin_rels = root_rel.sub_rels_by_type(TYPE_AASX_ORIGIN)
+    if len(origin_rels) != 1:
+        result.append(AasTestResult(f"Expected exactly one aas origin, but found {len(origin_rels)}", level=Level.WARNING))
+    for aasx_origin in origin_rels:
+        spec_rels = aasx_origin.sub_rels_by_type(TYPE_AASX_SPEC)
+        if not spec_rels:
+            result.append(AasTestResult("No aas spec found", level=Level.WARNING))
+        for aasx_spec in spec_rels:
             sub_result = AasTestResult(f'Checking {aasx_spec.target}', aasx_spec.target)
             try:
                 with zipfile.open(aasx_spec.target) as f:
