@@ -730,6 +730,8 @@ $defs:
     - $ref: "#/$defs/Property"
     - $ref: "#/$defs/Range"
     - $ref: "#/$defs/ReferenceElement"
+    discriminator:
+      propertyName: modelType
   DataSpecificationContent:
     type: object
     properties:
@@ -740,6 +742,8 @@ $defs:
   DataSpecificationContent_choice:
     anyOf:
     - $ref: "#/$defs/DataSpecificationIec61360"
+    discriminator:
+      propertyName: modelType
   DataSpecificationIec61360:
     allOf:
     - $ref: "#/$defs/DataSpecificationContent"
@@ -1283,6 +1287,8 @@ $defs:
     anyOf:
     - $ref: "#/$defs/RelationshipElement"
     - $ref: "#/$defs/AnnotatedRelationshipElement"
+    discriminator:
+      propertyName: modelType
   Resource:
     type: object
     properties:
@@ -1393,6 +1399,8 @@ $defs:
     - $ref: "#/$defs/Property"
     - $ref: "#/$defs/SubmodelElementCollection"
     - $ref: "#/$defs/SubmodelElementList"
+    discriminator:
+      propertyName: modelType
   ValueList:
     type: object
     properties:
