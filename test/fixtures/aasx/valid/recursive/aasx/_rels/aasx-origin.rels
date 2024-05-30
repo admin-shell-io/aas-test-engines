@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+   <Relationship Type="http://admin-shell.io/aasx/relationships/aas-spec" Target="/aasx/the_aas.json" />
+   <Relationship Type="http://admin-shell.io/aasx/relationships/aas-spec" Target="/aasx/aasx-origin" />
+</Relationships>

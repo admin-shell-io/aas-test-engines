@@ -293,8 +293,7 @@ def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, dir:
         result.append(AasTestResult(f'Relationship {sub_rel.target} is of type {sub_rel.type}', str(idx), Level.INFO))
         parent_rel.sub_rels.append(sub_rel)
         if target in visited_targets:
-            result.append(AasTestResult(
-                'Recursive relationship', str(idx), Level.ERROR))
+            result.append(AasTestResult(f'Already checked {target}', str(idx), Level.INFO))
             continue
         visited_targets.add(target)
         if target not in zipfile.namelist():

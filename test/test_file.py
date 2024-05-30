@@ -131,6 +131,12 @@ class CheckAasxTest(TestCase):
         result.dump()
         self.assertEqual(result.level, Level.INFO)
 
+    def test_recursive(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/recursive'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertEqual(result.level, Level.WARNING)
+
 
 class SupportedVersionTest(TestCase):
 
