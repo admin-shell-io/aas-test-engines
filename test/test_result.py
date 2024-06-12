@@ -34,7 +34,7 @@ class ResultTest(TestCase):
         self.result.dump()
 
     def test_to_json(self):
-        j = self.result.to_json()
+        j = self.result.to_dict()
         result = AasTestResult.from_json(j)
         self.assertEqual(len(self.result.sub_results), len(result.sub_results))
         self.assertEqual(self.result.level, result.level)

@@ -75,12 +75,12 @@ class AasTestResult:
             content = f.read()
         return content.replace("<!-- CONTENT -->", self._to_html())
 
-    def to_json(self):
+    def to_dict(self):
         return {
             'm': self.message,
             'f': self.path_fragment,
             'l': self.level.value,
-            's': [i.to_json() for i in self.sub_results]
+            's': [i.to_dict() for i in self.sub_results]
         }
 
     @classmethod

@@ -31,6 +31,10 @@ python -m aas_test_engines check_server https://localhost --suite 'Asset Adminis
 
 # Generate test data
 python -m aas_test_engines generate_files output_dir
+
+# Alternative output formats
+python -m aas_test_engines check_file test.aasx --output html > output.html
+python -m aas_test_engines check_file test.aasx --output json > output.json
 ```
 
 ## Check AAS Type 1 (File)

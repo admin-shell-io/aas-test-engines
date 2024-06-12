@@ -1,11 +1,12 @@
 import argparse
 import sys
 import os
+import json
 from aas_test_engines import api, file
 from enum import Enum
 
 
-class Formats(Enum):
+class InputFormats(Enum):
     xml = 'xml'
     json = 'json'
     aasx = 'aasx'
@@ -14,40 +15,51 @@ class Formats(Enum):
         return self.value
 
 
+class OutputFormats(Enum):
+    TEXT = 'text'
+    JSON = 'json'
+    HTML = 'html'
+
+
 def run_file_test(argv):
     parser = argparse.ArgumentParser(description='Checks a file for compliance with the AAS meta-model')
     parser.add_argument('file',
                         type=argparse.FileType('rb'),
                         help='the file to check')
     parser.add_argument('--format',
-                        type=Formats,
-                        default=Formats.aasx,
-                        choices=list(Formats))
+                        type=InputFormats,
+                        default=InputFormats.aasx,
+                        choices=list(InputFormats))
     parser.add_argument('--submodel_template',
                         type=str,
                         default=None,
                         help="Additionally check for compliance to a submodel template")
-    parser.add_argument('--html',
-                        type=argparse.FileType('w'),
-                        default=None)
+    parser.add_argument('--output',
+                        type=OutputFormats,
+                        default=OutputFormats.TEXT,
+                        choices=list(OutputFormats))
     args = parser.parse_args(argv)
     if args.submodel_template is None:
         submodel_templates = set()
     else:
         submodel_templates = set([args.submodel_template])
 
-    if args.format == Formats.aasx:
+    if args.format == InputFormats.aasx:
         result = file.check_aasx_file(args.file)
-    elif args.format == Formats.json:
+    elif args.format == InputFormats.json:
         result = file.check_json_file(args.file, submodel_templates=submodel_templates)
-    elif args.format == Formats.xml:
+    elif args.format == InputFormats.xml:
         result = file.check_xml_file(args.file)
     else:
         raise Exception(f"Invalid format {args.format}")
-    if args.html:
-        args.html.write(result.to_html())
-    else:
+    if args.output == OutputFormats.TEXT:
         result.dump()
+    elif args.output == OutputFormats.HTML:
+        print(result.to_html())
+    elif args.output == OutputFormats.JSON:
+        print(json.dumps(result.to_dict()))
+    else:
+        raise Exception(f"Invalid output {args.output}")
 
 
 def run_api_test(argv):
@@ -96,6 +108,7 @@ def generate_files(argv):
         i += 1
         if i > 100:
             break
+
 
 commands = {
     'check_file': run_file_test,
