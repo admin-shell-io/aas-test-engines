@@ -76,19 +76,29 @@ def run_api_test(argv):
     parser.add_argument('--no-verify',
                         action='store_true',
                         help='do not check TLS certificate')
+    parser.add_argument('--output',
+                        type=OutputFormats,
+                        default=OutputFormats.TEXT,
+                        choices=list(OutputFormats))
     args = parser.parse_args(argv)
     if args.suite:
         suites = set([args.suite])
     else:
         suites = None
-    tests = api.generate_tests(suites=suites)
-    exec_conf = api.run.ExecConf(
+    exec_conf = api.ExecConf(
         server=args.server,
         dry=args.dry,
         verify=not args.no_verify,
     )
-    for result in api.execute_tests(tests, exec_conf):
+    result = api.execute_tests(suites=suites, conf=exec_conf)
+    if args.output == OutputFormats.TEXT:
         result.dump()
+    elif args.output == OutputFormats.HTML:
+        print(result.to_html())
+    elif args.output == OutputFormats.JSON:
+        print(json.dumps(result.to_dict()))
+    else:
+        raise Exception(f"Invalid output {args.output}")
 
 
 def generate_files(argv):

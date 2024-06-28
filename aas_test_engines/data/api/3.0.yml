@@ -5601,17 +5601,17 @@ paths:
       summary: Returns all Asset Administration Shells
       operationId: GetAllAssetAdministrationShells
       parameters:
-      - name: assetIds
-        in: query
-        description: A list of specific Asset identifiers
-        required: false
-        style: form
-        explode: true
-        schema:
-          type: array
-          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
-          items:
-            $ref: '#/components/schemas/SpecificAssetId'
+#      - name: assetIds
+#        in: query
+#        description: A list of specific Asset identifiers
+#        required: false
+#        style: form
+#        explode: true
+#        schema:
+#          type: array
+#          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
+#          items:
+#            $ref: '#/components/schemas/SpecificAssetId'
       - name: idShort
         in: query
         description: The Asset Administration Shell’s IdShort
@@ -5738,17 +5738,17 @@ paths:
       summary: Returns References to all Asset Administration Shells
       operationId: GetAllAssetAdministrationShells-Reference
       parameters:
-      - name: assetIds
-        in: query
-        description: A list of specific Asset identifiers
-        required: false
-        style: form
-        explode: true
-        schema:
-          type: array
-          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
-          items:
-            $ref: '#/components/schemas/SpecificAssetId'
+#      - name: assetIds
+#        in: query
+#        description: A list of specific Asset identifiers
+#        required: false
+#        style: form
+#        explode: true
+#        schema:
+#          type: array
+#          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
+#          items:
+#            $ref: '#/components/schemas/SpecificAssetId'
       - name: idShort
         in: query
         description: The Asset Administration Shell’s IdShort
@@ -14388,17 +14388,17 @@ paths:
       summary: Returns a list of Asset Administration Shell ids linked to specific Asset identifiers
       operationId: GetAllAssetAdministrationShellIdsByAssetLink
       parameters:
-      - name: assetIds
-        in: query
-        description: A list of specific Asset identifiers
-        required: false
-        style: form
-        explode: true
-        schema:
-          type: array
-          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]"
-          items:
-            $ref: '#/components/schemas/SpecificAssetId'
+#      - name: assetIds
+#        in: query
+#        description: A list of specific Asset identifiers
+#        required: false
+#        style: form
+#        explode: true
+#        schema:
+#          type: array
+#          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]"
+#          items:
+#            $ref: '#/components/schemas/SpecificAssetId'
       - name: limit
         in: query
         description: The maximum number of elements in the response array
@@ -15281,7 +15281,7 @@ components:
         dataSpecificationContent:
           $ref: '#/components/schemas/DataSpecificationContent_choice'
     DataSpecificationContent_choice:
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/DataSpecificationIec61360'
     DataSpecificationIec61360:
       allOf:
@@ -15481,8 +15481,6 @@ components:
           allOf:
           - maxLength: 2000
             minLength: 1
-          - pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-          - pattern: "^file:(//((localhost|(\\[((([0-9A-Fa-f]{1,4}:){6}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::([0-9A-Fa-f]{1,4}:){5}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|([0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){4}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){3}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){2}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){2}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){4}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(([0-9A-Fa-f]{1,4}:){6}[0-9A-Fa-f]{1,4})?::)|[vV][0-9A-Fa-f]+\\.([a-zA-Z0-9\\-._~]|[!$&'()*+,;=]|:)+)\\]|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=])*)))?/((([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))+(/(([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))*)*)?|/((([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))+(/(([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))*)*)?)$"
         contentType:
           type: string
           allOf:
@@ -15600,7 +15598,7 @@ components:
       - TemplateQualifier
       - ValueQualifier
     SubmodelElement_choice:
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/RelationshipElement'
       - $ref: '#/components/schemas/AnnotatedRelationshipElement'
       - $ref: '#/components/schemas/BasicEventElement'
@@ -15652,7 +15650,7 @@ components:
             pattern: AnnotatedRelationshipElement
             type: string
     DataElement_choice:
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/Blob'
       - $ref: '#/components/schemas/File'
       - $ref: '#/components/schemas/MultiLanguageProperty'
@@ -15962,7 +15960,7 @@ components:
     SubmodelElementMetadata:
       allOf:
       - $ref: '#/components/schemas/SubmodelElementAttributes'
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/BlobMetadata'
       - $ref: '#/components/schemas/FileMetadata'
       - $ref: '#/components/schemas/CapabilityMetadata'
@@ -16075,7 +16073,7 @@ components:
             items:
               $ref: '#/components/schemas/SubmodelElementValue'
     SubmodelElementValue:
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/BasicEventElementValue'
       - $ref: '#/components/schemas/PropertyValue'
       - $ref: '#/components/schemas/MultiLanguagePropertyValue'
@@ -16105,7 +16103,7 @@ components:
           items:
             $ref: '#/components/schemas/Key'
     PropertyValue:
-      oneOf:
+      anyOf:
       - $ref: '#/components/schemas/StringValue'
       - $ref: '#/components/schemas/NumberValue'
       - $ref: '#/components/schemas/BooleanValue'
