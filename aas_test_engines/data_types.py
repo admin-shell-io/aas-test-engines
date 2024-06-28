@@ -1,5 +1,5 @@
 from decimal import Decimal, DecimalException
-from typing import Pattern, Dict
+from typing import Pattern, Dict, Mapping
 import re
 import base64
 
@@ -57,6 +57,23 @@ def _is_leap_year(year: int) -> bool:
         return False
     return True
 
+_DAYS_IN_MONTH: Mapping[int, int] = {
+    1: 31,
+    # Please use _is_leap_year if you need to check
+    # whether a concrete February has 28 or 29 days.
+    2: 29,
+    3: 31,
+    4: 30,
+    5: 31,
+    6: 30,
+    7: 31,
+    8: 31,
+    9: 30,
+    10: 31,
+    11: 30,
+    12: 31,
+}
+
 
 def _construct_matches_xs_date() -> Pattern[str]:
     digit = "[0-9]"
@@ -64,7 +81,7 @@ def _construct_matches_xs_date() -> Pattern[str]:
     month_frag = "((0[1-9])|(1[0-2]))"
     day_frag = f"((0[1-9])|([12]{digit})|(3[01]))"
     minute_frag = f"[0-5]{digit}"
-    timezone_frag = f"(Z|(\\+|-)(0{digit}|1[0-3]):{minute_frag}|14:00)"
+    timezone_frag = f"(Z|(\\+|-)((0{digit}|1[0-3]):{minute_frag}|14:00))"
     date_lexical_rep = f"{year_frag}-{month_frag}-{day_frag}{timezone_frag}?"
     pattern = f"^{date_lexical_rep}$"
 
@@ -94,7 +111,12 @@ def is_xs_date(value: str) -> bool:
     if month <= 0 or month >= 13:
         return False
 
-    if day > _days_in_month(month, year):
+    if month == 2:
+        max_days = 29 if _is_leap_year(year) else 28
+    else:
+        max_days = _DAYS_IN_MONTH[month]
+
+    if day > max_days:
         return False
 
     return True
@@ -109,7 +131,7 @@ def _construct_matches_xs_date_time() -> Pattern[str]:
     minute_frag = f"[0-5]{digit}"
     second_frag = f"([0-5]{digit})(\\.{digit}+)?"
     end_of_day_frag = "24:00:00(\\.0+)?"
-    timezone_frag = f"(Z|(\\+|-)(0{digit}|1[0-3]):{minute_frag}|14:00)"
+    timezone_frag = f"(Z|(\\+|-)((0{digit}|1[0-3]):{minute_frag}|14:00))"
     date_time_lexical_rep = f"{year_frag}-{month_frag}-{day_frag}T(({hour_frag}:{minute_frag}:{second_frag})|{end_of_day_frag}){timezone_frag}?"
     pattern = f"^{date_time_lexical_rep}$"
 

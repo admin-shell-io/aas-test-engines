@@ -150,7 +150,7 @@ def _get_model_type(el: ElementTree.Element, expected_namespace: str):
 
 def _get_single_child(el: ElementTree.Element) -> ElementTree.Element:
     if len(el) != 1:
-        raise Exception("DataSpecificationContent must have exactly one child")
+        raise PreprocessorException("DataSpecificationContent must have exactly one child")
     return el[0]
 
 
