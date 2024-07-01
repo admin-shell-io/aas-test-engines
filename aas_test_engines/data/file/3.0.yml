@@ -602,21 +602,19 @@ $defs:
       required:
       - assetInformation
   Constraint_AASd-131:
-    oneOf:
-    - allOf:
-      - required:
-          - specificAssetIds
-      - not:
-          required:
-            - globalAssetId
-    - allOf:
-      - required:
+    anyOf:
+    - required:
+        - specificAssetIds
+      not:
+        required:
           - globalAssetId
-      - not:
-          required:
-            - specificAssetIds
+    - required:
+        - globalAssetId
+      not:
+        required:
+          - specificAssetIds
   Constraint_AASd-116:
-    oneOf:
+    anyOf:
     - not:
         properties:
           name:
@@ -840,19 +838,17 @@ $defs:
       required:
         - entityType
     then:
-      oneOf:
-      - allOf:
-        - required:
-          - globalAssetId
-        - not:
-            required:
-            - specificAssetIds
-      - allOf:
-        - required:
+      anyOf:
+      - required:
+        - globalAssetId
+        not:
+          required:
           - specificAssetIds
-        - not:
-            required:
-            - globalAssetId
+      - required:
+        - specificAssetIds
+        not:
+          required:
+          - globalAssetId
     else:
       not:
         required:

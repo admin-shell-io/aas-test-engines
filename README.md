@@ -170,6 +170,6 @@ The test engines allow to generate a set of AAS files which are compliant with t
 ```python
 from aas_test_engines import file
 
-for sample in file.generate():
+for is_valid, sample in file.generate():
     print(sample) # or whatever you want to do with it
 ```

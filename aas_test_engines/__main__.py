@@ -112,11 +112,12 @@ def generate_files(argv):
         exit(1)
     os.mkdir(args.directory)
     i = 0
-    for sample in file.generate():
-        with open(os.path.join(args.directory, f"{i}.json"), "w") as f:
+    for is_valid, sample in file.generate():
+        tag = 'valid' if is_valid else 'invalid'
+        with open(os.path.join(args.directory, f"{i}_{tag}.json"), "w") as f:
             f.write(sample)
         i += 1
-        if i > 100:
+        if i > 2000:
             break
 
 

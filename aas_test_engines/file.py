@@ -379,11 +379,11 @@ def generate(version: str = _DEFAULT_VERSION, submodel_template: Optional[str] =
         graph = generate_graph(aas.schema)
         for i in graph.generate_paths():
             sample = graph.execute(i.path)
-            yield json.dumps(sample)
+            yield i.is_valid, sample
     else:
         aas = _get_schema(version, set([submodel_template]))
         graph = generate_graph(aas.submodel_schemas[submodel_template])
         for i in graph.generate_paths():
             sample = graph.execute(i.path)
             sample = un_group(sample)
-            yield json.dumps(sample, indent=4)
+            yield i.is_valid, sample

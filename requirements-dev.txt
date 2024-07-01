@@ -1,2 +1,3 @@
 coverage>=7.3
 build>=1.0
+aas-core3.0==1.0.4
