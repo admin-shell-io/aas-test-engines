@@ -19,21 +19,27 @@ $defs:
   TimeType:
     type: string
     pattern: ^(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+    format: xs:time
   DurationType:
     type: string
     pattern: ^-?P((([0-9]+Y([0-9]+M)?([0-9]+D)?|([0-9]+M)([0-9]+D)?|([0-9]+D))(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S)))?)|(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S))))$
+    format: xs:duration
   DayType:
     type: string
     pattern: ^---(0[1-9]|[12][0-9]|3[01])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+    format: xs:gDay
   MonthType:
     type: string
     pattern: ^--(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+    format: xs:gMonth
   YearType:
     type: string
     pattern: ^-?([1-9][0-9]{3,}|0[0-9]{3})(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+    format: xs:gYear
   YearMonthType:
     type: string
     pattern: ^-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$
+    format: xs:gYearMonth
   HexBinaryType:
     type: string
     pattern: ^([0-9a-fA-F][0-9a-fA-F])*$
@@ -43,13 +49,12 @@ $defs:
     contentEncoding: base64
   ContentType:
     type: string
-    allOf:
-    - minLength: 1
-      maxLength: 100
-    - pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-    - pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([
+    minLength: 1
+    maxLength: 100
+    pattern: "^([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+([
         \\t]*;[ \\t]*([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\\-.^_`|~0-9a-zA-Z])+|\"(([\\t
         !#-\\[\\]-~]|[\x80-ÿ])|\\\\([\\t !-~]|[\x80-ÿ]))*\"))*$"
+    format: contentType
   Identifier:
     type: string
     minLength: 1
@@ -74,27 +79,24 @@ $defs:
     - pattern: "^[a-zA-Z][a-zA-Z0-9_]*$"
   PathType:
     type: string
-    allOf:
-    - minLength: 1
-      maxLength: 2000
-    - pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-    - pattern: "^file:(//((localhost|(\\[((([0-9A-Fa-f]{1,4}:){6}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::([0-9A-Fa-f]{1,4}:){5}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|([0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){4}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){3}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){2}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){2}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){4}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(([0-9A-Fa-f]{1,4}:){6}[0-9A-Fa-f]{1,4})?::)|[vV][0-9A-Fa-f]+\\.([a-zA-Z0-9\\-._~]|[!$&'()*+,;=]|:)+)\\]|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=])*)))?/((([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))+(/(([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))*)*)?|/((([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))+(/(([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))*)*)?)$"
+    minLength: 1
+    maxLength: 2000
+    pattern: "^file:(//((localhost|(\\[((([0-9A-Fa-f]{1,4}:){6}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|::([0-9A-Fa-f]{1,4}:){5}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|([0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){4}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){3}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){2}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){2}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){4}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))|(([0-9A-Fa-f]{1,4}:){5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(([0-9A-Fa-f]{1,4}:){6}[0-9A-Fa-f]{1,4})?::)|[vV][0-9A-Fa-f]+\\.([a-zA-Z0-9\\-._~]|[!$&'()*+,;=]|:)+)\\]|([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])|([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=])*)))?/((([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))+(/(([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))*)*)?|/((([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))+(/(([a-zA-Z0-9\\-._~]|%[0-9A-Fa-f][0-9A-Fa-f]|[!$&'()*+,;=]|[:@]))*)*)?)$"
+    format: path
   RevisionType:
     type: string
-    allOf:
-    - minLength: 1
-      maxLength: 4
-    - pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-    - pattern: "^(0|[1-9][0-9]*)$"
+    minLength: 1
+    maxLength: 4
+    pattern: "^(0|[1-9][0-9]*)$"
+    format: version
   QualifierType:
     $ref: "#/$defs/NameType"
   VersionType:
     type: string
-    allOf:
-    - minLength: 1
-      maxLength: 4
-    - pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-    - pattern: "^(0|[1-9][0-9]*)$"
+    minLength: 1
+    maxLength: 4
+    pattern: "^(0|[1-9][0-9]*)$"
+    format: version
 
   ### 5.3.11.3 Enumeration for Submodel Element Value Types
   DataTypeDefXsd:
@@ -545,7 +547,7 @@ $defs:
     properties:
       language:
         type: string
-        pattern: "^(([a-zA-Z]{2,3}(-[a-zA-Z]{3}(-[a-zA-Z]{3}){0,2})?|[a-zA-Z]{4}|[a-zA-Z]{5,8})(-[a-zA-Z]{4})?(-([a-zA-Z]{2}|[0-9]{3}))?(-(([a-zA-Z0-9]){5,8}|[0-9]([a-zA-Z0-9]){3}))*(-[0-9A-WY-Za-wy-z](-([a-zA-Z0-9]){2,8})+)*(-[xX](-([a-zA-Z0-9]){1,8})+)?|[xX](-([a-zA-Z0-9]){1,8})+|((en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)|(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang)))$"
+        format: bcpLangString
       text:
         type: string
         minLength: 1
@@ -556,7 +558,6 @@ $defs:
   Constraint_AASd-005:
     dependentRequired:
       revision: ["version"]
-      version: ["revision"]
   AdministrativeInformation:
     allOf:
     - $ref: "#/$defs/HasDataSpecification"
@@ -621,8 +622,6 @@ $defs:
             const: globalAssetId
         required:
         - name
-    # TODO: if specific_asset_id.name == 'globalAssetId':
-    #            specific_asset_ID.value == self.global_asset_ID
   AssetInformation:
     allOf:
     - $ref: "#/$defs/Constraint_AASd-131"
@@ -638,7 +637,6 @@ $defs:
             allOf:
             - $ref: "#/$defs/Constraint_AASd-116"
             - $ref: "#/$defs/SpecificAssetId"
-          minItems: 1
         assetType:
           $ref: "#/$defs/Identifier"
         defaultThumbnail:
@@ -742,9 +740,20 @@ $defs:
     - $ref: "#/$defs/DataSpecificationIec61360"
     discriminator:
       propertyName: modelType
+  Constraint_AASd-010:
+    anyOf:
+    - required:
+      - value
+      properties:
+        valueList: False
+    - required:
+      - valueList
+      properties:
+        value: False
   DataSpecificationIec61360:
     allOf:
     - $ref: "#/$defs/DataSpecificationContent"
+    - $ref: "#/$defs/Constraint_AASd-010"
     - properties:
         preferredName:
           type: array
@@ -831,29 +840,24 @@ $defs:
     required:
     - dataSpecificationContent
   Constraint_AASd-014:
-    if:
-      properties:
+    anyOf:
+    - properties:
         entityType:
           const: SelfManagedEntity
+        specificAssetIds: false
       required:
-        - entityType
-    then:
-      anyOf:
-      - required:
         - globalAssetId
-        not:
-          required:
-          - specificAssetIds
-      - required:
+    - properties:
+        entityType:
+          const: SelfManagedEntity
+        globalAssetId: false
+      required:
         - specificAssetIds
-        not:
-          required:
-          - globalAssetId
-    else:
-      not:
-        required:
-        - globalAssetId
-        - specificAssetId
+    - properties:
+        entityType:
+          const: CoManagedEntity
+        globalAssetId: false
+        specificAssetIds: false
   Entity:
     allOf:
     - $ref: "#/$defs/SubmodelElement"
@@ -993,6 +997,22 @@ $defs:
     required:
     - type
     - value
+  GloballyIdentifiables:
+    enum:
+      - GlobalReference
+      - AssetAdministrationShell
+      - ConceptDescription
+      - Identifiable
+      - Submodel
+  GenericGloballyIdentifiables:
+    enum:
+      - GlobalReference
+  AasIdentifiables:
+    enum:
+      - AssetAdministrationShell
+      - ConceptDescription
+      - Identifiable
+      - Submodel
   KeyTypes:
     type: string
     enum:
@@ -1113,6 +1133,8 @@ $defs:
   Operation:
     allOf:
     - $ref: "#/$defs/SubmodelElement"
+    - check:
+      - Constraint_AASd-134
     - properties:
         inputVariables:
           type: array
@@ -1231,21 +1253,67 @@ $defs:
           $ref: "#/$defs/ModelType"
       required:
       - modelType
-  Reference:
-    type: object
+  Constraint_AASd-121:
     properties:
-      type:
-        $ref: "#/$defs/ReferenceTypes"
-      referredSemanticId:
-        $ref: "#/$defs/Reference"
       keys:
         type: array
-        items:
-          $ref: "#/$defs/Key"
-        minItems: 1
-    required:
-    - type
-    - keys
+        prefixItems:
+          - type: object
+            properties:
+              type:
+                $ref: '#/$defs/GloballyIdentifiables'
+  Constraint_AASd-122:
+    properties:
+      keys:
+        type: array
+        prefixItems:
+          - type: object
+            properties:
+              type:
+                $ref: '#/$defs/GenericGloballyIdentifiables'
+  Constraint_AASd-123:
+    properties:
+      keys:
+        type: array
+        prefixItems:
+        - type: object
+          properties:
+            type:
+              $ref: '#/$defs/AasIdentifiables'
+  Reference:
+    allOf:
+    - $ref: '#/$defs/Constraint_AASd-121'
+    - anyOf:
+      - properties:
+          type:
+            const: ModelReference
+        allOf:
+        - $ref: '#/$defs/Constraint_AASd-123'
+        - check:
+          - Constraint_AASd-125
+          - Constraint_AASd-127
+          - Constraint_AASd-128
+      - properties:
+          type:
+            const: ExternalReference
+        allOf:
+        - $ref: '#/$defs/Constraint_AASd-122'
+        - check:
+          - Constraint_AASd-124
+    - type: object
+      properties:
+        type:
+          $ref: "#/$defs/ReferenceTypes"
+        referredSemanticId:
+          $ref: "#/$defs/Reference"
+        keys:
+          type: array
+          items:
+            $ref: "#/$defs/Key"
+          minItems: 1
+      required:
+      - type
+      - keys
   ReferenceElement:
     allOf:
     - $ref: "#/$defs/DataElement"
@@ -1340,6 +1408,9 @@ $defs:
     - $ref: "#/$defs/HasSemantics"
     - $ref: "#/$defs/Qualifiable"
     - $ref: "#/$defs/HasDataSpecification"
+    - check:
+      - Constraint_AASd-119
+      - Constraint_AASd-129
   Constraint_AASd-117:
     required:
     - idShort
@@ -1361,6 +1432,11 @@ $defs:
       required:
         - idShort
   SubmodelElementList:
+    check:
+    - Constraint_AASd-107
+    - Constraint_AASd-108
+    - Constraint_AASd-109
+    - Constraint_AASd-114
     allOf:
     - $ref: "#/$defs/SubmodelElement"
     - properties:

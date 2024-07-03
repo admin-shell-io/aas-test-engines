@@ -57,6 +57,7 @@ def _is_leap_year(year: int) -> bool:
         return False
     return True
 
+
 _DAYS_IN_MONTH: Mapping[int, int] = {
     1: 31,
     # Please use _is_leap_year if you need to check
@@ -275,6 +276,44 @@ def is_base64_binary(s: str) -> bool:
         return False
 
 
+def _construct_matches_bcp_47() -> Pattern[str]:
+    alphanum = '[a-zA-Z0-9]'
+    singleton = '[0-9A-WY-Za-wy-z]'
+    extension = f'{singleton}(-({alphanum}){{2,8}})+'
+    extlang = '[a-zA-Z]{3}(-[a-zA-Z]{3}){0,2}'
+    irregular = '(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)'
+    regular = '(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang)'
+    grandfathered = f'({irregular}|{regular})'
+    language = f'([a-zA-Z]{{2,3}}(-{extlang})?|[a-zA-Z]{{4}}|[a-zA-Z]{{5,8}})'
+    script = '[a-zA-Z]{4}'
+    region = '([a-zA-Z]{2}|[0-9]{3})'
+    variant = f'(({alphanum}){{5,8}}|[0-9]({alphanum}){{3}})'
+    privateuse = f'[xX](-({alphanum}){{1,8}})+'
+    langtag = f'{language}(-{script})?(-{region})?(-{variant})*(-{extension})*(-{privateuse})?'
+    language_tag = f'({langtag}|{privateuse}|{grandfathered})'
+    pattern = f'^{language_tag}$'
+
+    return re.compile(pattern)
+
+
+_REGEX_MATCHES_BCP_47 = _construct_matches_bcp_47()
+
+
+def is_bcp_lang_string(s: str) -> bool:
+    return _REGEX_MATCHES_BCP_47.match(s) is not None
+
+
+def _construct_matches_version_type() -> Pattern[str]:
+    pattern = '^(0|[1-9][0-9]*)$'
+    return re.compile(pattern)
+
+_REGEX_MATCHES_VERSION_TYPE = _construct_matches_version_type()
+
+
+def is_version_string(text: str) -> bool:
+    return _REGEX_MATCHES_VERSION_TYPE.match(text) is not None
+
+
 validators = {
     'xs:decimal': is_decimal,
     'xs:integer': lambda s: _is_bounded_integer(s, float('-inf'), float('inf')),
@@ -301,7 +340,18 @@ validators = {
     'xs:dateTime': is_xs_date_time,
     'xs:gMonthDay': is_xs_g_month_day,
     'xs:dateTimeUTC': is_xs_date_time_utc,
+    'xs:gYearMonth': lambda x: True,
+    'xs:gDay': lambda x: True,
+    'xs:gMonth': lambda x: True,
+    'xs:gYear': lambda x: True,
+    'xs:time': lambda x: True,
+    'xs:duration': lambda x: True,
 
     'xs:anyURI': is_any_uri,
     'xs:base64Binary': is_base64_binary,
+
+    'bcpLangString': is_bcp_lang_string,
+    'version': is_version_string,
+    'contentType': lambda x: True,
+    'path': lambda x: True,
 }
