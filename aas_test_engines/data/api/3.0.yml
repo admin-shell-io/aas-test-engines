@@ -5625,7 +5625,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -5826,6 +5826,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       responses:
         "200":
@@ -6060,6 +6061,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       responses:
         "200":
@@ -6179,6 +6181,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       responses:
         "200":
@@ -6356,6 +6359,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       - name: limit
         in: query
@@ -6566,6 +6570,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       - name: submodelIdentifier
         in: path
@@ -7366,6 +7371,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       - name: submodelIdentifier
         in: path
@@ -7948,6 +7954,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       - name: submodelIdentifier
         in: path
@@ -8940,6 +8947,7 @@ paths:
         explode: false
         schema:
           type: string
+          minLength: 1
           format: byte
       - name: submodelIdentifier
         in: path

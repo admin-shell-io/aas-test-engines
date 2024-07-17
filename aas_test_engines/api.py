@@ -1,17 +1,34 @@
-from typing import Dict, Set
+from typing import Dict, Set, List
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
 
-from fences.open_api.open_api import OpenApi
-from fences.open_api.generate import SampleCache, parse_operation, Request
+from fences.open_api.open_api import OpenApi, Operation
+from fences.open_api.generate import SampleCache, generate_all, generate_one_valid, Request
 
 import os
-from yaml import safe_load
+from yaml import load, CSafeLoader
 from dataclasses import dataclass
 import requests
-import html
+import base64
 
-_available_suites = {
+
+def _extend(data: Dict[str, List[str]]) -> dict:
+    while True:
+        all_resolved = True
+        for key, values in data.items():
+            new_values = []
+            for value in values:
+                try:
+                    new_values.extend(data[value])
+                    all_resolved = False
+                except KeyError:
+                    new_values.append(value)
+            data[key] = new_values
+        if all_resolved:
+            return data
+
+
+_available_suites = _extend({
     # APIs
     "Asset Administration Shell API": [
         "GetAssetAdministrationShell",
@@ -109,7 +126,7 @@ _available_suites = {
     # Service Specs
     "Asset Administration Shell Service Specification": [
         "Asset Administration Shell API",
-        "Submodel API", # TODO: via super path
+        "Submodel API",  # TODO: via super path
         "Serialization API",
         "Description API",
     ],
@@ -124,7 +141,7 @@ _available_suites = {
     ],
     "Asset Administration Shell Registry Service Specification": [
         "Asset Administration Shell Registry API",
-        "Submodel Registry API", # TODO: via super path
+        "Submodel Registry API",  # TODO: via super path
         "Description API",
     ],
     "Submodel Registry Service Specification": [
@@ -136,16 +153,16 @@ _available_suites = {
         "Description API",
     ],
     "Asset Administration Shell Repository Service Specification": [
-        "Asset Administration Shell API", # TODO: via super path
-        "Submodel API", # TODO: via super path
+        "Asset Administration Shell API",  # TODO: via super path
+        "Submodel API",  # TODO: via super path
         "Asset Administration Shell Repository API",
-        "Submodel Repository API", # TODO: via super path
+        "Submodel Repository API",  # TODO: via super path
         "Serialization API",
         "Description API",
     ],
     "Submodel Repository Service Specification": [
-        "Submodel API", # TODO: via super path
-        "Submodel Repository API", # TODO: via super path
+        "Submodel API",  # TODO: via super path
+        "Submodel Repository API",  # TODO: via super path
         "Serialization API",
         "Description API",
     ],
@@ -163,10 +180,10 @@ _available_suites = {
         "GetAllSubmodelReferences",
         "GetAssetInformation",
         "GetThumbnail",
-        "GetSubmodel", # TODO: via super path
-        "GetAllSubmodelElements", # TODO: via super path
-        "GetSubmodelElementByPath", # TODO: via super path
-        "GetFileByPath", # TODO: via super path
+        "GetSubmodel",  # TODO: via super path
+        "GetAllSubmodelElements",  # TODO: via super path
+        "GetSubmodelElementByPath",  # TODO: via super path
+        "GetFileByPath",  # TODO: via super path
     ],
     "SubmodelServiceSpecification/SSP-001": [
         "Submodel Service Specification",
@@ -193,8 +210,8 @@ _available_suites = {
     "AssetAdministrationShellRegistryServiceSpecification/SSP-002": [
         "GetAllAssetAdministrationShellDescriptors",
         "GetAssetAdministrationShellDescriptorById",
-        "GetAllSubmodelDescriptors", # TODO: via super path
-        "GetSubmodelDescriptorById", # TODO: via super path
+        "GetAllSubmodelDescriptors",  # TODO: via super path
+        "GetSubmodelDescriptorById",  # TODO: via super path
     ],
     "SubmodelRegistryServiceSpecification/SSP-001": [
         "Submodel Registry Service Specification",
@@ -212,21 +229,22 @@ _available_suites = {
     ],
     "AssetAdministrationShellRepositoryServiceSpecification/SSP-002": [
         "GetAllAssetAdministrationShells",
+        "GetAllAssetAdministrationShells-Reference",
         "GetAssetAdministrationShellById",
+        "GetAssetAdministrationShellById-Reference_AasRepository",
         "GetAllAssetAdministrationShellsByAssetId",
         "GetAllAssetAdministrationShellsByIdShort",
-        "GetAssetAdministrationShell", # TODO: via super path
-        "GetAllSubmodelReferences", # TODO: via super path
-        "GetAssetInformation", # TODO: via super path
-        "GetThumbnail", # TODO: via super path
-        "GetAllSubmodels", # TODO: via super path
-        "GetSubmodelById", # TODO: via super path
-        "GetAllSubmodelsBySemanticId", # TODO: via super path
-        "GetAllSubmodelsByIdShort", # TODO: via super path
-        "GetSubmodel", # TODO: via super path
-        "GetAllSubmodelElements", # TODO: via super path
-        "GetSubmodelElementByPath", # TODO: via super path
-        "GetFileByPath", # TODO: via super path
+        "GetAllSubmodelReferences_AasRepository",
+        "GetAssetInformation_AasRepository",
+        "GetThumbnail_AasRepository",
+        "GetAllSubmodels_AasRepository",
+        "GetSubmodelById_AasRepository",
+        "GetAllSubmodelsBySemanticId_AasRepository",
+        "GetAllSubmodelsByIdShort_AasRepository",
+        "GetSubmodelById_AasRepository",
+        "GetAllSubmodelElements_AasRepository",
+        "GetSubmodelElementByPath_AasRepository",
+        "GetFileByPath_AasRepository",
         "GenerateSerializationByIds",
         "GetDescription",
     ],
@@ -246,15 +264,15 @@ _available_suites = {
         "GetDescription"
     ],
     "SubmodelRepositoryServiceSpecification/SSP-003": [
-        "SubmodelRepositoryServiceSpecification/SSP-001" # TODO: Constraint AASa-003
+        "SubmodelRepositoryServiceSpecification/SSP-001"  # TODO: Constraint AASa-003
     ],
     "SubmodelRepositoryServiceSpecification/SSP-004": [
-        "SubmodelRepositoryServiceSpecification/SSP-002" # TODO: Constraint AASa-004
+        "SubmodelRepositoryServiceSpecification/SSP-002"  # TODO: Constraint AASa-004
     ],
     "ConceptDescriptionRepositoryServiceSpecification/SSP-001": [
         "Concept Description Repository Service Specification"
     ]
-}
+})
 
 
 @dataclass
@@ -265,7 +283,11 @@ class ExecConf:
 
 
 def _check_server(exec_conf: ExecConf) -> AasTestResult:
-    result = AasTestResult(f'Check {exec_conf.server}')
+    result = AasTestResult(f'Trying to reach {exec_conf.server}')
+    if exec_conf.dry:
+        result.append(AasTestResult("Skipped due to dry run", '', Level.WARNING))
+        return result
+
     try:
         requests.get(exec_conf.server, verify=exec_conf.verify)
         result.append(AasTestResult('OK', '', Level.INFO))
@@ -289,7 +311,7 @@ def _find_specs() -> Dict[str, AasSpec]:
         if not i.endswith('.yml'):
             continue
         with open(path, 'rb') as f:
-            spec = safe_load(f)
+            spec = load(f, Loader=CSafeLoader)
         open_api = OpenApi.from_dict(spec)
         result[i[:-4]] = AasSpec(open_api)
     return result
@@ -298,6 +320,7 @@ def _find_specs() -> Dict[str, AasSpec]:
 _specs = _find_specs()
 
 _DEFAULT_VERSION = '3.0'
+_DEFAULT_SUITE = "AssetAdministrationShellRepositoryServiceSpecification/SSP-002"
 
 
 def _get_spec(version: str) -> AasSpec:
@@ -307,49 +330,147 @@ def _get_spec(version: str) -> AasSpec:
         raise AasTestToolsException(
             f"Unknown version {version}, must be one of {supported_versions()}")
 
-def _html_safe(content: bytes, max_len: int = 100) -> str:
+
+def _shorten(content: bytes, max_len: int = 300) -> str:
     content = content.decode()
     if len(content) > max_len:
-        content = content[:max_len]
-    return html.escape(content)
+        return content[:max_len] + "..."
+    return content
 
-def execute_tests(version: str = _DEFAULT_VERSION, suites: Set[str] = None, conf: ExecConf = ExecConf()) -> AasTestResult:
-    spec = _get_spec(version)
-    if suites is None:
-        suites = set(_available_suites.keys())
-    operations = set()
-    for suite in suites:
+
+def _make_invoke_result(request: Request) -> AasTestResult:
+    return AasTestResult(f"Invoke: {request.operation.method.upper()} {request.make_path()}")
+
+
+class ApiTestSuiteException(Exception):
+    pass
+
+
+class ApiTestSuite:
+
+    def __init__(self, operation: Operation, conf: ExecConf, sample_cache: SampleCache, open_api: OpenApi):
+        self.operation = operation
+        self.conf = conf
+        self.sample_cache = sample_cache
+        self.open_api = open_api
+
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        return {}
+
+    def before_semantic_test(self):
+        pass
+
+    def after_semantic_test(self, request: Request, response: requests.models.Response):
+        pass
+
+    def after_suite(self):
+        pass
+
+
+class GetAllAasTestSuite(ApiTestSuite):
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        request = generate_one_valid(self.operation, self.sample_cache, {'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        data = response.json()
+        overwrites = {
+            'limit': [1],
+        }
         try:
-            operations.update(_available_suites[suite])
+            valid_cursor = data['paging_metadata']['cursor']
+            overwrites['cursor'] = [valid_cursor]
         except KeyError:
-            all_suites = "\n".join(sorted(_available_suites.keys()))
-            raise AasTestToolsException(f"Unknown suite {suite}, must be one of:\n{all_suites}")
+            pass  # TODO
+        try:
+            valid_id_short = data['result'][0]['idShort']
+            overwrites['idShort'] = [valid_id_short]
+        except KeyError:
+            pass  # TODO
+        return overwrites
+
+
+class GetAasById(ApiTestSuite):
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        data = response.json()
+        overwrites = {}
+        try:
+            valid_id = data['result'][0]['id']
+            overwrites['aasIdentifier'] = [base64.urlsafe_b64encode(valid_id.encode()).decode()]
+        except (KeyError, TypeError):
+            pass  # TODO
+        return overwrites
+
+
+_test_suites = {
+    'GetAllAssetAdministrationShells': GetAllAasTestSuite,
+    'GetAssetAdministrationShellById': GetAasById,
+}
+
+
+def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, conf: ExecConf = ExecConf()) -> AasTestResult:
+    spec = _get_spec(version)
+    try:
+        operation_ids = _available_suites[suite]
+    except KeyError:
+        all_suites = "\n".join(sorted(_available_suites.keys()))
+        raise AasTestToolsException(f"Unknown suite {suite}, must be one of:\n{all_suites}")
+    # for i in operation_ids:
+    #     if i not in spec.open_api.operations:
+    #         raise AasTestToolsException(f"Unknown operation {i}")
+
     sample_cache = SampleCache()
-    result_root = AasTestResult("Checking api")
+    result_root = AasTestResult(f"Checking compliance to {suite}")
+
+    # Initial connection check
+    r = _check_server(conf)
+    result_root.append(r)
+    if not result_root.ok():
+        return result_root
+
+    # Check individual operations
     for operation in spec.open_api.operations.values():
-        if operation.operation_id not in operations:
+        if operation.operation_id not in operation_ids:
             continue
         result_op = AasTestResult(f"Checking {operation.operation_id}")
-        result_negative = AasTestResult("Negative tests")
-        result_positive = AasTestResult("Positive tests")
 
-        graph = parse_operation(operation, sample_cache)
+        try:
+            ctr = _test_suites[operation.operation_id]
+        except KeyError:
+            ctr = ApiTestSuite
+        test_suite = ctr(operation, conf, sample_cache, spec.open_api)
+
+        result_before_suite = AasTestResult("Setup")
+        valid_values = test_suite.before_suite(result_before_suite)
+        result_before_suite.append(AasTestResult(f"Valid values: {valid_values}"))
+        result_op.append(result_before_suite)
+
+        result_negative = AasTestResult("Syntactic tests")
+        result_positive = AasTestResult("Semantic tests")
+
+        graph = generate_all(operation, sample_cache, valid_values)
         for i in graph.generate_paths():
             request: Request = graph.execute(i.path)
-            result_request = AasTestResult(f"Invoke: {request.operation.method.upper()} {request.path}")
-            response = request.execute(conf.server)
-            if response.status_code >= 400 and response.status_code < 500:
-                if i.is_valid:
-                    result_request.append(AasTestResult(f"Got bad status code {response.status_code}: {_html_safe(response.content)}", level=Level.ERROR))
+            result_request = _make_invoke_result(request)
+            if not conf.dry:
+                response = request.execute(conf.server)
+                if response.status_code >= 400 and response.status_code < 500:
+                    if i.is_valid:
+                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
+                    else:
+                        result_request.append(AasTestResult(f"Ok ({response.status_code})"))
+                elif response.status_code >= 200 and response.status_code < 300:
+                    if i.is_valid:
+                        result_request.append(AasTestResult(f"Ok ({response.status_code})"))
+                    else:
+                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
                 else:
-                    result_request.append(AasTestResult(f"Ok ({response.status_code})"))
-            elif response.status_code >= 200 and response.status_code < 300:
-                if i.is_valid:
-                    result_request.append(AasTestResult(f"Ok ({response.status_code})"))
-                else:
-                    result_request.append(AasTestResult(f"Got good status code {response.status_code}: {_html_safe(response.content)}", level=Level.ERROR))
-            else:
-                result_request.append(AasTestResult(f"Got unexpected status code {response.status_code}: {_html_safe(response.content)}", level=Level.ERROR))
+                    if i.is_valid:
+                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
+                    else:
+                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
             parent = result_positive if i.is_valid else result_negative
             parent.append(result_request)
         result_op.append(result_negative)

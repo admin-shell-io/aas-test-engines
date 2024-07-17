@@ -1,6 +1,7 @@
 from typing import List
 from enum import Enum
 import os
+import html
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -52,14 +53,17 @@ class AasTestResult:
             Level.ERROR: 'error'
         }[self.level]
         s = "<div>\n"
+        msg = html.escape(self.message)
         if self.sub_results:
-            s += f'<div class="{cls}">{self.message}<span class="caret"/></div>\n'
-            s += '<div class="sub-results">\n'
+            c = "" if self.ok() else "caret-down"
+            s += f'<div class="{cls}">{msg}<span class="caret {c}"/></div>\n'
+            c = "" if self.ok() else "visible"
+            s += f'<div class="sub-results {c}">\n'
             for sub_result in self.sub_results:
                 s += sub_result._to_html()
             s += "</div>\n"
         else:
-            s += f'<div class="{cls}">{self.message}</div>\n'
+            s += f'<div class="{cls}">{msg}</div>\n'
         s += "</div>\n"
         return s
 

@@ -125,14 +125,11 @@ print(file.latest_version())
 ```python
 from aas_test_engines import api
 
-tests = api.generate_tests(suites=set(['Asset Administration Shell API']))
-
-conf = api.run.ExecConf(
-    server = "http://localhost",
+conf = api.ExecConf(
+    server="http://localhost",
 )
-
-for result in api.execute_tests(tests, conf):
-    result.dump()
+result = api.execute_tests(conf=conf)
+result.dump()
 ```
 
 ### Checking older versions and specific test suites
@@ -144,8 +141,11 @@ You can also provide a list of test suites to check against:
 ```python
 from aas_test_engines import api
 
-tests = api.generate_tests('3.0', ['Asset Administration Shell API'])
-api.execute_tests(tests, "http://localhost")
+conf = api.ExecConf(
+    server="http://localhost",
+)
+result = api.execute_tests(version="3.0", suite='Asset Administration Shell API', conf=conf)
+result.dump()
 ```
 
 For the naming of test suites we follow the names given by the specification. These are:

@@ -72,7 +72,8 @@ def run_api_test(argv):
                         help="dry run, do not send requests")
     parser.add_argument('--suite',
                         type=str,
-                        help='selected test suite')
+                        help='selected test suite',
+                        default=api._DEFAULT_SUITE)
     parser.add_argument('--no-verify',
                         action='store_true',
                         help='do not check TLS certificate')
@@ -81,16 +82,12 @@ def run_api_test(argv):
                         default=OutputFormats.TEXT,
                         choices=list(OutputFormats))
     args = parser.parse_args(argv)
-    if args.suite:
-        suites = set([args.suite])
-    else:
-        suites = None
     exec_conf = api.ExecConf(
         server=args.server,
         dry=args.dry,
         verify=not args.no_verify,
     )
-    result = api.execute_tests(suites=suites, conf=exec_conf)
+    result = api.execute_tests(suite=args.suite, conf=exec_conf)
     if args.output == OutputFormats.TEXT:
         result.dump()
     elif args.output == OutputFormats.HTML:
