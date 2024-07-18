@@ -485,9 +485,9 @@ def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, 
                         result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
                 else:
                     if i.is_valid:
-                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
+                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.CRITICAL))
                     else:
-                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
+                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.CRITICAL))
             parent = result_positive if i.is_valid else result_negative
             parent.append(result_request)
         result_op.append(result_negative)

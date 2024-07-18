@@ -10,6 +10,7 @@ class Level(Enum):
     INFO = 0
     WARNING = 1
     ERROR = 2
+    CRITICAL = 3
 
     def __or__(self, other: "Level") -> "Level":
         return Level(max(self.value, other.value))
@@ -37,7 +38,7 @@ class AasTestResult:
         self.level = self.level | result.level
 
     def ok(self) -> bool:
-        return self.level != Level.ERROR
+        return self.level == Level.INFO or self.level == Level.WARNING
 
     def dump(self, indent=0, path=''):
         """Outputs the result to console"""
@@ -50,7 +51,8 @@ class AasTestResult:
         cls = {
             Level.INFO: 'info',
             Level.WARNING: 'warning',
-            Level.ERROR: 'error'
+            Level.ERROR: 'error',
+            Level.CRITICAL: 'critical',
         }[self.level]
         s = "<div>\n"
         msg = html.escape(self.message)
