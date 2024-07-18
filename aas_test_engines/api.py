@@ -228,24 +228,41 @@ _available_suites = _extend({
         "Asset Administration Shell Repository Service Specification",
     ],
     "AssetAdministrationShellRepositoryServiceSpecification/SSP-002": [
-        "GetAllAssetAdministrationShells",
+        # AAS Repository API:
+        "GetAllAssetAdministrationShells", # includes ...ByAssetId and ...ByIdShort
         "GetAllAssetAdministrationShells-Reference",
         "GetAssetAdministrationShellById",
-        "GetAssetAdministrationShellById-Reference_AasRepository",
-        "GetAllAssetAdministrationShellsByAssetId",
-        "GetAllAssetAdministrationShellsByIdShort",
+        "GetAssetAdministrationShellById-Reference",
+        # AAS API by superpath:
         "GetAllSubmodelReferences_AasRepository",
         "GetAssetInformation_AasRepository",
         "GetThumbnail_AasRepository",
-        "GetAllSubmodels_AasRepository",
+        # Submodel Repository API by superpath:
+        "GetAllSubmodels_AasRepository", # includes ...BySemanticId and ...ByIdShort
+        "GetAllSubmodels_AasRepository Metadata",
+        "GetAllSubmodels_AasRepository-ValueOnly",
+        "GetAllSubmodels_AasRepository-Reference",
+        "GetAllSubmodels_AasRepository-Path",
         "GetSubmodelById_AasRepository",
-        "GetAllSubmodelsBySemanticId_AasRepository",
-        "GetAllSubmodelsByIdShort_AasRepository",
-        "GetSubmodelById_AasRepository",
+        "GetSubmodelById_AasRepository Metadata",
+        "GetSubmodelById_AasRepository-ValueOnly",
+        "GetSubmodelById_AasRepository-Reference",
+        "GetSubmodelById_AasRepository-Path",
+        # Submodel API by superpath:
         "GetAllSubmodelElements_AasRepository",
+        "GetAllSubmodelElements_AasRepository Metadata",
+        "GetAllSubmodelElements_AasRepository-ValueOnly",
+        "GetAllSubmodelElements_AasRepository-Reference",
+        "GetAllSubmodelElements_AasRepository-Path",
         "GetSubmodelElementByPath_AasRepository",
+        "GetSubmodelElementByPath_AasRepository Metadata",
+        "GetSubmodelElementByPath_AasRepository-ValueOnly",
+        "GetSubmodelElementByPath_AasRepository-Reference",
+        "GetSubmodelElementByPath_AasRepository-Path",
         "GetFileByPath_AasRepository",
+        # Serialization API
         "GenerateSerializationByIds",
+        # Description API
         "GetDescription",
     ],
     "SubmodelRepositoryServiceSpecification/SSP-001": [
@@ -434,7 +451,7 @@ def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, 
     for operation in spec.open_api.operations.values():
         if operation.operation_id not in operation_ids:
             continue
-        result_op = AasTestResult(f"Checking {operation.operation_id}")
+        result_op = AasTestResult(f"Checking {operation.path} ({operation.operation_id})")
 
         try:
             ctr = _test_suites[operation.operation_id]
