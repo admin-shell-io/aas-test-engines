@@ -1,4 +1,4 @@
-from fences.json_schema.normalize import normalize
+from fences.json_schema.normalize import normalize, NormalizationConfig
 from fences.json_schema.parse import default_config, parse, KeyReference
 from fences.json_schema.config import FormatSamples
 from fences.core.node import Node as FlowGraph, NoOpDecision, Leaf
@@ -209,7 +209,14 @@ def post_process(entry: dict, result: FlowGraph) -> FlowGraph:
 
 
 def generate_graph(schema) -> FlowGraph:
-    schema_norm = normalize(schema, False)
+    norm_config = NormalizationConfig(
+        full_merge=False,
+        discard_fields={'discriminator'},
+        additional_mergers={
+            'check': lambda x, y: x + y
+        }
+    )
+    schema_norm = normalize(schema, norm_config)
     config = default_config()
     config.normalize = False
     config.format_samples = default_samples

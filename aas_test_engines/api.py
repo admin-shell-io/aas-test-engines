@@ -229,7 +229,7 @@ _available_suites = _extend({
     ],
     "AssetAdministrationShellRepositoryServiceSpecification/SSP-002": [
         # AAS Repository API:
-        "GetAllAssetAdministrationShells", # includes ...ByAssetId and ...ByIdShort
+        "GetAllAssetAdministrationShells",  # includes ...ByAssetId and ...ByIdShort
         "GetAllAssetAdministrationShells-Reference",
         "GetAssetAdministrationShellById",
         "GetAssetAdministrationShellById-Reference",
@@ -238,24 +238,24 @@ _available_suites = _extend({
         "GetAssetInformation_AasRepository",
         "GetThumbnail_AasRepository",
         # Submodel Repository API by superpath:
-        "GetAllSubmodels_AasRepository", # includes ...BySemanticId and ...ByIdShort
+        "GetAllSubmodels_AasRepository",  # includes ...BySemanticId and ...ByIdShort
         "GetAllSubmodels_AasRepository Metadata",
         "GetAllSubmodels_AasRepository-ValueOnly",
         "GetAllSubmodels_AasRepository-Reference",
         "GetAllSubmodels_AasRepository-Path",
         "GetSubmodelById_AasRepository",
-        "GetSubmodelById_AasRepository Metadata",
+        "GetSubmodelById_AasRepository-Metadata",
         "GetSubmodelById_AasRepository-ValueOnly",
         "GetSubmodelById_AasRepository-Reference",
         "GetSubmodelById_AasRepository-Path",
         # Submodel API by superpath:
         "GetAllSubmodelElements_AasRepository",
-        "GetAllSubmodelElements_AasRepository Metadata",
+        "GetAllSubmodelElements_AasRepository-Metadata",
         "GetAllSubmodelElements_AasRepository-ValueOnly",
         "GetAllSubmodelElements_AasRepository-Reference",
         "GetAllSubmodelElements_AasRepository-Path",
         "GetSubmodelElementByPath_AasRepository",
-        "GetSubmodelElementByPath_AasRepository Metadata",
+        "GetSubmodelElementByPath_AasRepository-Metadata",
         "GetSubmodelElementByPath_AasRepository-ValueOnly",
         "GetSubmodelElementByPath_AasRepository-Reference",
         "GetSubmodelElementByPath_AasRepository-Path",
@@ -349,7 +349,10 @@ def _get_spec(version: str) -> AasSpec:
 
 
 def _shorten(content: bytes, max_len: int = 300) -> str:
-    content = content.decode()
+    try:
+        content = content.decode()
+    except UnicodeDecodeError:
+        return "<binary-data>"
     if len(content) > max_len:
         return content[:max_len] + "..."
     return content
@@ -365,11 +368,12 @@ class ApiTestSuiteException(Exception):
 
 class ApiTestSuite:
 
-    def __init__(self, operation: Operation, conf: ExecConf, sample_cache: SampleCache, open_api: OpenApi):
+    def __init__(self, operation: Operation, conf: ExecConf, sample_cache: SampleCache, open_api: OpenApi, suite: str):
         self.operation = operation
         self.conf = conf
         self.sample_cache = sample_cache
         self.open_api = open_api
+        self.suite = suite
 
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         return {}
@@ -377,7 +381,7 @@ class ApiTestSuite:
     def before_semantic_test(self):
         pass
 
-    def after_semantic_test(self, request: Request, response: requests.models.Response):
+    def after_semantic_test(self, result: AasTestResult, request: Request, response: requests.models.Response):
         pass
 
     def after_suite(self):
@@ -389,6 +393,8 @@ class GetAllAasTestSuite(ApiTestSuite):
         request = generate_one_valid(self.operation, self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up idShort, got status {response.status_code}")
         data = response.json()
         overwrites = {
             'limit': [1],
@@ -396,13 +402,13 @@ class GetAllAasTestSuite(ApiTestSuite):
         try:
             valid_cursor = data['paging_metadata']['cursor']
             overwrites['cursor'] = [valid_cursor]
-        except KeyError:
-            pass  # TODO
+        except KeyError as e:
+            pass
         try:
             valid_id_short = data['result'][0]['idShort']
             overwrites['idShort'] = [valid_id_short]
-        except KeyError:
-            pass  # TODO
+        except KeyError as e:
+            raise ApiTestSuiteException(f"Cannot look up idShort: {e}")
         return overwrites
 
 
@@ -411,19 +417,101 @@ class GetAasById(ApiTestSuite):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
         data = response.json()
         overwrites = {}
         try:
             valid_id = data['result'][0]['id']
             overwrites['aasIdentifier'] = [base64.urlsafe_b64encode(valid_id.encode()).decode()]
-        except (KeyError, TypeError):
-            pass  # TODO
+        except (KeyError, TypeError) as e:
+            raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
         return overwrites
 
 
+class AasBySuperpathSuite(ApiTestSuite):
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
+        data = response.json()
+        overwrites = {}
+        try:
+            valid_id = data['result'][0]['id']
+            overwrites['aasIdentifier'] = [base64.urlsafe_b64encode(valid_id.encode()).decode()]
+        except (KeyError, TypeError) as e:
+            raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
+        return overwrites
+
+
+class AasAndSubmodelBySuperpathSuite(ApiTestSuite):
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
+        data = response.json()
+        overwrites = {}
+        try:
+            valid_id = data['result'][0]['id']
+            valid_id_b64 = base64.urlsafe_b64encode(valid_id.encode()).decode()
+            overwrites['aasIdentifier'] = [valid_id_b64]
+        except (KeyError, TypeError) as e:
+            raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
+        request = generate_one_valid(self.open_api.operations["GetAllSubmodels_AasRepository"], self.sample_cache, {'aasIdentifier': valid_id_b64, 'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError as e:
+            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier: {e}")
+        try:
+            valid_id = data['result'][0]['id']
+            valid_id_b64 = base64.urlsafe_b64encode(valid_id.encode()).decode()
+            overwrites['submodelIdentifier'] = [valid_id_b64]
+        except (KeyError, TypeError) as e:
+            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier: {e}")
+        return overwrites
+
+class GetDescriptionTestSuite(ApiTestSuite):
+    def after_semantic_test(self, result: AasTestResult, request: Request, response: requests.models.Response):
+        data = response.json()
+        profiles = data["Profiles"]
+        if self.suite not in profiles:
+            result.append(AasTestResult(f"Suite {self.suite} not part of profiles", level=Level.WARNING))
+
 _test_suites = {
     'GetAllAssetAdministrationShells': GetAllAasTestSuite,
+    'GetAllAssetAdministrationShells-Reference': GetAllAasTestSuite,
+
     'GetAssetAdministrationShellById': GetAasById,
+    'GetAssetAdministrationShellById-Reference': GetAasById,
+    "GetAllSubmodelReferences_AasRepository": AasBySuperpathSuite,
+    "GetAssetInformation_AasRepository": AasBySuperpathSuite,
+    "GetThumbnail_AasRepository": AasBySuperpathSuite,
+    "GetAllSubmodels_AasRepository": AasBySuperpathSuite,
+    "GetAllSubmodels_AasRepository Metadata": AasBySuperpathSuite,
+    "GetAllSubmodels_AasRepository-ValueOnly": AasBySuperpathSuite,
+    "GetAllSubmodels_AasRepository-Reference": AasBySuperpathSuite,
+    "GetAllSubmodels_AasRepository-Path": AasBySuperpathSuite,
+
+    "GetSubmodelById_AasRepository": AasAndSubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-Metadata": AasAndSubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-ValueOnly": AasAndSubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-Reference": AasAndSubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-Path": AasAndSubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository": AasAndSubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-Metadata": AasAndSubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-ValueOnly": AasAndSubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-Reference": AasAndSubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-Path": AasAndSubmodelBySuperpathSuite,
+
+    "GetDescription": GetDescriptionTestSuite,
 }
 
 
@@ -457,41 +545,49 @@ def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, 
             ctr = _test_suites[operation.operation_id]
         except KeyError:
             ctr = ApiTestSuite
-        test_suite = ctr(operation, conf, sample_cache, spec.open_api)
+        test_suite = ctr(operation, conf, sample_cache, spec.open_api, suite)
 
         result_before_suite = AasTestResult("Setup")
-        valid_values = test_suite.before_suite(result_before_suite)
-        result_before_suite.append(AasTestResult(f"Valid values: {valid_values}"))
+        try:
+            valid_values = test_suite.before_suite(result_before_suite)
+            result_before_suite.append(AasTestResult(f"Valid values: {valid_values}"))
+        except ApiTestSuiteException as e:
+            result_before_suite.append(AasTestResult( f"Failed: {e}", level=Level.ERROR))
         result_op.append(result_before_suite)
 
-        result_negative = AasTestResult("Syntactic tests")
-        result_positive = AasTestResult("Semantic tests")
+        if result_op.ok():
+            result_negative = AasTestResult("Syntactic tests")
+            result_positive = AasTestResult("Semantic tests")
 
-        graph = generate_all(operation, sample_cache, valid_values)
-        for i in graph.generate_paths():
-            request: Request = graph.execute(i.path)
-            result_request = _make_invoke_result(request)
-            if not conf.dry:
-                response = request.execute(conf.server)
-                if response.status_code >= 400 and response.status_code < 500:
-                    if i.is_valid:
-                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
+            graph = generate_all(operation, sample_cache, valid_values)
+            for i in graph.generate_paths():
+                request: Request = graph.execute(i.path)
+                result_request = _make_invoke_result(request)
+                if not conf.dry:
+                    response = request.execute(conf.server)
+                    if response.status_code >= 500:
+                        if i.is_valid:
+                            result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.CRITICAL))
+                            result_negative.append(result_request)
+                        else:
+                            result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.CRITICAL))
+                            result_positive.append(result_request)
                     else:
-                        result_request.append(AasTestResult(f"Ok ({response.status_code})"))
-                elif response.status_code >= 200 and response.status_code < 300:
-                    if i.is_valid:
-                        result_request.append(AasTestResult(f"Ok ({response.status_code})"))
-                    else:
-                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
-                else:
-                    if i.is_valid:
-                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.CRITICAL))
-                    else:
-                        result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.CRITICAL))
-            parent = result_positive if i.is_valid else result_negative
-            parent.append(result_request)
-        result_op.append(result_negative)
-        result_op.append(result_positive)
+                        if i.is_valid:
+                            if response.status_code >= 400:
+                                result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
+                            else:
+                                result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
+                                test_suite.after_semantic_test(result_request, request, response)
+                            result_positive.append(result_request)
+                        else:
+                            if response.status_code >= 400:
+                                result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
+                            else:
+                                result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
+                            result_negative.append(result_request)
+            result_op.append(result_negative)
+            result_op.append(result_positive)
         result_root.append(result_op)
     return result_root
 

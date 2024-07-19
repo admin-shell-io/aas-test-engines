@@ -5642,17 +5642,17 @@ paths:
       summary: Returns all Asset Administration Shells
       operationId: GetAllAssetAdministrationShells
       parameters:
-      - name: assetIds
-        in: query
-        description: A list of specific Asset identifiers
-        required: false
-        style: form
-        explode: true
-        schema:
-          type: array
-          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
-          items:
-            $ref: '#/components/schemas/SpecificAssetId'
+#      - name: assetIds
+#        in: query
+#        description: A list of specific Asset identifiers
+#        required: false
+#        style: form
+#        explode: true
+#        schema:
+#          type: array
+#          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
+#          items:
+#            $ref: '#/components/schemas/SpecificAssetId'
       - name: idShort
         in: query
         description: The Asset Administration Shell’s IdShort
@@ -5779,17 +5779,17 @@ paths:
       summary: Returns References to all Asset Administration Shells
       operationId: GetAllAssetAdministrationShells-Reference
       parameters:
-#      - name: assetIds
-#        in: query
-#        description: A list of specific Asset identifiers
-#        required: false
-#        style: form
-#        explode: true
-#        schema:
-#          type: array
-#          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
-#          items:
-#            $ref: '#/components/schemas/SpecificAssetId'
+      - name: assetIds
+        in: query
+        description: A list of specific Asset identifiers
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          example: "[ { \"name\": \"some-asset-id\", \"value\": \"http://example-company.com/myAsset\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://example-company.com/example-companys-asset-keys\" } ], \"type\": \"GlobalReference\" } }, { \"name\": \"some-other-asset-id\", \"value\": \"12345ABC\", \"externalSubjectId\": { \"keys\": [ { \"type\": \"GlobalReference\", \"value\": \"http://my-own-company.com/keys\" } ], \"type\": \"GlobalReference\" } } ]e\": \"globalAssetId\",\"value\": \"http://example.company/myAsset\", \"externalSubjectId\": \"http://example.company\"},{\"name\": \"myOwnInternalAssetId\",\"value\": \"12345ABC\", \"externalSubjectId\": \"http://example.company\"}]"
+          items:
+            $ref: '#/components/schemas/SpecificAssetId'
       - name: idShort
         in: query
         description: The Asset Administration Shell’s IdShort
@@ -5803,7 +5803,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -6413,7 +6413,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -7410,7 +7410,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$metadata:
     get:
       summary: Returns the Submodel's metadata elements
-      operationId: GetSubmodelById-Metadata_AasRepository
+      operationId: GetSubmodelById_AasRepository-Metadata
       parameters:
       - name: aasIdentifier
         in: path
@@ -7554,7 +7554,7 @@ paths:
       - https://admin-shell.io/aas/API/DeleteSubmodelById/3/0
     patch:
       summary: Updates the metadata attributes of the Submodel
-      operationId: PatchSubmodelById-Metadata_AasRepository
+      operationId: PatchSubmodelById_AasRepository-Metadata
       parameters:
       - name: aasIdentifier
         in: path
@@ -7638,7 +7638,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$value:
     get:
       summary: Returns the Submodel's ValueOnly representation
-      operationId: GetSubmodelById-ValueOnly_AasRepository
+      operationId: GetSubmodelById_AasRepository-ValueOnly
       parameters:
       - name: aasIdentifier
         in: path
@@ -7727,7 +7727,7 @@ paths:
       - https://admin-shell.io/aas/API/GetSubmodel/3/0
     patch:
       summary: Updates teh values of the Submodel
-      operationId: PatchSubmodelById-ValueOnly_AasRepository
+      operationId: PatchSubmodelById_AasRepository-ValueOnly
       parameters:
       - name: aasIdentifier
         in: path
@@ -7811,7 +7811,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$reference:
     get:
       summary: Returns the Submodel as a Reference
-      operationId: GetSubmodelById-Reference_AasRepository
+      operationId: GetSubmodelById_AasRepository-Reference
       parameters:
       - name: aasIdentifier
         in: path
@@ -7892,7 +7892,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/$path:
     get:
       summary: Returns the Submodel's metadata elements
-      operationId: GetSubmodelById-Path_AasRepository
+      operationId: GetSubmodelById_AasRepository-Path
       parameters:
       - name: aasIdentifier
         in: path
@@ -8179,7 +8179,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$metadata:
     get:
       summary: Returns all submodel elements including their hierarchy
-      operationId: GetAllSubmodelElements-Metadata_AasRepository
+      operationId: GetAllSubmodelElements_AasRepository-Metadata
       parameters:
       - name: aasIdentifier
         in: path
@@ -8274,7 +8274,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$value:
     get:
       summary: Returns all submodel elements including their hierarchy in the ValueOnly representation
-      operationId: GetAllSubmodelElements-ValueOnly_AasRepository
+      operationId: GetAllSubmodelElements_AasRepository-ValueOnly
       parameters:
       - name: aasIdentifier
         in: path
@@ -8369,7 +8369,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$reference:
     get:
       summary: Returns all submodel elements as a list of References
-      operationId: GetAllSubmodelElements-Reference_AasRepository
+      operationId: GetAllSubmodelElements_AasRepository-Reference
       parameters:
       - name: aasIdentifier
         in: path
@@ -8465,7 +8465,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/$path:
     get:
       summary: Returns all submodel elements including their hierarchy
-      operationId: GetAllSubmodelElements-Path_AasRepository
+      operationId: GetAllSubmodelElements_AasRepository-Path
       parameters:
       - name: aasIdentifier
         in: path
@@ -9013,7 +9013,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$metadata:
     get:
       summary: Returns the metadata attributes if a specific submodel element from the Submodel at a specified path
-      operationId: GetSubmodelElementByPath-Metadata_AasRepository
+      operationId: GetSubmodelElementByPath_AasRepository-Metadata
       parameters:
       - name: aasIdentifier
         in: path
@@ -9204,7 +9204,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$value:
     get:
       summary: Returns a specific submodel element from the Submodel at a specified path in the ValueOnly representation
-      operationId: GetSubmodelElementByPath-ValueOnly_AasRepository
+      operationId: GetSubmodelElementByPath_AasRepository-ValueOnly
       parameters:
       - name: aasIdentifier
         in: path
@@ -9405,7 +9405,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$reference:
     get:
       summary: Returns the Reference of a specific submodel element from the Submodel at a specified path
-      operationId: GetSubmodelElementByPath-Reference_AasRepository
+      operationId: GetSubmodelElementByPath_AasRepository-Reference
       parameters:
       - name: aasIdentifier
         in: path
@@ -9494,7 +9494,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/$path:
     get:
       summary: Returns a specific submodel element from the Submodel at a specified path in the Path notation
-      operationId: GetSubmodelElementByPath-Path_AasRepository
+      operationId: GetSubmodelElementByPath_AasRepository-Path
       parameters:
       - name: aasIdentifier
         in: path
@@ -9911,7 +9911,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke/$value:
     post:
       summary: Synchronously invokes an Operation at a specified path
-      operationId: InvokeOperation-ValueOnly_AasRepository
+      operationId: InvokeOperation_AasRepository-ValueOnly
       parameters:
       - name: aasIdentifier
         in: path
@@ -10082,7 +10082,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/invoke-async/$value:
     post:
       summary: Asynchronously invokes an Operation at a specified path
-      operationId: InvokeOperationAsync-ValueOnly_AasRepository
+      operationId: InvokeOperationAsync_AasRepository-ValueOnly
       parameters:
       - name: aasIdentifier
         in: path
@@ -10349,7 +10349,7 @@ paths:
   /shells/{aasIdentifier}/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}/$value:
     get:
       summary: Returns the ValueOnly notation of the Operation result of an asynchronous invoked Operation
-      operationId: GetOperationAsyncResult-ValueOnly_AasRepository
+      operationId: GetOperationAsyncResult_AasRepository-ValueOnly
       parameters:
       - name: aasIdentifier
         in: path
