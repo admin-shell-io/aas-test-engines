@@ -593,7 +593,7 @@ def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, 
 
 
 def supported_versions():
-    return {ver: spec.tags for ver, spec in _specs.items()}
+    return {ver: _available_suites.keys() for ver, spec in _specs.items()}
 
 
 def latest_version():
