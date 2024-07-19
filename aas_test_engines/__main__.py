@@ -60,7 +60,7 @@ def run_file_test(argv):
         print(json.dumps(result.to_dict()))
     else:
         raise Exception(f"Invalid output {args.output}")
-
+    exit(0 if result.ok() else 1)
 
 def run_api_test(argv):
     parser = argparse.ArgumentParser(description='Checks a server instance for compliance with the AAS api')
@@ -96,6 +96,7 @@ def run_api_test(argv):
         print(json.dumps(result.to_dict()))
     else:
         raise Exception(f"Invalid output {args.output}")
+    exit(0 if result.ok() else 1)
 
 
 def generate_files(argv):
