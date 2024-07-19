@@ -7,7 +7,7 @@
             "semanticId": {
                 "keys": [
                     {
-                        "type": "ConceptDescription",
+                        "type": "GlobalReference",
                         "value": "https://admin-shell.io/zvei/nameplate/2/0/Nameplate"
                     }
                 ],
