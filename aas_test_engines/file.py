@@ -368,6 +368,11 @@ NS_RELATIONSHIPS = "{http://schemas.openxmlformats.org/package/2006/relationship
 TYPE_AASX_ORIGIN = 'http://admin-shell.io/aasx/relationships/aasx-origin'
 TYPE_AASX_SPEC = 'http://admin-shell.io/aasx/relationships/aas-spec'
 TYPE_AASX_SUPPL = 'http://admin-shell.io/aasx/relationships/aas-suppl'
+DEPRECATED_TYPES = {
+    'http://www.admin-shell.io/aasx/relationships/aasx-origin': TYPE_AASX_ORIGIN,
+    'http://www.admin-shell.io/aasx/relationships/aas-spec': TYPE_AASX_SPEC,
+    'http://www.admin-shell.io/aasx/relationships/aas-suppl': TYPE_AASX_SUPPL
+}
 TYPE_THUMBNAIL = 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail'
 
 
@@ -432,6 +437,11 @@ def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, dir:
             result.append(AasTestResult(
                 f'Attribute {e} is missing', str(idx), Level.ERROR))
             continue
+
+        if type in DEPRECATED_TYPES:
+            new_type = DEPRECATED_TYPES[type]
+            result.append(AasTestResult(f"Deprecated type {type}, considering as {new_type}", level=Level.WARNING))
+            type = new_type
 
         if target.startswith('/'):
             target = target[1:]

@@ -40,12 +40,16 @@ class AasTestResult:
     def ok(self) -> bool:
         return self.level == Level.INFO or self.level == Level.WARNING
 
-    def dump(self, indent=0, path=''):
+    def dump(self):
         """Outputs the result to console"""
+        for line in self.to_lines():
+            print(line)
+
+    def to_lines(self, indent=0, path=''):
         ENDC = '\033[0m'
-        print("   " * indent + self.level.color() + self.message + ENDC)
+        yield "   " * indent + self.level.color() + self.message + ENDC
         for sub_result in self.sub_results:
-            sub_result.dump(indent + 1, path + "/" + self.path_fragment)
+            yield from sub_result.to_lines(indent + 1, path + "/" + self.path_fragment)
 
     def _to_html(self) -> str:
         cls = {

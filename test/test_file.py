@@ -137,6 +137,13 @@ class CheckAasxTest(TestCase):
         result.dump()
         self.assertEqual(result.level, Level.WARNING)
 
+    def test_deprecated_rel(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/deprecated_rel'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertTrue(any("Deprecated type http://www.admin-shell.io/" in line for line in result.to_lines()))
+        self.assertEqual(result.level, Level.WARNING)
+
 
 class SupportedVersionTest(TestCase):
 
