@@ -1,4 +1,4 @@
-from typing import Dict, Set, List
+from typing import Dict, List, Union
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
 from ._util import b64urlsafe
@@ -10,6 +10,28 @@ import os
 from yaml import load, CSafeLoader
 from dataclasses import dataclass
 import requests
+
+
+def _lookup(value: any, path: List[Union[str, int]], idx: int = 0) -> any:
+    if idx >= len(path):
+        return value
+
+    fragment = path[idx]
+    if isinstance(fragment, str):
+        if not isinstance(value, dict):
+            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: should be an object")
+        try:
+            sub_value = value[fragment]
+        except KeyError:
+            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: key '{fragment}' does not exist")
+    elif isinstance(fragment, int):
+        if not isinstance(value, list):
+            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: should be an array")
+        try:
+            sub_value = value[fragment]
+        except IndexError:
+            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: array too short")
+    return _lookup(sub_value, path, idx+1)
 
 
 def _extend(data: Dict[str, List[str]]) -> dict:
@@ -396,20 +418,11 @@ class GetAllAasTestSuite(ApiTestSuite):
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up idShort, got status {response.status_code}")
         data = response.json()
-        overwrites = {
+        return {
             'limit': [1],
+            'cursor': [_lookup(data, ['paging_metadata', 'cursor'])],
+            'idShort': [_lookup(data, ['result', 0, 'idShort'])],
         }
-        try:
-            valid_cursor = data['paging_metadata']['cursor']
-            overwrites['cursor'] = [valid_cursor]
-        except KeyError as e:
-            pass
-        try:
-            valid_id_short = data['result'][0]['idShort']
-            overwrites['idShort'] = [valid_id_short]
-        except KeyError as e:
-            raise ApiTestSuiteException(f"Cannot look up idShort: {e}")
-        return overwrites
 
 
 class GetAasById(ApiTestSuite):
@@ -420,13 +433,10 @@ class GetAasById(ApiTestSuite):
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
         data = response.json()
-        overwrites = {}
-        try:
-            valid_id = data['result'][0]['id']
-            overwrites['aasIdentifier'] = [b64urlsafe(valid_id)]
-        except (KeyError, TypeError) as e:
-            raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
-        return overwrites
+        valid_id = _lookup(data, ['result', 0, 'id'])
+        return {
+            'aasIdentifier': [b64urlsafe(valid_id)]
+        }
 
 
 class AasBySuperpathSuite(ApiTestSuite):
@@ -437,13 +447,10 @@ class AasBySuperpathSuite(ApiTestSuite):
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
         data = response.json()
-        overwrites = {}
-        try:
-            valid_id = data['result'][0]['id']
-            overwrites['aasIdentifier'] = [b64urlsafe(valid_id)]
-        except (KeyError, TypeError) as e:
-            raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
-        return overwrites
+        valid_id = _lookup(data, ['result', 0, 'id'])
+        return {
+            'aasIdentifier': [b64urlsafe(valid_id)]
+        }
 
 
 class AasAndSubmodelBySuperpathSuite(ApiTestSuite):
@@ -454,15 +461,13 @@ class AasAndSubmodelBySuperpathSuite(ApiTestSuite):
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
         data = response.json()
-        overwrites = {}
-        try:
-            valid_id = data['result'][0]['id']
-            overwrites['aasIdentifier'] = [b64urlsafe(valid_id)]
-            valid_submodel_id = data['result'][0]['submodels'][0]['keys'][0]['value']
-            overwrites['submodelIdentifier'] = [b64urlsafe(valid_submodel_id)]
-        except (KeyError, TypeError) as e:
-            raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
-        return overwrites
+        valid_id = _lookup(data, ['result', 0, 'id'])
+        valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
+        return {
+            'aasIdentifier': [b64urlsafe(valid_id)],
+            'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
+        }
+
 
 class GetDescriptionTestSuite(ApiTestSuite):
     def after_semantic_test(self, result: AasTestResult, request: Request, response: requests.models.Response):
@@ -470,6 +475,7 @@ class GetDescriptionTestSuite(ApiTestSuite):
         profiles = data["Profiles"]
         if self.suite not in profiles:
             result.append(AasTestResult(f"Suite {self.suite} not part of profiles", level=Level.WARNING))
+
 
 _test_suites = {
     'GetAllAssetAdministrationShells': GetAllAasTestSuite,
@@ -538,7 +544,7 @@ def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, 
             valid_values = test_suite.before_suite(result_before_suite)
             result_before_suite.append(AasTestResult(f"Valid values: {valid_values}"))
         except ApiTestSuiteException as e:
-            result_before_suite.append(AasTestResult( f"Failed: {e}", level=Level.ERROR))
+            result_before_suite.append(AasTestResult(f"Failed: {e}", level=Level.ERROR))
         result_op.append(result_before_suite)
 
         if result_op.ok():
