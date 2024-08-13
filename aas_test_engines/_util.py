@@ -1,4 +1,6 @@
 from typing import Dict, List
+import base64
+
 
 def _group(elements: list) -> dict:
     assert isinstance(elements, list)
@@ -13,6 +15,7 @@ def _group(elements: list) -> dict:
             grouped[key] = [item]
     return grouped
 
+
 def group(data: any) -> any:
     if isinstance(data, list):
         data = [group(i) for i in data]
@@ -26,6 +29,7 @@ def group(data: any) -> any:
             data['submodelElements'] = _group(elements)
     return data
 
+
 def _un_group(elements: dict) -> list:
     if not isinstance(elements, dict):
         return elements
@@ -36,6 +40,7 @@ def _un_group(elements: dict) -> list:
         else:
             un_grouped.append(item)
     return un_grouped
+
 
 def un_group(data: any) -> any:
     if isinstance(data, list):
@@ -51,3 +56,7 @@ def un_group(data: any) -> any:
             elements = data.get('submodelElements')
             data['submodelElements'] = _un_group(elements)
     return data
+
+
+def b64urlsafe(value: str) -> str:
+    return base64.urlsafe_b64encode(value.encode()).decode()

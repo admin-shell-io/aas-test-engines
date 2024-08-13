@@ -1,6 +1,7 @@
 from typing import Dict, Set, List
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
+from ._util import b64urlsafe
 
 from fences.open_api.open_api import OpenApi, Operation
 from fences.open_api.generate import SampleCache, generate_all, generate_one_valid, Request
@@ -9,7 +10,6 @@ import os
 from yaml import load, CSafeLoader
 from dataclasses import dataclass
 import requests
-import base64
 
 
 def _extend(data: Dict[str, List[str]]) -> dict:
@@ -423,7 +423,7 @@ class GetAasById(ApiTestSuite):
         overwrites = {}
         try:
             valid_id = data['result'][0]['id']
-            overwrites['aasIdentifier'] = [base64.urlsafe_b64encode(valid_id.encode()).decode()]
+            overwrites['aasIdentifier'] = [b64urlsafe(valid_id)]
         except (KeyError, TypeError) as e:
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
         return overwrites
@@ -440,7 +440,7 @@ class AasBySuperpathSuite(ApiTestSuite):
         overwrites = {}
         try:
             valid_id = data['result'][0]['id']
-            overwrites['aasIdentifier'] = [base64.urlsafe_b64encode(valid_id.encode()).decode()]
+            overwrites['aasIdentifier'] = [b64urlsafe(valid_id)]
         except (KeyError, TypeError) as e:
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
         return overwrites
@@ -457,25 +457,11 @@ class AasAndSubmodelBySuperpathSuite(ApiTestSuite):
         overwrites = {}
         try:
             valid_id = data['result'][0]['id']
-            valid_id_b64 = base64.urlsafe_b64encode(valid_id.encode()).decode()
-            overwrites['aasIdentifier'] = [valid_id_b64]
+            overwrites['aasIdentifier'] = [b64urlsafe(valid_id)]
+            valid_submodel_id = data['result'][0]['submodels'][0]['keys'][0]['value']
+            overwrites['submodelIdentifier'] = [b64urlsafe(valid_submodel_id)]
         except (KeyError, TypeError) as e:
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier: {e}")
-        request = generate_one_valid(self.open_api.operations["GetAllSubmodels_AasRepository"], self.sample_cache, {'aasIdentifier': valid_id_b64, 'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
-        try:
-            data = response.json()
-        except requests.exceptions.JSONDecodeError as e:
-            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier: {e}")
-        try:
-            valid_id = data['result'][0]['id']
-            valid_id_b64 = base64.urlsafe_b64encode(valid_id.encode()).decode()
-            overwrites['submodelIdentifier'] = [valid_id_b64]
-        except (KeyError, TypeError) as e:
-            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier: {e}")
         return overwrites
 
 class GetDescriptionTestSuite(ApiTestSuite):
