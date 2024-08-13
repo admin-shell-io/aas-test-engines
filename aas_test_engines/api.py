@@ -7,7 +7,13 @@ from fences.open_api.open_api import OpenApi, Operation
 from fences.open_api.generate import SampleCache, generate_all, generate_one_valid, Request
 
 import os
-from yaml import load, CSafeLoader
+from yaml import load
+try:
+    # This one is faster but not available on all systems
+    from yaml import CSafeLoader as Loader
+except ImportError:
+    from yaml import SafeLoader as Loader
+
 from dataclasses import dataclass
 import requests
 
@@ -351,7 +357,7 @@ def _find_specs() -> Dict[str, AasSpec]:
         if not i.endswith('.yml'):
             continue
         with open(path, 'rb') as f:
-            spec = load(f, Loader=CSafeLoader)
+            spec = load(f, Loader=Loader)
         open_api = OpenApi.from_dict(spec)
         result[i[:-4]] = AasSpec(open_api)
     return result

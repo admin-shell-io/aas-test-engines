@@ -2,7 +2,11 @@ from typing import List, Dict, TextIO, Union, Any, Set, Optional, Generator
 import os
 import json
 from yaml import load
-from yaml import CSafeLoader as Loader
+try:
+    # This one is faster but not available on all systems
+    from yaml import CSafeLoader as Loader
+except ImportError:
+    from yaml import SafeLoader as Loader
 
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
