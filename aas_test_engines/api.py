@@ -454,7 +454,7 @@ class AasBySuperpathSuite(ApiTestSuite):
         }
 
 
-class AasAndSubmodelBySuperpathSuite(ApiTestSuite):
+class SubmodelBySuperpathSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
@@ -467,6 +467,44 @@ class AasAndSubmodelBySuperpathSuite(ApiTestSuite):
         return {
             'aasIdentifier': [b64urlsafe(valid_id)],
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
+        }
+
+class SubmodelElementBySuperpathSuite(ApiTestSuite):
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
+        data = response.json()
+        valid_id = _lookup(data, ['result', 0, 'id'])
+        valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
+        overwrites = {
+            'aasIdentifier': [b64urlsafe(valid_id)],
+            'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
+        }
+        request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
+        data = response.json()
+        overwrites['idShortPath'] = [_lookup(data, ['result', 0, 'idShort'])]
+        return overwrites
+
+class GenerateSerializationSuite(ApiTestSuite):
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.conf.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
+        data = response.json()
+        valid_id = _lookup(data, ['result', 0, 'id'])
+        valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
+        return {
+            'aasIds': [[b64urlsafe(valid_id)]],
+            'submodelIds': [[b64urlsafe(valid_submodel_id)]],
         }
 
 
@@ -484,6 +522,7 @@ _test_suites = {
 
     'GetAssetAdministrationShellById': GetAasById,
     'GetAssetAdministrationShellById-Reference': GetAasById,
+
     "GetAllSubmodelReferences_AasRepository": AasBySuperpathSuite,
     "GetAssetInformation_AasRepository": AasBySuperpathSuite,
     "GetThumbnail_AasRepository": AasBySuperpathSuite,
@@ -493,16 +532,24 @@ _test_suites = {
     "GetAllSubmodels_AasRepository-Reference": AasBySuperpathSuite,
     "GetAllSubmodels_AasRepository-Path": AasBySuperpathSuite,
 
-    "GetSubmodelById_AasRepository": AasAndSubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-Metadata": AasAndSubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-ValueOnly": AasAndSubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-Reference": AasAndSubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-Path": AasAndSubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository": AasAndSubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-Metadata": AasAndSubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-ValueOnly": AasAndSubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-Reference": AasAndSubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-Path": AasAndSubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository": SubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-Metadata": SubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-ValueOnly": SubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-Reference": SubmodelBySuperpathSuite,
+    "GetSubmodelById_AasRepository-Path": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-Metadata": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-ValueOnly": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-Reference": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements_AasRepository-Path": SubmodelBySuperpathSuite,
+
+    "GetSubmodelElementByPath_AasRepository": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath_AasRepository-Metadata": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath_AasRepository-ValueOnly": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath_AasRepository-Reference": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath_AasRepository-Path": SubmodelElementBySuperpathSuite,
+
+    "GenerateSerializationByIds": GenerateSerializationSuite,
 
     "GetDescription": GetDescriptionTestSuite,
 }

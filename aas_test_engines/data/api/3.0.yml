@@ -8598,19 +8598,6 @@ paths:
         explode: false
         schema:
           type: string
-      - name: limit
-        in: query
-        description: The maximum number of elements in the response array
-        required: false
-        schema:
-          minimum: 0
-          type: integer
-      - name: cursor
-        in: query
-        description: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
-        required: false
-        schema:
-          type: string
       - name: level
         in: query
         description: Determines the structural depth of the respective resource content
@@ -9043,19 +9030,6 @@ paths:
         explode: false
         schema:
           type: string
-      - name: limit
-        in: query
-        description: The maximum number of elements in the response array
-        required: false
-        schema:
-          minimum: 0
-          type: integer
-      - name: cursor
-        in: query
-        description: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
-        required: false
-        schema:
-          type: string
       - name: level
         in: query
         description: Determines the structural depth of the respective resource content
@@ -9232,19 +9206,6 @@ paths:
         required: true
         style: simple
         explode: false
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: The maximum number of elements in the response array
-        required: false
-        schema:
-          minimum: 0
-          type: integer
-      - name: cursor
-        in: query
-        description: A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue
-        required: false
         schema:
           type: string
       - name: level
