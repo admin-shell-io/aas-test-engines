@@ -49,6 +49,7 @@ def _extend(data: Dict[str, List[str]]) -> dict:
         if all_resolved:
             return data
 
+SSP_PREFIX = "https://admin-shell.io/aas/API/3/0/"
 
 _available_suites = _extend({
     # APIs
@@ -194,10 +195,10 @@ _available_suites = _extend({
         "Concept Description Repository API",
     ],
     # Service Spec Profiles
-    "AssetAdministrationShellServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}AssetAdministrationShellServiceSpecification/SSP-001": [
         "Asset Administration Shell Service Specification"
     ],
-    "AssetAdministrationShellServiceSpecification/SSP-002": [
+    f"{SSP_PREFIX}AssetAdministrationShellServiceSpecification/SSP-002": [
         "GetAssetAdministrationShell",
         "GetAllSubmodelReferences",
         "GetAssetInformation",
@@ -207,10 +208,10 @@ _available_suites = _extend({
         "GetSubmodelElementByPath",  # TODO: via super path
         "GetFileByPath",  # TODO: via super path
     ],
-    "SubmodelServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}SubmodelServiceSpecification/SSP-001": [
         "Submodel Service Specification",
     ],
-    "SubmodelServiceSpecification/SSP-002": [
+    f"{SSP_PREFIX}SubmodelServiceSpecification/SSP-002": [
         "GetSubmodel",
         "GetAllSubmodelElements",
         "GetSubmodelElementByPath",
@@ -218,38 +219,38 @@ _available_suites = _extend({
         "GenerateSerializationByIds",
         "GetDescription",
     ],
-    "SubmodelServiceSpecification/SSP-003": [
+    f"{SSP_PREFIX}SubmodelServiceSpecification/SSP-003": [
         "GetSubmodel",
         "InvokeOperationSync",
         "GetDescription",
     ],
-    "AasxFileServerServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}AasxFileServerServiceSpecification/SSP-001": [
         "AASX File Server Service Specification"
     ],
-    "AssetAdministrationShellRegistryServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}AssetAdministrationShellRegistryServiceSpecification/SSP-001": [
         "Asset Administration Shell Registry Service Specification",
     ],
-    "AssetAdministrationShellRegistryServiceSpecification/SSP-002": [
+    f"{SSP_PREFIX}AssetAdministrationShellRegistryServiceSpecification/SSP-002": [
         "GetAllAssetAdministrationShellDescriptors",
         "GetAssetAdministrationShellDescriptorById",
         "GetAllSubmodelDescriptors",  # TODO: via super path
         "GetSubmodelDescriptorById",  # TODO: via super path
     ],
-    "SubmodelRegistryServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}SubmodelRegistryServiceSpecification/SSP-001": [
         "Submodel Registry Service Specification",
     ],
-    "SubmodelRegistryServiceSpecification/SSP-002": [
+    f"{SSP_PREFIX}SubmodelRegistryServiceSpecification/SSP-002": [
         "GetAllSubmodelDescriptors",
         "GetSubmodelDescriptorById",
         "GetDescription",
     ],
-    "DiscoveryServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}DiscoveryServiceSpecification/SSP-001": [
         "Discovery Service Specification",
     ],
-    "AssetAdministrationShellRepositoryServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}AssetAdministrationShellRepositoryServiceSpecification/SSP-001": [
         "Asset Administration Shell Repository Service Specification",
     ],
-    "AssetAdministrationShellRepositoryServiceSpecification/SSP-002": [
+    f"{SSP_PREFIX}AssetAdministrationShellRepositoryServiceSpecification/SSP-002": [
         # AAS Repository API:
         "GetAllAssetAdministrationShells",  # includes ...ByAssetId and ...ByIdShort
         "GetAllAssetAdministrationShells-Reference",
@@ -287,10 +288,10 @@ _available_suites = _extend({
         # Description API
         "GetDescription",
     ],
-    "SubmodelRepositoryServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}SubmodelRepositoryServiceSpecification/SSP-001": [
         "Submodel Repository Service Specification",
     ],
-    "SubmodelRepositoryServiceSpecification/SSP-002": [
+    f"{SSP_PREFIX}SubmodelRepositoryServiceSpecification/SSP-002": [
         "GetAllSubmodels",
         "GetSubmodelById",
         "GetAllSubmodelsBySemanticId",
@@ -302,13 +303,13 @@ _available_suites = _extend({
         "GenerateSerializationByIds",
         "GetDescription"
     ],
-    "SubmodelRepositoryServiceSpecification/SSP-003": [
+    f"{SSP_PREFIX}SubmodelRepositoryServiceSpecification/SSP-003": [
         "SubmodelRepositoryServiceSpecification/SSP-001"  # TODO: Constraint AASa-003
     ],
-    "SubmodelRepositoryServiceSpecification/SSP-004": [
+    f"{SSP_PREFIX}SubmodelRepositoryServiceSpecification/SSP-004": [
         "SubmodelRepositoryServiceSpecification/SSP-002"  # TODO: Constraint AASa-004
     ],
-    "ConceptDescriptionRepositoryServiceSpecification/SSP-001": [
+    f"{SSP_PREFIX}ConceptDescriptionRepositoryServiceSpecification/SSP-001": [
         "Concept Description Repository Service Specification"
     ]
 })
@@ -359,7 +360,7 @@ def _find_specs() -> Dict[str, AasSpec]:
 _specs = _find_specs()
 
 _DEFAULT_VERSION = '3.0'
-_DEFAULT_SUITE = "AssetAdministrationShellRepositoryServiceSpecification/SSP-002"
+_DEFAULT_SUITE = f"{SSP_PREFIX}AssetAdministrationShellRepositoryServiceSpecification/SSP-002"
 
 
 def _get_spec(version: str) -> AasSpec:
@@ -474,7 +475,7 @@ class GetDescriptionTestSuite(ApiTestSuite):
         data = response.json()
         profiles = data["Profiles"]
         if self.suite not in profiles:
-            result.append(AasTestResult(f"Suite {self.suite} not part of profiles", level=Level.WARNING))
+            result.append(AasTestResult(f"Suite {self.suite} not part of profiles", level=Level.ERROR))
 
 
 _test_suites = {
