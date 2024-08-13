@@ -407,7 +407,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -1232,7 +1232,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -1405,7 +1405,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -1482,7 +1482,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -1569,7 +1569,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -1647,7 +1647,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -1732,7 +1732,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -2097,7 +2097,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -2256,7 +2256,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -2415,7 +2415,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -2501,7 +2501,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -3780,7 +3780,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -3917,7 +3917,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -3980,7 +3980,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4053,7 +4053,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4117,7 +4117,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4188,7 +4188,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4535,7 +4535,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4601,7 +4601,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4682,7 +4682,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4768,7 +4768,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4849,7 +4849,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -4927,7 +4927,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -6644,7 +6644,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -6803,7 +6803,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -6895,7 +6895,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -7003,7 +7003,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -7096,7 +7096,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -8001,7 +8001,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -8206,7 +8206,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -8301,7 +8301,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -8396,7 +8396,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -8492,7 +8492,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -8603,7 +8603,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -9048,7 +9048,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -9239,7 +9239,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -10461,7 +10461,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -10615,7 +10615,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -10702,7 +10702,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -10805,7 +10805,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -10893,7 +10893,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -11694,7 +11694,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -11859,7 +11859,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -11942,7 +11942,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -12035,7 +12035,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -12119,7 +12119,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -13940,7 +13940,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -14210,7 +14210,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -14532,7 +14532,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -14854,7 +14854,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -15129,7 +15129,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
@@ -15309,7 +15309,7 @@ paths:
         description: The maximum number of elements in the response array
         required: false
         schema:
-          minimum: 1
+          minimum: 0
           type: integer
       - name: cursor
         in: query
