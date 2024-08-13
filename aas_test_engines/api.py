@@ -238,11 +238,11 @@ _available_suites = _extend({
         "GetAssetInformation_AasRepository",
         "GetThumbnail_AasRepository",
         # Submodel Repository API by superpath:
-        "GetAllSubmodels_AasRepository",  # includes ...BySemanticId and ...ByIdShort
-        "GetAllSubmodels_AasRepository Metadata",
-        "GetAllSubmodels_AasRepository-ValueOnly",
-        "GetAllSubmodels_AasRepository-Reference",
-        "GetAllSubmodels_AasRepository-Path",
+        # "GetAllSubmodels_AasRepository",  # includes ...BySemanticId and ...ByIdShort
+        # "GetAllSubmodels_AasRepository Metadata",
+        # "GetAllSubmodels_AasRepository-ValueOnly",
+        # "GetAllSubmodels_AasRepository-Reference",
+        # "GetAllSubmodels_AasRepository-Path",
         "GetSubmodelById_AasRepository",
         "GetSubmodelById_AasRepository-Metadata",
         "GetSubmodelById_AasRepository-ValueOnly",
