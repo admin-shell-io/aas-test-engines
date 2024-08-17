@@ -91,6 +91,13 @@ class CheckAasxTest(TestCase):
         result.dump()
         self.assertEqual(result.level, Level.WARNING)
 
+    def test_rel_target_not_exists(self):
+        z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/invalid/rel_target_not_exists'))
+        result = file.check_aasx_data(z)
+        result.dump()
+        self.assertEqual(result.level, Level.ERROR)
+        self.assertTrue(any("Relationship has non-existing target aasx/aasx-origin" in i for i in result.to_lines()))
+
     def test_no_aas(self):
         z = in_memory_zipfile(os.path.join(script_dir, 'fixtures/aasx/valid/no_aas1'))
         result = file.check_aasx_data(z)

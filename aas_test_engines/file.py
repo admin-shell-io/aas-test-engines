@@ -19,7 +19,7 @@ from json_schema_tool.types import JsonType, values_are_equal
 from json_schema_tool.exception import PreprocessorException, PostProcessorException
 import zipfile
 
-from ._util import un_group
+from ._util import un_group, normpath, splitpath
 
 JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
 
@@ -451,9 +451,9 @@ def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, dir:
             target = target[1:]
         else:
             target = dir + target
-        target = os.path.normpath(target)
+        target = normpath(target)
 
-        sub_dir, file = os.path.split(target)
+        sub_dir, file = splitpath(target)
         sub_rel = Relationship(type, target)
         result.append(AasTestResult(f'Relationship {sub_rel.target} is of type {sub_rel.type}', str(idx), Level.INFO))
         parent_rel.sub_rels.append(sub_rel)

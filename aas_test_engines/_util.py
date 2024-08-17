@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import base64
 
 
@@ -60,3 +60,38 @@ def un_group(data: any) -> any:
 
 def b64urlsafe(value: str) -> str:
     return base64.urlsafe_b64encode(value.encode()).decode()
+
+
+def normpath(path: str) -> str:
+    """
+    Normalizes a given path.
+    E.g. normpath('///a/../b/)') == '/b'
+    This implementation is platform independent and behaves like os.normpath on a unix system.
+    See https://docs.python.org/3/library/os.path.html#os.path.normpath for more details.
+    """
+    path = path.strip()
+    if len(path) == 0:
+        return ''
+    result = []
+    for token in path.split("/"):
+        if token.strip() == '' or token == '.':
+            continue
+        if token == '..':
+            if result:
+                result.pop()
+        else:
+            result.append(token)
+    if path.startswith('/'):
+        return "/" + "/".join(result)
+    else:
+        return "/".join(result)
+
+
+def splitpath(path: str) -> Tuple[str, str]:
+    """
+    Splits a path into a pair (head, tail)
+    This implementation is platform independent and behaves like os.path.split on a unix system.
+    See https://docs.python.org/3/library/os.path.html#os.path.split for more details.
+    """
+    prefix, _, suffix = path.rpartition('/')
+    return prefix, suffix
