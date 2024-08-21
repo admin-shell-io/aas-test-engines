@@ -22,6 +22,7 @@ You may want to invoke the test tools using the simplified command line interfac
 ```sh
 # Check file
 python -m aas_test_engines check_file test.aasx
+python -m aas_test_engines check_file test.json --format json
 
 # Check file including submodel template
 python -m aas_test_engines check_file test.aasx --submodel_template ContactInformation
