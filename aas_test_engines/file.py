@@ -10,7 +10,7 @@ except ImportError:
 
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
-from .data_types import validators
+from .data_types import validators, is_bcp_47_for_english
 from ._file.generate import generate_graph, FlowGraph
 
 from xml.etree import ElementTree
@@ -93,6 +93,7 @@ def _map_error(parent: AasTestResult, error: SchemaValidationResult):
             _map_error(kw_result, j)
         parent.append(kw_result)
 
+
 FRAGMENT_KEYS = [
     'FragmentReference',
     'Referable',
@@ -114,6 +115,7 @@ FRAGMENT_KEYS = [
     'SubmodelElementCollection',
     'SubmodelElementList',
 ]
+
 
 def check_constraints(instance: any, validator: SchemaValidator):
     for check in validator.schema.get('check', []):
@@ -205,33 +207,64 @@ def check_constraints(instance: any, validator: SchemaValidator):
                 if idx + 1 == len(keys) or not keys[idx+1]['value'].isdigit():
                     raise PostProcessorException("AASd-128: SubmodelElementList must be succeeded by an integer")
         elif check == 'Constraint_AASd-119':
-            # TODO
-            pass
-        elif check == 'Constraint_AASd-129':
             if not isinstance(instance, dict):
                 continue
             qualifiers = instance.get('qualifiers', [])
             if not isinstance(qualifiers, list):
                 continue
             if any(qualifier.get('kind') == 'TemplateQualifier' for qualifier in qualifiers):
-                if instance['kind'] != 'Template':
+                if instance.get('kind') != 'Template':
                     raise PostProcessorException("AASd-129: kind must be Template as at least one qualifier is a TemplateQualifier")
+        elif check == 'Constraint_AASd-129':
+            if not isinstance(instance, dict):
+                continue
+            elements = instance.get('submodelElements')
+            if not isinstance(elements, list):
+                continue
+            for element in elements:
+                qualifiers = element.get('qualifiers')
+                if not isinstance(qualifiers, list):
+                    continue
+                if any(qualifier.get('kind') == 'TemplateQualifier' for qualifier in qualifiers):
+                    if instance.get('kind') != 'Template':
+                        raise PostProcessorException("AASd-129: kind must be Template as at least one qualifier is a TemplateQualifier")
         elif check == 'Constraint_AASd-134':
             # TODO
             pass
+        elif check == 'Constraint_AASc-3a-002':
+            try:
+                if not any(is_bcp_47_for_english(name.get('language')) for name in instance['preferredName']):
+                    raise PostProcessorException("AASc-3a-008: preferredName must be provided at least in english")
+            except (KeyError, TypeError, AttributeError):
+                pass
+        elif check == 'Constraint_AASc-3a-008':
+            try:
+                if 'value' not in instance:
+                    if not any(is_bcp_47_for_english(definition.get('language')) for definition in instance['definition']):
+                        raise PostProcessorException("AASc-3a-008: definition must be provided at least in english")
+            except (KeyError, TypeError, AttributeError):
+                pass
         else:
             # This should not happen
             raise RuntimeError(f"Invalid check {check}")
 
-def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
-    schema = _get_schema(version, submodel_templates)
+
+def _check_json_data(data: any, validator: SchemaValidator, short_circuit: bool) -> AasTestResult:
     result = AasTestResult('Check JSON', '', Level.INFO)
     config = ValidationConfig(
-            postprocessor=check_constraints,
+        postprocessor=check_constraints,
+        short_circuit_evaluation=short_circuit,
     )
 
-    error = schema.validator.validate(data, config)
+    error = validator.validate(data, config)
     _map_error(result, error)
+    return result
+
+
+def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
+    schema = _get_schema(version, submodel_templates)
+    result = _check_json_data(data, schema.validator, False)
+
     if submodel_templates and result.ok():
 
         def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
@@ -288,20 +321,24 @@ def _get_single_child(el: ElementTree.Element) -> ElementTree.Element:
         raise PreprocessorException("DataSpecificationContent must have exactly one child")
     return el[0]
 
+
 def _is_json(data: any) -> bool:
     if data is None:
         return True
     return isinstance(data, (dict, list, str, bool, int, float))
 
+
 def _assert_no_children(el: ElementTree.Element):
     if next(iter(el), None):
         raise PreprocessorException("No child elements allowed")
+
 
 def _assert_no_text(el: ElementTree.Element):
     if el.text is None:
         return
     if el.text.strip():
         raise PreprocessorException("No inline text allowed")
+
 
 def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION, submodel_templates: Set[str] = set()) -> AasTestResult:
     expected_namespace = '{https://admin-shell.io/aas/3/0}'
@@ -544,7 +581,11 @@ def generate(version: str = _DEFAULT_VERSION, submodel_template: Optional[str] =
         graph = generate_graph(aas.schema)
         for i in graph.generate_paths():
             sample = graph.execute(i.path)
-            yield i.is_valid, sample
+            if i.is_valid:
+                valid = True
+            else:
+                valid = _check_json_data(sample, aas.validator, True).ok()
+            yield valid, sample
     else:
         aas = _get_schema(version, set([submodel_template]))
         graph = generate_graph(aas.submodel_schemas[submodel_template])

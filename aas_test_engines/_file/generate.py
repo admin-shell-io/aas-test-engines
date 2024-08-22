@@ -89,7 +89,7 @@ default_samples = {
         valid=["http://example.com"]
     ),
     "bcpLangString": FormatSamples(
-        valid=["en"]
+        valid=["de"]
     ),
     'version': FormatSamples(
         valid=['567'],
@@ -175,15 +175,26 @@ def post_process(entry: dict, result: FlowGraph) -> FlowGraph:
                 def apply(self, data: KeyReference) -> any:
                     d: dict = data.get()
                     try:
-                        if any(i['kind'] == 'TemplateQualifier' for i in d['qualifiers']):
+                        if any(i.get('kind') == 'TemplateQualifier' for i in d['qualifiers']):
                             d['kind'] = 'Template'
-                        else:
-                            d['kind'] = 'Instance'
                     except (KeyError, TypeError):
                         pass
                     return data
-            # TODO
-            # sub_root.add_transition(FixConstraint119(is_valid=True))
+            sub_root.add_transition(FixConstraint119(is_valid=True))
+        elif ch == 'Constraint_AASd-129':
+            class FixConstraint129(Leaf):
+                def apply(self, data: KeyReference) -> any:
+                    d: dict = data.get()
+                    try:
+                        submodel_elements = d.get('submodelElements', [])
+                        for element in submodel_elements:
+                            if any(i.get('kind') == 'TemplateQualifier' for i in element['qualifiers']):
+                                d['kind'] = 'Template'
+                                break
+                    except (KeyError, TypeError, AttributeError):
+                        pass
+                    return data
+            sub_root.add_transition(FixConstraint129(is_valid=True))
         elif ch == 'Constraint_AASd-134':
             class FixConstraint134(Leaf):
                 def apply(self, data: KeyReference) -> any:
@@ -205,6 +216,33 @@ def post_process(entry: dict, result: FlowGraph) -> FlowGraph:
                         pass
                     return data
             sub_root.add_transition(FixConstraint134(is_valid=True))
+        elif ch == 'Constraint_AASc-3a-002':
+            class FixConstraint008(Leaf):
+                def apply(self, data: KeyReference) -> any:
+                    d: dict = data.get()
+                    try:
+                        d['preferredName'] = [{
+                            'language': 'en',
+                            'text': 'xyz',
+                        }]
+                    except (KeyError, TypeError, AttributeError) as e:
+                        pass
+                    return data
+            sub_root.add_transition(FixConstraint008(is_valid=True))
+        elif ch == 'Constraint_AASc-3a-008':
+            class FixConstraint008(Leaf):
+                def apply(self, data: KeyReference) -> any:
+                    d: dict = data.get()
+                    try:
+                        if 'value' not in d:
+                            d['definition'] = [{
+                                'language': 'en',
+                                'text': 'xyz',
+                            }]
+                    except (KeyError, TypeError, AttributeError) as e:
+                        pass
+                    return data
+            sub_root.add_transition(FixConstraint008(is_valid=True))
     return sub_root
 
 

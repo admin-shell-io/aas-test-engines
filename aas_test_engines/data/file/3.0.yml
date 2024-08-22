@@ -740,20 +740,23 @@ $defs:
     - $ref: "#/$defs/DataSpecificationIec61360"
     discriminator:
       propertyName: modelType
-  Constraint_AASd-010:
+  Constraint_AASc-3a-010:
     anyOf:
     - required:
       - value
       properties:
-        valueList: False
+        valueList: false
     - required:
       - valueList
       properties:
-        value: False
+        value: false
   DataSpecificationIec61360:
     allOf:
     - $ref: "#/$defs/DataSpecificationContent"
-    - $ref: "#/$defs/Constraint_AASd-010"
+    - $ref: "#/$defs/Constraint_AASc-3a-010"
+    - check:
+      - Constraint_AASc-3a-002
+      - Constraint_AASc-3a-008
     - properties:
         preferredName:
           type: array
@@ -1402,15 +1405,15 @@ $defs:
           minItems: 1
         modelType:
           const: Submodel
+    - check:
+      - Constraint_AASd-119
+      - Constraint_AASd-129
   SubmodelElement:
     allOf:
     - $ref: "#/$defs/Referable"
     - $ref: "#/$defs/HasSemantics"
     - $ref: "#/$defs/Qualifiable"
     - $ref: "#/$defs/HasDataSpecification"
-    - check:
-      - Constraint_AASd-119
-      - Constraint_AASd-129
   Constraint_AASd-117:
     required:
     - idShort

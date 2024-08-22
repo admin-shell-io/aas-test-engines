@@ -307,11 +307,19 @@ def _construct_matches_version_type() -> Pattern[str]:
     pattern = '^(0|[1-9][0-9]*)$'
     return re.compile(pattern)
 
+
 _REGEX_MATCHES_VERSION_TYPE = _construct_matches_version_type()
 
 
 def is_version_string(text: str) -> bool:
     return _REGEX_MATCHES_VERSION_TYPE.match(text) is not None
+
+
+_REGEX_IS_BCP_47_FOR_ENGLISH = re.compile("^(en|EN)(-.*)?$")
+
+
+def is_bcp_47_for_english(text: str) -> bool:
+    return _REGEX_IS_BCP_47_FOR_ENGLISH.match(text) is not None
 
 
 validators = {
