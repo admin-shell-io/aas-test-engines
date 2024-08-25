@@ -11,7 +11,7 @@ except ImportError:
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
 from .data_types import validators, is_bcp_47_for_english
-from ._file.generate import generate_graph, FlowGraph
+from ._generate import generate_graph, FlowGraph
 
 from xml.etree import ElementTree
 from json_schema_tool.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, KeywordValidationResult, parse_schema
