@@ -28,7 +28,7 @@ python -m aas_test_engines check_file test.json --format json
 python -m aas_test_engines check_file test.aasx --submodel_template ContactInformation
 
 # Check server
-python -m aas_test_engines check_server https://localhost --suite 'Asset Administration Shell API'
+python -m aas_test_engines check_server https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002
 
 # Generate test data
 python -m aas_test_engines generate_files output_dir

@@ -366,7 +366,6 @@ def _find_specs() -> Dict[str, AasSpec]:
 _specs = _find_specs()
 
 _DEFAULT_VERSION = '3.0'
-_DEFAULT_SUITE = f"{SSP_PREFIX}AssetAdministrationShellRepositoryServiceSpecification/SSP-002"
 
 
 def _get_spec(version: str) -> AasSpec:
@@ -561,7 +560,7 @@ _test_suites = {
 }
 
 
-def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, conf: ExecConf = ExecConf()) -> AasTestResult:
+def execute_tests(suite: str, version: str = _DEFAULT_VERSION, conf: ExecConf = ExecConf()) -> AasTestResult:
     spec = _get_spec(version)
     try:
         operation_ids = _available_suites[suite]
@@ -586,6 +585,9 @@ def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, 
         if operation.operation_id not in operation_ids:
             continue
         result_op = AasTestResult(f"Checking {operation.path} ({operation.operation_id})")
+        if conf.dry:
+            result_root.append(result_op)
+            continue
 
         try:
             ctr = _test_suites[operation.operation_id]
@@ -638,7 +640,7 @@ def execute_tests(version: str = _DEFAULT_VERSION, suite: str = _DEFAULT_SUITE, 
     return result_root
 
 
-def supported_versions():
+def supported_versions() -> Dict[str, List[str]]:
     return {ver: _available_suites.keys() for ver, spec in _specs.items()}
 
 

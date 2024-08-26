@@ -62,18 +62,21 @@ def run_file_test(argv):
         raise Exception(f"Invalid output {args.output}")
     exit(0 if result.ok() else 1)
 
+
 def run_api_test(argv):
     parser = argparse.ArgumentParser(description='Checks a server instance for compliance with the AAS api')
     parser.add_argument('server',
                         type=str,
                         help='server to run the tests against')
+    parser.add_argument('suite',
+                        type=str,
+                        help='test suite (or substring of it)')
     parser.add_argument('--dry',
                         action='store_true',
                         help="dry run, do not send requests")
-    parser.add_argument('--suite',
+    parser.add_argument('--version',
                         type=str,
-                        help='selected test suite',
-                        default=api._DEFAULT_SUITE)
+                        default=api.latest_version())
     parser.add_argument('--no-verify',
                         action='store_true',
                         help='do not check TLS certificate')
@@ -82,12 +85,30 @@ def run_api_test(argv):
                         default=OutputFormats.TEXT,
                         choices=list(OutputFormats))
     args = parser.parse_args(argv)
+    try:
+        available_suites = api.supported_versions()[args.version]
+    except KeyError:
+        sys.stderr.write(f"Unknown version, must be one of {api.supported_versions().keys()}\n")
+    suites = [i for i in available_suites if args.suite in i]
+    if len(suites) == 0:
+        sys.stderr.write(f"Unknown suite '{args.suite}', must be one of:\n")
+        for i in available_suites:
+            sys.stderr.writelines(f" - {i}\n")
+        exit(1)
+    elif len(suites) > 1:
+        sys.stderr.write(f"Substring '{args.suite}' is not unique, covers:\n")
+        for i in suites:
+            sys.stderr.write(f" - {i}\n")
+        exit(1)
+    else:
+        suite = suites[0]
+
     exec_conf = api.ExecConf(
         server=args.server,
         dry=args.dry,
         verify=not args.no_verify,
     )
-    result = api.execute_tests(suite=args.suite, conf=exec_conf)
+    result = api.execute_tests(version=args.version, suite=suite, conf=exec_conf)
     if args.output == OutputFormats.TEXT:
         result.dump()
     elif args.output == OutputFormats.HTML:
