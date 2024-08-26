@@ -17,6 +17,8 @@ except ImportError:
 from dataclasses import dataclass
 import requests
 
+def _stringify_path(path: List[Union[str, int]]) -> str:
+    return "/".join(str(fragment) for fragment in path)
 
 def _lookup(value: any, path: List[Union[str, int]], idx: int = 0) -> any:
     if idx >= len(path):
@@ -25,18 +27,18 @@ def _lookup(value: any, path: List[Union[str, int]], idx: int = 0) -> any:
     fragment = path[idx]
     if isinstance(fragment, str):
         if not isinstance(value, dict):
-            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: should be an object")
+            raise ApiTestSuiteException(f"Cannot look up {_stringify_path(path)}: should be an object")
         try:
             sub_value = value[fragment]
         except KeyError:
-            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: key '{fragment}' does not exist")
+            raise ApiTestSuiteException(f"Cannot look up {_stringify_path(path)}: key '{fragment}' does not exist")
     elif isinstance(fragment, int):
         if not isinstance(value, list):
-            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: should be an array")
+            raise ApiTestSuiteException(f"Cannot look up {_stringify_path(path)}: should be an array")
         try:
             sub_value = value[fragment]
         except IndexError:
-            raise ApiTestSuiteException(f"Cannot look up {'/'.join(path)}: array too short")
+            raise ApiTestSuiteException(f"Cannot look up {_stringify_path(path)}: array too short")
     return _lookup(sub_value, path, idx+1)
 
 
