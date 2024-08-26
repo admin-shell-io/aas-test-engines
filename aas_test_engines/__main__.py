@@ -104,11 +104,10 @@ def run_api_test(argv):
         suite = suites[0]
 
     exec_conf = api.ExecConf(
-        server=args.server,
         dry=args.dry,
         verify=not args.no_verify,
     )
-    result = api.execute_tests(version=args.version, suite=suite, conf=exec_conf)
+    result = api.execute_tests(args.server, suite, args.version, exec_conf)
     if args.output == OutputFormats.TEXT:
         result.dump()
     elif args.output == OutputFormats.HTML:

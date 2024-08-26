@@ -323,19 +323,18 @@ _available_suites = _extend({
 
 @dataclass
 class ExecConf:
-    server: str = ''
     dry: bool = False
     verify: bool = True
 
 
-def _check_server(exec_conf: ExecConf) -> AasTestResult:
-    result = AasTestResult(f'Trying to reach {exec_conf.server}')
+def _check_server(server: str, exec_conf: ExecConf) -> AasTestResult:
+    result = AasTestResult(f'Trying to reach {server}')
     if exec_conf.dry:
         result.append(AasTestResult("Skipped due to dry run", '', Level.WARNING))
         return result
 
     try:
-        requests.get(exec_conf.server, verify=exec_conf.verify)
+        requests.get(server, verify=exec_conf.verify)
         result.append(AasTestResult('OK', '', Level.INFO))
     except requests.exceptions.RequestException as e:
         result.append(AasTestResult('Failed to reach: {}'.format(e), '', Level.ERROR))
@@ -396,7 +395,8 @@ class ApiTestSuiteException(Exception):
 
 class ApiTestSuite:
 
-    def __init__(self, operation: Operation, conf: ExecConf, sample_cache: SampleCache, open_api: OpenApi, suite: str):
+    def __init__(self, server: str, operation: Operation, conf: ExecConf, sample_cache: SampleCache, open_api: OpenApi, suite: str):
+        self.server = server
         self.operation = operation
         self.conf = conf
         self.sample_cache = sample_cache
@@ -420,7 +420,7 @@ class GetAllAasTestSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.operation, self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
+        response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up idShort, got status {response.status_code}")
         data = response.json()
@@ -435,7 +435,7 @@ class GetAasById(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
+        response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
         data = response.json()
@@ -449,7 +449,7 @@ class AasBySuperpathSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
+        response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
         data = response.json()
@@ -463,7 +463,7 @@ class SubmodelBySuperpathSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
+        response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
         data = response.json()
@@ -478,7 +478,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
+        response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
         data = response.json()
@@ -490,7 +490,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
         }
         request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
         result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
+        response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
         data = response.json()
@@ -501,7 +501,7 @@ class GenerateSerializationSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
-        response = request.execute(self.conf.server)
+        response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
         data = response.json()
@@ -560,7 +560,7 @@ _test_suites = {
 }
 
 
-def execute_tests(suite: str, version: str = _DEFAULT_VERSION, conf: ExecConf = ExecConf()) -> AasTestResult:
+def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf: ExecConf = ExecConf()) -> AasTestResult:
     spec = _get_spec(version)
     try:
         operation_ids = _available_suites[suite]
@@ -575,7 +575,7 @@ def execute_tests(suite: str, version: str = _DEFAULT_VERSION, conf: ExecConf = 
     result_root = AasTestResult(f"Checking compliance to {suite}")
 
     # Initial connection check
-    r = _check_server(conf)
+    r = _check_server(server, conf)
     result_root.append(r)
     if not result_root.ok():
         return result_root
@@ -593,7 +593,7 @@ def execute_tests(suite: str, version: str = _DEFAULT_VERSION, conf: ExecConf = 
             ctr = _test_suites[operation.operation_id]
         except KeyError:
             ctr = ApiTestSuite
-        test_suite = ctr(operation, conf, sample_cache, spec.open_api, suite)
+        test_suite = ctr(server, operation, conf, sample_cache, spec.open_api, suite)
 
         result_before_suite = AasTestResult("Setup")
         try:
@@ -612,7 +612,7 @@ def execute_tests(suite: str, version: str = _DEFAULT_VERSION, conf: ExecConf = 
                 request: Request = graph.execute(i.path)
                 result_request = _make_invoke_result(request)
                 if not conf.dry:
-                    response = request.execute(conf.server)
+                    response = request.execute(server)
                     if response.status_code >= 500:
                         if i.is_valid:
                             result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.CRITICAL))
