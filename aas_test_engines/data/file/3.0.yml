@@ -842,6 +842,7 @@ $defs:
         $ref: "#/$defs/DataSpecificationContent_choice"
     required:
     - dataSpecificationContent
+    - dataSpecification
   Constraint_AASd-014:
     anyOf:
     - properties:
