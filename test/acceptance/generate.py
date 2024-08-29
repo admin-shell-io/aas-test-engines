@@ -19,6 +19,7 @@ blacklist = [
     'Observed must be a model reference to a referable.',
     'Derived-from must be a model reference to an asset administration shell.',
     'All submodels must be model references to a submodel.',
+    'Constraint AASc-3a-009: If data type is a an integer, real or rational with a measure or currency, unit or unit ID shall be defined.',
 ]
 
 start = default_timer()
@@ -39,9 +40,13 @@ for idx, (is_valid, sample) in enumerate(file.generate()):
             if error.cause not in blacklist:
                 accepted = False
     mat.add(is_valid, accepted)
-    if DEBUG and not is_valid and accepted:
-        with open(f'invalid_accepted/{mat.invalid_accepted}.json', "w") as f:
-            json.dump(sample, f, indent=4)
+    if DEBUG:
+        if is_valid and not accepted:
+            with open(f'valid_rejected/{mat.valid_rejected}.json', "w") as f:
+                json.dump(sample, f, indent=4)
+        if not is_valid and accepted:
+            with open(f'invalid_accepted/{mat.invalid_accepted}.json', "w") as f:
+                json.dump(sample, f, indent=4)
 
     if (idx+1) % 100 == 0:
         mat.print()
@@ -53,9 +58,8 @@ end = default_timer()
 
 print(f"Elapsed time: {end - start:.1f}s")
 
-if DEBUG:
-    for cause in sorted(causes.keys(), key=lambda x: causes[x]):
-        print(f"{causes[cause]}: {cause}")
+for cause in sorted(causes.keys(), key=lambda x: causes[x]):
+    print(f"{causes[cause]}: {cause}")
 
 if mat.valid_rejected:
     print("Valid instances have been rejected!")

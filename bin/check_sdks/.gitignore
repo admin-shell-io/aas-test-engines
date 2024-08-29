@@ -1,0 +1,5 @@
+sdks/aas_core_csharp/src/bin/
+sdks/aas_core_csharp/src/obj/
+sdks/aas_core_csharp/src/out/
+test_data/
+out/
