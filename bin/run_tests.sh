@@ -11,3 +11,4 @@ coverage run \
          -m unittest
 
 PYTHONPATH=. ./test/acceptance/file.py
+PYTHONPATH=. ./test/acceptance/generate.py

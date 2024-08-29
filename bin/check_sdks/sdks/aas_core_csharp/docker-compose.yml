@@ -1,0 +1,9 @@
+services:
+  app:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    command: ./build_and_run.sh
+    working_dir: /App
+    volumes:
+      - ./src:/App
+      - ../../test_data:/test_data:ro
+      - ../../out/aas_core_csharp:/out

@@ -15,7 +15,7 @@ You can install the AAS Test Engines via pip:
 python -m pip install aas_test_engines
 ```
 
-## Command line interface
+## Command Line Interface
 
 You may want to invoke the test tools using the simplified command line interface:
 
@@ -28,7 +28,7 @@ python -m aas_test_engines check_file test.json --format json
 python -m aas_test_engines check_file test.aasx --submodel_template ContactInformation
 
 # Check server
-python -m aas_test_engines check_server https://localhost --suite 'Asset Administration Shell API'
+python -m aas_test_engines check_server https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002
 
 # Generate test data
 python -m aas_test_engines generate_files output_dir
@@ -38,12 +38,58 @@ python -m aas_test_engines check_file test.aasx --output html > output.html
 python -m aas_test_engines check_file test.aasx --output json > output.json
 ```
 
-## Check AAS Type 1 (File)
+## Supported Versions and Suites
 
-### Check AASX:
+By default, the Test Engines test against the latest version 3.0 (file and api).
+For v3.0 api testing, the following suites are defined:
+
+ - `Asset Administration Shell API`
+ - `Submodel API`
+ - `Serialization API`
+ - `AASX File Server API`
+ - `Asset Administration Shell Registry API`
+ - `Submodel Registry API`
+ - `Asset Administration Shell Repository API`
+ - `Submodel Repository API`
+ - `Concept Description Repository API`
+ - `Asset Administration Shell Basic Discovery API`
+ - `Description API`
+ - `Asset Administration Shell Service Specification`
+ - `Submodel Service Specification`
+ - `AASX File Server Service Specification`
+ - `Asset Administration Shell Registry Service Specification`
+ - `Submodel Registry Service Specification`
+ - `Discovery Service Specification`
+ - `Asset Administration Shell Repository Service Specification`
+ - `Submodel Repository Service Specification`
+ - `ConceptDescription Repository Service Specification`
+ - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-003`
+ - `https://admin-shell.io/aas/API/3/0/AasxFileServerServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-002`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-002`
+ - `https://admin-shell.io/aas/API/3/0/DiscoveryServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-001`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-003`
+ - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-004`
+ - `https://admin-shell.io/aas/API/3/0/ConceptDescriptionRepositoryServiceSpecification/SSP-001`
+ 
+## Python Module Interface
+
+### Check AAS Type 1 (File)
+
+Check AASX:
+
 ```python
 from aas_test_engines import file
-from xml.etree import ElementTree
 
 with open('aas.aasx', 'rb') as f:
     result = file.check_aasx_file(f)
@@ -53,7 +99,7 @@ result.dump()
 # try result.to_html() to get an interactive representation
 ```
 
-### Check JSON:
+Check JSON:
 
 ```python
 from aas_test_engines import file
@@ -75,7 +121,8 @@ result = file.check_json_data(aas)
 result.dump()
 ```
 
-### Check XML:
+Check XML:
+
 ```python
 from aas_test_engines import file
 from xml.etree import ElementTree
@@ -94,8 +141,7 @@ result = file.check_xml_data(aas)
 result.dump()
 ```
 
-### Checking for submodel templates
-By passing a set of submodel template names you can check a file for compliance to these:
+Checking for submodel templates:
 
 ```python
 from aas_test_engines import file
@@ -105,65 +151,43 @@ with open('aas.xml') as f:
 
 ```
 
-### Checking older versions
-
-By default, the `file.check...` methods check compliance to version 3.0 of the standard.
-You may want to check against older versions by passing a string containing the version to these methods.
-
-You can query the list of supported versions as follows:
+Checking older versions:
 
 ```python
 from aas_test_engines import file
 
 print(file.supported_versions())
 print(file.latest_version())
-```
+with open('aas.aasx', 'rb') as f:
+    result = file.check_aasx_file(f, version="3.0")
+# result.ok() == True
 
-## Check AAS Type 2 (HTTP API)
-
-### Check a running server instance
-
-```python
-from aas_test_engines import api
-
-conf = api.ExecConf(
-    server="http://localhost",
-)
-result = api.execute_tests(conf=conf)
 result.dump()
 ```
 
-### Checking older versions and specific test suites
+### Check AAS Type 2 (HTTP API)
 
-By default, the `api.generate_tests` method generate test cases for version 3.0 of the standard and all associated test suites.
-You may want to check against older versions by passing a string containing the version to these methods.
-You can also provide a list of test suites to check against:
+Check a running server instance:
 
 ```python
 from aas_test_engines import api
 
-conf = api.ExecConf(
-    server="http://localhost",
-)
-result = api.execute_tests(version="3.0", suite='Asset Administration Shell API', conf=conf)
+result = api.execute_tests("http://localhost", "https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002")
 result.dump()
 ```
 
-For the naming of test suites we follow the names given by the specification. These are:
-* **APIs:** Asset Administration Shell API, Submodel API, ...
-* **Service Specifications:** Asset Administration Shell Service Specification, Submodel Service Specification, ...
-* **Profiles:**  AssetAdministrationShellServiceSpecification/SSP-001, ...
-
-You can query the list of supported versions and their associated test suites as follows:
+Checking older versions:
 
 ```python
 from aas_test_engines import api
-
 print(api.supported_versions())
 print(api.latest_version())
+
+result = api.execute_tests("http://localhost", 'Asset Administration Shell API', version="3.0")
+result.dump()
 ```
 
-## Generating test data for software testing
+### Generating test data for software testing
 
 If you develop an AAS application like an AAS editor you may want to use test data to verify correctness of your application.
 The test engines allow to generate a set of AAS files which are compliant with the standard and you can therefore use to assess your application as follows:
