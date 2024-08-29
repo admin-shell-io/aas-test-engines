@@ -249,10 +249,10 @@ def post_process(entry: dict, result: FlowGraph) -> FlowGraph:
 def generate_graph(schema) -> FlowGraph:
     norm_config = NormalizationConfig(
         full_merge=False,
-        discard_fields={'discriminator'},
         additional_mergers={
             'check': lambda x, y: x + y
-        }
+        },
+        detect_duplicate_subschemas=True,
     )
     schema_norm = normalize(schema, norm_config)
     config = default_config()
