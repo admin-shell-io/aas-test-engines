@@ -14782,6 +14782,8 @@ paths:
           type: array
           items:
             type: string
+            minLength: 1
+            format: byte
       - name: submodelIds
         in: query
         description: The Submodels' unique ids (UTF8-BASE64-URL-encoded)
@@ -14792,6 +14794,8 @@ paths:
           type: array
           items:
             type: string
+            minLength: 1
+            format: byte
       - name: includeConceptDescriptions
         in: query
         description: Include Concept Descriptions?
