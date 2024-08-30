@@ -263,33 +263,28 @@ _available_suites = _extend({
         "GetAllAssetAdministrationShells",  # includes ...ByAssetId and ...ByIdShort
         "GetAllAssetAdministrationShells-Reference",
         "GetAssetAdministrationShellById",
-        "GetAssetAdministrationShellById-Reference",
+        "GetAssetAdministrationShellById-Reference_AasRepository",
         # AAS API by superpath:
         "GetAllSubmodelReferences_AasRepository",
         "GetAssetInformation_AasRepository",
         "GetThumbnail_AasRepository",
         # Submodel Repository API by superpath:
-        # "GetAllSubmodels_AasRepository",  # includes ...BySemanticId and ...ByIdShort
-        # "GetAllSubmodels_AasRepository Metadata",
-        # "GetAllSubmodels_AasRepository-ValueOnly",
-        # "GetAllSubmodels_AasRepository-Reference",
-        # "GetAllSubmodels_AasRepository-Path",
         "GetSubmodelById_AasRepository",
-        "GetSubmodelById_AasRepository-Metadata",
-        "GetSubmodelById_AasRepository-ValueOnly",
-        "GetSubmodelById_AasRepository-Reference",
-        "GetSubmodelById_AasRepository-Path",
+        "GetSubmodelById-Metadata_AasRepository",
+        "GetSubmodelById-ValueOnly_AasRepository",
+        "GetSubmodelById-Reference_AasRepository",
+        "GetSubmodelById-Path_AasRepository",
         # Submodel API by superpath:
         "GetAllSubmodelElements_AasRepository",
-        "GetAllSubmodelElements_AasRepository-Metadata",
-        "GetAllSubmodelElements_AasRepository-ValueOnly",
-        "GetAllSubmodelElements_AasRepository-Reference",
-        "GetAllSubmodelElements_AasRepository-Path",
+        "GetAllSubmodelElements-Metadata_AasRepository",
+        "GetAllSubmodelElements-ValueOnly_AasRepository",
+        "GetAllSubmodelElements-Reference_AasRepository",
+        "GetAllSubmodelElements-Path_AasRepository",
         "GetSubmodelElementByPath_AasRepository",
-        "GetSubmodelElementByPath_AasRepository-Metadata",
-        "GetSubmodelElementByPath_AasRepository-ValueOnly",
-        "GetSubmodelElementByPath_AasRepository-Reference",
-        "GetSubmodelElementByPath_AasRepository-Path",
+        "GetSubmodelElementByPath-Metadata_AasRepository",
+        "GetSubmodelElementByPath-ValueOnly_AasRepository",
+        "GetSubmodelElementByPath-Reference_AasRepository",
+        "GetSubmodelElementByPath-Path_AasRepository",
         "GetFileByPath_AasRepository",
         # Serialization API
         "GenerateSerializationByIds",
@@ -420,7 +415,7 @@ class ApiTestSuite:
 
 class GetAllAasTestSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
-        request = generate_one_valid(self.operation, self.sample_cache, {'limit': 1})
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
         if response.status_code != 200:
@@ -499,6 +494,30 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
         overwrites['idShortPath'] = [_lookup(data, ['result', 0, 'idShort'])]
         return overwrites
 
+class GetFileByPathSuperpathSuite(ApiTestSuite):
+    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
+        data = response.json()
+        valid_id = _lookup(data, ['result', 0, 'id'])
+        valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
+        overwrites = {
+            'aasIdentifier': [b64urlsafe(valid_id)],
+            'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
+        }
+        request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
+        result.append(_make_invoke_result(request))
+        response = request.execute(self.server)
+        if response.status_code != 200:
+            raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
+        data = response.json()
+        overwrites['idShortPath'] = [_lookup(data, ['result', 0, 'idShort'])]
+        return overwrites
+
+
 class GenerateSerializationSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
@@ -528,7 +547,7 @@ _test_suites = {
     'GetAllAssetAdministrationShells-Reference': GetAllAasTestSuite,
 
     'GetAssetAdministrationShellById': GetAasById,
-    'GetAssetAdministrationShellById-Reference': GetAasById,
+    'GetAssetAdministrationShellById-Reference_AasRepository': GetAasById,
 
     "GetAllSubmodelReferences_AasRepository": AasBySuperpathSuite,
     "GetAssetInformation_AasRepository": AasBySuperpathSuite,
@@ -540,21 +559,23 @@ _test_suites = {
     "GetAllSubmodels_AasRepository-Path": AasBySuperpathSuite,
 
     "GetSubmodelById_AasRepository": SubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-Metadata": SubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-ValueOnly": SubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-Reference": SubmodelBySuperpathSuite,
-    "GetSubmodelById_AasRepository-Path": SubmodelBySuperpathSuite,
+    "GetSubmodelById-Metadata_AasRepository": SubmodelBySuperpathSuite,
+    "GetSubmodelById-ValueOnly_AasRepository": SubmodelBySuperpathSuite,
+    "GetSubmodelById-Reference_AasRepository": SubmodelBySuperpathSuite,
+    "GetSubmodelById-Path_AasRepository": SubmodelBySuperpathSuite,
     "GetAllSubmodelElements_AasRepository": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-Metadata": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-ValueOnly": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-Reference": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements_AasRepository-Path": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements-Metadata_AasRepository": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements-ValueOnly_AasRepository": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements-Reference_AasRepository": SubmodelBySuperpathSuite,
+    "GetAllSubmodelElements-Path_AasRepository": SubmodelBySuperpathSuite,
 
     "GetSubmodelElementByPath_AasRepository": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath_AasRepository-Metadata": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath_AasRepository-ValueOnly": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath_AasRepository-Reference": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath_AasRepository-Path": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath-Metadata_AasRepository": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath-ValueOnly_AasRepository": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath-Reference_AasRepository": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath-Path_AasRepository": SubmodelElementBySuperpathSuite,
+
+    "GetFileByPath_AasRepository": GetFileByPathSuperpathSuite,
 
     "GenerateSerializationByIds": GenerateSerializationSuite,
 
@@ -569,9 +590,11 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
     except KeyError:
         all_suites = "\n".join(sorted(_available_suites.keys()))
         raise AasTestToolsException(f"Unknown suite {suite}, must be one of:\n{all_suites}")
-    # for i in operation_ids:
-    #     if i not in spec.open_api.operations:
-    #         raise AasTestToolsException(f"Unknown operation {i}")
+
+    # Sanity check, should never fail
+    for i in operation_ids:
+        if i not in spec.open_api.operations:
+            raise AasTestToolsException(f"Unknown operation {i}")
 
     sample_cache = SampleCache()
     result_root = AasTestResult(f"Checking compliance to {suite}")
@@ -591,10 +614,7 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
             result_root.append(result_op)
             continue
 
-        try:
-            ctr = _test_suites[operation.operation_id]
-        except KeyError:
-            ctr = ApiTestSuite
+        ctr = _test_suites[operation.operation_id]
         test_suite = ctr(server, operation, conf, sample_cache, spec.open_api, suite)
 
         result_before_suite = AasTestResult("Setup")
