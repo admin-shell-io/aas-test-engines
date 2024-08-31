@@ -645,10 +645,10 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
                     if response.status_code >= 500:
                         if i.is_valid:
                             result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.CRITICAL))
-                            result_negative.append(result_request)
+                            result_positive.append(result_request)
                         else:
                             result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.CRITICAL))
-                            result_positive.append(result_request)
+                            result_negative.append(result_request)
                     else:
                         if i.is_valid:
                             if response.status_code >= 400:
