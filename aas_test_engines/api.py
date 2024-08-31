@@ -5,6 +5,7 @@ from ._util import b64urlsafe
 
 from fences.open_api.open_api import OpenApi, Operation
 from fences.open_api.generate import SampleCache, generate_all, generate_one_valid, Request
+from fences.core.util import ConfusionMatrix
 
 import os
 from yaml import load
@@ -17,8 +18,10 @@ except ImportError:
 from dataclasses import dataclass
 import requests
 
+
 def _stringify_path(path: List[Union[str, int]]) -> str:
     return "/".join(str(fragment) for fragment in path)
+
 
 def _lookup(value: any, path: List[Union[str, int]], idx: int = 0) -> any:
     if idx >= len(path):
@@ -56,6 +59,7 @@ def _extend(data: Dict[str, List[str]]) -> dict:
             data[key] = new_values
         if all_resolved:
             return data
+
 
 SSP_PREFIX = "https://admin-shell.io/aas/API/3/0/"
 
@@ -471,6 +475,7 @@ class SubmodelBySuperpathSuite(ApiTestSuite):
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
 
+
 class SubmodelElementBySuperpathSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
@@ -493,6 +498,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
         data = response.json()
         overwrites['idShortPath'] = [_lookup(data, ['result', 0, 'idShort'])]
         return overwrites
+
 
 class GetFileByPathSuperpathSuite(ApiTestSuite):
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
@@ -606,6 +612,7 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
         return result_root
 
     # Check individual operations
+    mat = ConfusionMatrix()
     for operation in spec.open_api.operations.values():
         if operation.operation_id not in operation_ids:
             continue
@@ -658,7 +665,15 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
                             result_negative.append(result_request)
             result_op.append(result_negative)
             result_op.append(result_positive)
+            for i in result_positive.sub_results:
+                mat.add(True, i.ok())
+            for i in result_negative.sub_results:
+                mat.add(False, not i.ok())
         result_root.append(result_op)
+    result_summary = AasTestResult("Summary")
+    result_summary.append(AasTestResult(f"Syntactic tests passed: {mat.invalid_rejected} / {mat.invalid_accepted + mat.invalid_rejected}"))
+    result_summary.append(AasTestResult(f"Semantic tests passed: {mat.valid_accepted} / {mat.valid_accepted + mat.valid_rejected}"))
+    result_root.append(result_summary)
     return result_root
 
 
