@@ -476,7 +476,21 @@ class SubmodelBySuperpathSuite(ApiTestSuite):
         }
 
 
+def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_prefix: str):
+    for i in data:
+        id_short = path_prefix + _lookup(i, ['idShort'])
+        model_type = _lookup(i, ['modelType'])
+        try:
+            paths[model_type].append(id_short)
+        except KeyError:
+            paths[model_type] = [id_short]
+        if model_type == 'SubmodelElementCollection':
+            value = _lookup(i, ['value'])
+            _collect_submodel_elements(value, paths, id_short + ".")
+
+
 class SubmodelElementBySuperpathSuite(ApiTestSuite):
+
     def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
@@ -496,7 +510,10 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
         data = response.json()
-        overwrites['idShortPath'] = [_lookup(data, ['result', 0, 'idShort'])]
+        elements = _lookup(data, ['result'])
+        paths = {}
+        _collect_submodel_elements(elements, paths, '')
+        overwrites['idShortPath'] = [i[0] for i in paths.values()]
         return overwrites
 
 
@@ -520,7 +537,12 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
         data = response.json()
-        overwrites['idShortPath'] = [_lookup(data, ['result', 0, 'idShort'])]
+        paths = {}
+        _collect_submodel_elements(_lookup(data, ['result']), paths, '')
+        try:
+            overwrites['idShortPath'] = [paths['File']]
+        except KeyError:
+            raise ApiTestSuiteException("No submodel element of type 'File' found, skipping test.")
         return overwrites
 
 
