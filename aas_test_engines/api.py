@@ -456,6 +456,7 @@ class GetAllAasTestSuite(ApiTestSuite):
         self.valid_values = {
             'limit': [1],
             'idShort': [_lookup(data, ['result', 0, 'idShort'])],
+            'assetIds': [b64urlsafe(_lookup(data, ['result', 0, 'id']))],
         }
         try:
             cursor = [_lookup(data, ['paging_metadata', 'cursor'])]
