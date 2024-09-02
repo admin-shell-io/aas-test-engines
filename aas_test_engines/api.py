@@ -403,29 +403,57 @@ class ApiTestSuite:
         self.sample_cache = sample_cache
         self.open_api = open_api
         self.suite = suite
+        self.valid_values: Dict[str, List[any]] = {}
 
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
-        return {}
-
-    def before_semantic_test(self):
+    def setup(self, result: AasTestResult):
         pass
 
-    def after_semantic_test(self, result: AasTestResult, request: Request, response: requests.models.Response):
-        pass
+    def execute_syntactic_test(self, request: Request, result: AasTestResult) -> requests.models.Response:
+        result_request = _make_invoke_result(request)
+        response = request.execute(self.server)
+        if response.status_code >= 500:
+            result.append(AasTestResult(f"Server crashed with code {response.status_code}: {_shorten(response.content)}", level=Level.CRITICAL))
+        elif response.status_code >= 400:
+            result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
+        else:
+            result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
+        result.append(result_request)
+        return response
 
-    def after_suite(self):
+    def execute_semantic_test(self, request: Request, result: AasTestResult) -> requests.models.Response:
+        result_request = _make_invoke_result(request)
+        response = request.execute(self.server)
+        if response.status_code >= 500:
+            result.append(AasTestResult(f"Server crashed with code {response.status_code}: {_shorten(response.content)}", level=Level.CRITICAL))
+        elif response.status_code >= 400:
+            result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
+        else:
+            result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
+        result.append(result_request)
+        return response
+
+    def execute(self, result_positive: AasTestResult, result_negative: AasTestResult):
+        graph = generate_all(self.operation, self.sample_cache, self.valid_values)
+        for i in graph.generate_paths():
+            request: Request = graph.execute(i.path)
+            if i.is_valid:
+                self.execute_semantic_test(request, result_positive)
+            else:
+                self.execute_syntactic_test(request, result_negative)
+
+    def teardown(self):
         pass
 
 
 class GetAllAasTestSuite(ApiTestSuite):
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+    def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
         if response.status_code != 200:
             raise ApiTestSuiteException(f"Cannot look up idShort, got status {response.status_code}")
         data = response.json()
-        return {
+        self.valid_values = {
             'limit': [1],
             'cursor': [_lookup(data, ['paging_metadata', 'cursor'])],
             'idShort': [_lookup(data, ['result', 0, 'idShort'])],
@@ -433,7 +461,7 @@ class GetAllAasTestSuite(ApiTestSuite):
 
 
 class GetAasById(ApiTestSuite):
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+    def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
@@ -441,13 +469,13 @@ class GetAasById(ApiTestSuite):
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
         data = response.json()
         valid_id = _lookup(data, ['result', 0, 'id'])
-        return {
+        self.valid_values = {
             'aasIdentifier': [b64urlsafe(valid_id)]
         }
 
 
 class AasBySuperpathSuite(ApiTestSuite):
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+    def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
@@ -455,13 +483,13 @@ class AasBySuperpathSuite(ApiTestSuite):
             raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
         data = response.json()
         valid_id = _lookup(data, ['result', 0, 'id'])
-        return {
+        self.valid_values = {
             'aasIdentifier': [b64urlsafe(valid_id)]
         }
 
 
 class SubmodelBySuperpathSuite(ApiTestSuite):
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+    def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
@@ -470,7 +498,7 @@ class SubmodelBySuperpathSuite(ApiTestSuite):
         data = response.json()
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
-        return {
+        self.valid_values = {
             'aasIdentifier': [b64urlsafe(valid_id)],
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
@@ -490,8 +518,24 @@ def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_pre
 
 
 class SubmodelElementBySuperpathSuite(ApiTestSuite):
+    ALL_TYPES = [
+        'SubmodelElementCollection',
+        'SubmodelElementList',
+        'Entity',
+        'BasicEventElement',
+        'Capability',
+        'Operation',
+        'Property',
+        'MultiLanguageProperty',
+        'Range',
+        'ReferenceElement',
+        'RelationshipElement',
+        'AnnotatedRelationshipElement',
+        'Blob',
+        'File',
+    ]
 
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+    def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
@@ -511,14 +555,47 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
             raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
         data = response.json()
         elements = _lookup(data, ['result'])
-        paths = {}
-        _collect_submodel_elements(elements, paths, '')
-        overwrites['idShortPath'] = [i[0] for i in paths.values()]
-        return overwrites
+        self.paths = {}
+        _collect_submodel_elements(elements, self.paths, '')
+        overwrites['idShortPath'] = [i[0] for i in self.paths.values()]
+        self.valid_values = overwrites
+
+    def execute(self, result_positive: AasTestResult, result_negative: AasTestResult):
+        graph = generate_all(self.operation, self.sample_cache, self.valid_values)
+        for i in graph.generate_paths():
+            request: Request = graph.execute(i.path)
+            if i.is_valid:
+                pass  # skip, we do semantic testing manually
+            else:
+                self.execute_syntactic_test(request, result_negative)
+
+        for model_type in self.ALL_TYPES:
+            result_type = AasTestResult(f"Checking {model_type}")
+            try:
+                id_short_path = self.paths[model_type][0]
+            except KeyError:
+                result_type.append(AasTestResult("No such element present", level=Level.WARNING))
+                id_short_path = None
+            if id_short_path:
+                valid_values = self.valid_values.copy()
+                valid_values['idShortPath'] = [id_short_path]
+                graph = generate_all(self.operation, self.sample_cache, valid_values)
+                for i in graph.generate_paths():
+                    request: Request = graph.execute(i.path)
+                    if i.is_valid:
+                        has_extend = 'extend' in request.query_parameters
+                        has_level = 'level' in request.query_parameters
+                        if (not has_extend and not has_level) or \
+                                model_type in ['SubmodelElementCollection', 'SubmodelElementList', 'Entity'] or \
+                                model_type in ['Blob'] and not has_level:
+                            self.execute_semantic_test(request, result_type)
+                        else:
+                            self.execute_syntactic_test(request, result_type)
+            result_positive.append(result_type)
 
 
 class GetFileByPathSuperpathSuite(ApiTestSuite):
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+    def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
@@ -543,11 +620,11 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
             overwrites['idShortPath'] = [paths['File']]
         except KeyError:
             raise ApiTestSuiteException("No submodel element of type 'File' found, skipping test.")
-        return overwrites
+        self.valid_values = overwrites
 
 
 class GenerateSerializationSuite(ApiTestSuite):
-    def before_suite(self, result: AasTestResult) -> Dict[str, List[any]]:
+    def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
         result.append(_make_invoke_result(request))
         response = request.execute(self.server)
@@ -556,14 +633,15 @@ class GenerateSerializationSuite(ApiTestSuite):
         data = response.json()
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
-        return {
+        self.valid_values = {
             'aasIds': [[b64urlsafe(valid_id)]],
             'submodelIds': [[b64urlsafe(valid_submodel_id)]],
         }
 
 
 class GetDescriptionTestSuite(ApiTestSuite):
-    def after_semantic_test(self, result: AasTestResult, request: Request, response: requests.models.Response):
+    def execute_semantic_test(self, request: Request, result: AasTestResult):
+        response = super().execute_semantic_test(request, result)
         data = response.json()
         profiles = data["Profiles"]
         if self.suite not in profiles:
@@ -644,12 +722,12 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
             continue
 
         ctr = _test_suites[operation.operation_id]
-        test_suite = ctr(server, operation, conf, sample_cache, spec.open_api, suite)
+        test_suite: ApiTestSuite = ctr(server, operation, conf, sample_cache, spec.open_api, suite)
 
         result_before_suite = AasTestResult("Setup")
         try:
-            valid_values = test_suite.before_suite(result_before_suite)
-            result_before_suite.append(AasTestResult(f"Valid values: {valid_values}"))
+            test_suite.setup(result_before_suite)
+            result_before_suite.append(AasTestResult(f"Valid values: {test_suite.valid_values}"))
         except ApiTestSuiteException as e:
             result_before_suite.append(AasTestResult(f"Failed: {e}", level=Level.ERROR))
         result_op.append(result_before_suite)
@@ -657,34 +735,7 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
         if result_op.ok():
             result_negative = AasTestResult("Syntactic tests")
             result_positive = AasTestResult("Semantic tests")
-
-            graph = generate_all(operation, sample_cache, valid_values)
-            for i in graph.generate_paths():
-                request: Request = graph.execute(i.path)
-                result_request = _make_invoke_result(request)
-                if not conf.dry:
-                    response = request.execute(server)
-                    if response.status_code >= 500:
-                        if i.is_valid:
-                            result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.CRITICAL))
-                            result_positive.append(result_request)
-                        else:
-                            result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.CRITICAL))
-                            result_negative.append(result_request)
-                    else:
-                        if i.is_valid:
-                            if response.status_code >= 400:
-                                result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
-                            else:
-                                result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
-                                test_suite.after_semantic_test(result_request, request, response)
-                            result_positive.append(result_request)
-                        else:
-                            if response.status_code >= 400:
-                                result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
-                            else:
-                                result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 4xx: {_shorten(response.content)}", level=Level.ERROR))
-                            result_negative.append(result_request)
+            test_suite.execute(result_positive, result_negative)
             result_op.append(result_negative)
             result_op.append(result_positive)
             for i in result_positive.sub_results:
