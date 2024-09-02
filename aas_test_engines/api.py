@@ -455,9 +455,14 @@ class GetAllAasTestSuite(ApiTestSuite):
         data = response.json()
         self.valid_values = {
             'limit': [1],
-            'cursor': [_lookup(data, ['paging_metadata', 'cursor'])],
             'idShort': [_lookup(data, ['result', 0, 'idShort'])],
         }
+        try:
+            cursor = [_lookup(data, ['paging_metadata', 'cursor'])]
+        except ApiTestSuiteException as e:
+            result.append(AasTestResult("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING))
+            cursor = ''
+        self.valid_values['cursor'] = cursor
 
 
 class GetAasById(ApiTestSuite):
