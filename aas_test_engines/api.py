@@ -383,16 +383,19 @@ def _make_invoke_result(request: Request) -> AasTestResult:
     return AasTestResult(f"Invoke: {request.operation.method.upper()} {request.make_path()}")
 
 
+def _get_json(response: requests.models.Response) -> dict:
+    try:
+        return response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        raise ApiTestSuiteException(f"Cannot decode as JSON: {e}")
+
+
 def _invoke(parent_result: AasTestResult, request: Request, server: str) -> dict:
     parent_result.append(_make_invoke_result(request))
     response = request.execute(server)
     if response.status_code != 200:
         raise ApiTestSuiteException(f"Expected status code 200, but got {response.status_code}")
-    try:
-        data = response.json()
-    except requests.exceptions.JSONDecodeError as e:
-        raise ApiTestSuiteException(f"Cannot decode as JSON: {e}")
-
+    data = _get_json(response)
     if not isinstance(data, dict):
         raise ApiTestSuiteException(f"Expected an object, got {type(data)}")
 
@@ -421,7 +424,7 @@ class ApiTestSuite:
         result_request = _make_invoke_result(request)
         response = request.execute(self.server)
         if response.status_code >= 500:
-            result.append(AasTestResult(f"Server crashed with code {response.status_code}: {_shorten(response.content)}", level=Level.CRITICAL))
+            result_request.append(AasTestResult(f"Server crashed with code {response.status_code}: {_shorten(response.content)}", level=Level.CRITICAL))
         elif response.status_code >= 400:
             result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
         else:
@@ -433,7 +436,7 @@ class ApiTestSuite:
         result_request = _make_invoke_result(request)
         response = request.execute(self.server)
         if response.status_code >= 500:
-            result.append(AasTestResult(f"Server crashed with code {response.status_code}: {_shorten(response.content)}", level=Level.CRITICAL))
+            result_request.append(AasTestResult(f"Server crashed with code {response.status_code}: {_shorten(response.content)}", level=Level.CRITICAL))
         elif response.status_code >= 400:
             result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
         else:
@@ -446,9 +449,15 @@ class ApiTestSuite:
         for i in graph.generate_paths():
             request: Request = graph.execute(i.path)
             if i.is_valid:
-                self.execute_semantic_test(request, result_positive)
+                try:
+                    self.execute_semantic_test(request, result_positive)
+                except ApiTestSuiteException as e:
+                    result_positive.append(AasTestResult(f"Failed {e}", level=Level.ERROR))
             else:
-                self.execute_syntactic_test(request, result_negative)
+                try:
+                    self.execute_syntactic_test(request, result_negative)
+                except ApiTestSuiteException as e:
+                    result_negative.append(AasTestResult(f"Failed {e}", level=Level.ERROR))
 
     def teardown(self):
         pass
@@ -621,7 +630,7 @@ class GenerateSerializationSuite(ApiTestSuite):
 class GetDescriptionTestSuite(ApiTestSuite):
     def execute_semantic_test(self, request: Request, result: AasTestResult):
         response = super().execute_semantic_test(request, result)
-        data = response.json()
+        data = _get_json(response)
         profiles = data["Profiles"]
         if self.suite not in profiles:
             result.append(AasTestResult(f"Suite {self.suite} not part of profiles", level=Level.ERROR))
