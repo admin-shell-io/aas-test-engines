@@ -383,6 +383,22 @@ def _make_invoke_result(request: Request) -> AasTestResult:
     return AasTestResult(f"Invoke: {request.operation.method.upper()} {request.make_path()}")
 
 
+def _invoke(parent_result: AasTestResult, request: Request, server: str) -> dict:
+    parent_result.append(_make_invoke_result(request))
+    response = request.execute(server)
+    if response.status_code != 200:
+        raise ApiTestSuiteException(f"Expected status code 200, but got {response.status_code}")
+    try:
+        data = response.json()
+    except requests.exceptions.JSONDecodeError as e:
+        raise ApiTestSuiteException(f"Cannot decode as JSON: {e}")
+
+    if not isinstance(data, dict):
+        raise ApiTestSuiteException(f"Expected an object, got {type(data)}")
+
+    return data
+
+
 class ApiTestSuiteException(Exception):
     pass
 
@@ -441,11 +457,7 @@ class ApiTestSuite:
 class GetAllAasTestSuite(ApiTestSuite):
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up idShort, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         self.valid_values = {
             'limit': [1],
             'idShort': [_lookup(data, ['result', 0, 'idShort'])],
@@ -462,11 +474,7 @@ class GetAllAasTestSuite(ApiTestSuite):
 class GetAasById(ApiTestSuite):
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         self.valid_values = {
             'aasIdentifier': [b64urlsafe(valid_id)]
@@ -476,11 +484,7 @@ class GetAasById(ApiTestSuite):
 class AasBySuperpathSuite(ApiTestSuite):
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up aasIdentifier, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         self.valid_values = {
             'aasIdentifier': [b64urlsafe(valid_id)]
@@ -490,11 +494,7 @@ class AasBySuperpathSuite(ApiTestSuite):
 class SubmodelBySuperpathSuite(ApiTestSuite):
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         self.valid_values = {
@@ -536,11 +536,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
 
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         overwrites = {
@@ -548,11 +544,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
         request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         elements = _lookup(data, ['result'])
         self.paths = {}
         _collect_submodel_elements(elements, self.paths, '')
@@ -596,11 +588,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
 class GetFileByPathSuperpathSuite(ApiTestSuite):
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         overwrites = {
@@ -608,11 +596,7 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
         request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up idShortPath, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         paths = {}
         _collect_submodel_elements(_lookup(data, ['result']), paths, '')
         try:
@@ -625,11 +609,7 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
 class GenerateSerializationSuite(ApiTestSuite):
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        result.append(_make_invoke_result(request))
-        response = request.execute(self.server)
-        if response.status_code != 200:
-            raise ApiTestSuiteException(f"Cannot look up submodelIdentifier, got status {response.status_code}")
-        data = response.json()
+        data = _invoke(result, request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         self.valid_values = {
