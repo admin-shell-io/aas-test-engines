@@ -236,11 +236,26 @@ _available_suites = _extend({
         "Submodel Service Specification",
     ],
     f"{SSP_PREFIX}SubmodelServiceSpecification/SSP-002": [
+        # Submodel API
         "GetSubmodel",
+        "GetSubmodel-Metadata",
+        "GetSubmodel-Valueonly",
+        "GetSubmodel-Reference",
+        "GetSubmodel-Path",
         "GetAllSubmodelElements",
+        "GetAllSubmodelElements-Metadata",
+        "GetAllSubmodelElements-Valueonly",
+        "GetAllSubmodelElements-Reference",
+        "GetAllSubmodelElements-Path",
         "GetSubmodelElementByPath",
+        "GetSubmodelElementByPath-Metadata",
+        "GetSubmodelElementByPath-Valueonly",
+        "GetSubmodelElementByPath-Reference",
+        "GetSubmodelElementByPath-Path",
         "GetFileByPath",
+        # Serialization API
         "GenerateSerializationByIds",
+        # Description API
         "GetDescription",
     ],
     f"{SSP_PREFIX}SubmodelServiceSpecification/SSP-003": [
@@ -276,7 +291,7 @@ _available_suites = _extend({
     ],
     f"{SSP_PREFIX}AssetAdministrationShellRepositoryServiceSpecification/SSP-002": [
         # AAS Repository API:
-        "GetAllAssetAdministrationShells",  # includes ...ByAssetId and ...ByIdShort
+        "GetAllAssetAdministrationShells",
         "GetAllAssetAdministrationShells-Reference",
         "GetAssetAdministrationShellById",
         "GetAssetAdministrationShellById-Reference_AasRepository",
@@ -311,13 +326,32 @@ _available_suites = _extend({
         "Submodel Repository Service Specification",
     ],
     f"{SSP_PREFIX}SubmodelRepositoryServiceSpecification/SSP-002": [
+        # Submodel Repository API
         "GetAllSubmodels",
+        'GetAllSubmodels-Metadata',
+        'GetAllSubmodels-ValueOnly',
+        'GetAllSubmodels-Reference',
+        'GetAllSubmodels-Path',
         "GetSubmodelById",
-        "GetSubmodel",
-        "GetAllSubmodelElements",
-        "GetSubmodelElementByPath",
-        "GetFileByPath",
+        "GetSubmodelById-Metadata",
+        "GetSubmodelById-ValueOnly",
+        "GetSubmodelById-Reference",
+        "GetSubmodelById-Path",
+        # Submodel API
+        'GetAllSubmodelElements_SubmodelRepository',
+        'GetAllSubmodelElements-Metadata_SubmodelRepository',
+        'GetAllSubmodelElements-ValueOnly_SubmodelRepository',
+        'GetAllSubmodelElements-Reference_SubmodelRepository',
+        'GetAllSubmodelElements-Path_SubmodelRepository',
+        "GetSubmodelElementByPath_SubmodelRepo",
+        "GetSubmodelElementByPath-Metadata_SubmodelRepo",
+        "GetSubmodelElementByPath-ValueOnly_SubmodelRepo",
+        "GetSubmodelElementByPath-Reference_SubmodelRepo",
+        "GetSubmodelElementByPath-Path_SubmodelRepo",
+        "GetFileByPath_SubmodelRepo",
+        # Serialization API
         "GenerateSerializationByIds",
+        # Description API
         "GetDescription"
     ],
     f"{SSP_PREFIX}SubmodelRepositoryServiceSpecification/SSP-003": [
