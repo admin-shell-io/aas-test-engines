@@ -206,14 +206,31 @@ _available_suites = _extend({
         "Asset Administration Shell Service Specification"
     ],
     f"{SSP_PREFIX}AssetAdministrationShellServiceSpecification/SSP-002": [
+        # AAS
         "GetAssetAdministrationShell",
+        "GetAssetAdministrationShell-Reference",
         "GetAllSubmodelReferences",
         "GetAssetInformation",
         "GetThumbnail",
-        "GetSubmodel",  # TODO: via super path
-        "GetAllSubmodelElements",  # TODO: via super path
-        "GetSubmodelElementByPath",  # TODO: via super path
-        "GetFileByPath",  # TODO: via super path
+        # Submodel Repo
+        "GetSubmodel_AAS",
+        "GetSubmodel-Metadata_AAS",
+        "GetSubmodel-ValueOnly_AAS",
+        "GetSubmodelMetadata-Reference_AAS",
+        "GetSubmodel-Path_AAS",
+        # Submodel Elements
+        "GetAllSubmodelElements_AAS",
+        "GetAllSubmodelElements-Metadata_AAS",
+        "GetAllSubmodelElements-ValueOnly_AAS",
+        "GetAllSubmodelElementsReference_AAS",
+        "GetAllSubmodelElementsPath_AAS",
+        # Submodel Element
+        "GetSubmodelElementByPath_AAS",
+        "GetSubmodelElementByPath-Metadata_AAS",
+        "GetSubmodelElementByPath-ValueOnly_AAS",
+        "GetSubmodelElementByPath-Reference_AAS",
+        "GetSubmodelElementByPath-Path_AAS",
+        "GetFileByPath_AAS",
     ],
     f"{SSP_PREFIX}SubmodelServiceSpecification/SSP-001": [
         "Submodel Service Specification",
@@ -240,8 +257,8 @@ _available_suites = _extend({
     f"{SSP_PREFIX}AssetAdministrationShellRegistryServiceSpecification/SSP-002": [
         "GetAllAssetAdministrationShellDescriptors",
         "GetAssetAdministrationShellDescriptorById",
-        "GetAllSubmodelDescriptors",  # TODO: via super path
-        "GetSubmodelDescriptorById",  # TODO: via super path
+        "GetAllSubmodelDescriptorsThroughSuperpath",
+        "GetSubmodelDescriptorByIdThroughSuperpath",
     ],
     f"{SSP_PREFIX}SubmodelRegistryServiceSpecification/SSP-001": [
         "Submodel Registry Service Specification",
@@ -319,6 +336,7 @@ _available_suites = _extend({
 class ExecConf:
     dry: bool = False
     verify: bool = True
+    remove_path_prefix: str = ""
 
 
 def _check_server(server: str, exec_conf: ExecConf) -> AasTestResult:
