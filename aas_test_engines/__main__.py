@@ -80,6 +80,10 @@ def run_api_test(argv):
     parser.add_argument('--no-verify',
                         action='store_true',
                         help='do not check TLS certificate')
+    parser.add_argument('--remove-path-prefix',
+                        type=str,
+                        default='',
+                        help='remove prefix from all paths')
     parser.add_argument('--output',
                         type=OutputFormats,
                         default=OutputFormats.TEXT,
@@ -106,6 +110,7 @@ def run_api_test(argv):
     exec_conf = api.ExecConf(
         dry=args.dry,
         verify=not args.no_verify,
+        remove_path_prefix=args.remove_path_prefix,
     )
     result = api.execute_tests(args.server, suite, args.version, exec_conf)
     if args.output == OutputFormats.TEXT:

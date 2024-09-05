@@ -961,6 +961,11 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
     if not result_root.ok():
         return result_root
 
+    for operation in spec.open_api.operations.values():
+        if operation.path.startswith(conf.remove_path_prefix):
+            # TODO: this will be permanent so that you cannot call this function again
+            operation.path = operation.path[len(conf.remove_path_prefix):]
+
     # Check individual operations
     mat = ConfusionMatrix()
     for operation in spec.open_api.operations.values():
