@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Test Result</title>
     <style>
+        :root {
+            color-scheme: light dark;
+        }
+
         #content {
             margin: none;
             padding: 16px;
@@ -23,7 +27,7 @@
 
         .caret::before {
             content: "\25B6";
-            color: black;
+            color: light-dark(black, gray);
             display: inline-block;
             margin-left: 6px;
         }
