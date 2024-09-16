@@ -239,17 +239,17 @@ _available_suites = _extend({
         # Submodel API
         "GetSubmodel",
         "GetSubmodel-Metadata",
-        "GetSubmodel-Valueonly",
+        "GetSubmodel-ValueOnly",
         "GetSubmodel-Reference",
         "GetSubmodel-Path",
         "GetAllSubmodelElements",
         "GetAllSubmodelElements-Metadata",
-        "GetAllSubmodelElements-Valueonly",
+        "GetAllSubmodelElements-ValueOnly",
         "GetAllSubmodelElements-Reference",
         "GetAllSubmodelElements-Path",
         "GetSubmodelElementByPath",
         "GetSubmodelElementByPath-Metadata",
-        "GetSubmodelElementByPath-Valueonly",
+        "GetSubmodelElementByPath-ValueOnly",
         "GetSubmodelElementByPath-Reference",
         "GetSubmodelElementByPath-Path",
         "GetFileByPath",
@@ -340,9 +340,9 @@ _available_suites = _extend({
         # Submodel API
         'GetAllSubmodelElements_SubmodelRepository',
         'GetAllSubmodelElements-Metadata_SubmodelRepository',
-        'GetAllSubmodelElements-ValueOnly_SubmodelRepository',
-        'GetAllSubmodelElements-Reference_SubmodelRepository',
-        'GetAllSubmodelElements-Path_SubmodelRepository',
+        'GetAllSubmodelElements-ValueOnly_SubmodelRepo',
+        'GetAllSubmodelElements-Reference_SubmodelRepo',
+        'GetAllSubmodelElements-Path_SubmodelRepo',
         "GetSubmodelElementByPath_SubmodelRepo",
         "GetSubmodelElementByPath-Metadata_SubmodelRepo",
         "GetSubmodelElementByPath-ValueOnly_SubmodelRepo",
@@ -978,7 +978,7 @@ def check_in_sync():
             operations = _available_suites[suite]
             for op in operations:
                 if op not in spec.open_api.operations:
-                    raise AasTestToolsException(f"Unknown operation {suite}")
+                    raise AasTestToolsException(f"Unknown operation {op}")
 
 
 def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf: ExecConf = ExecConf()) -> AasTestResult:
