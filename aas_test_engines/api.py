@@ -521,7 +521,10 @@ class GetAllAasTestSuite(ApiTestSuite):
         data = _invoke(result, request, self.server)
         self.valid_values = {
             'limit': [1],
-            'idShort': [_lookup(data, ['result', 0, 'idShort'])],
+            'idShort': [
+                _lookup(data, ['result', 0, 'idShort']),
+                'does-not-exist',
+            ],
             'assetIds': [b64urlsafe(_lookup(data, ['result', 0, 'id']))],
         }
         try:
