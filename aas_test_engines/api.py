@@ -581,7 +581,7 @@ def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_pre
 
 
 class SubmodelElementBySuperpathSuite(ApiTestSuite):
-    ALL_TYPES = [
+    supported_submodel_elements = [
         'SubmodelElementCollection',
         'SubmodelElementList',
         'Entity',
@@ -624,7 +624,8 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
             else:
                 self.execute_syntactic_test(request, result_negative)
 
-        for model_type in self.ALL_TYPES:
+        # TODO: for unsupported elements, check if 4xx is returned
+        for model_type in self.supported_submodel_elements:
             result_type = AasTestResult(f"Checking {model_type}")
             try:
                 id_short_path = self.paths[model_type][0]
@@ -648,6 +649,28 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
                             self.execute_syntactic_test(request, result_type)
             result_positive.append(result_type)
 
+class SubmodelElementMetadataBySuperpathSuite(SubmodelElementBySuperpathSuite):
+    supported_submodel_elements = [
+        'SubmodelElementCollection',
+        'SubmodelElementList',
+        'Entity',
+        'BasicEventElement',
+        'Property',
+        'MultiLanguageProperty',
+        'Range',
+        'ReferenceElement',
+        'RelationshipElement',
+        'AnnotatedRelationshipElement',
+        'Blob',
+        'File',
+    ]
+
+class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuite):
+    supported_submodel_elements = [
+        'SubmodelElementCollection',
+        'SubmodelElementList',
+        'Entity',
+    ]
 
 class GetFileByPathSuperpathSuite(ApiTestSuite):
     def setup(self, result: AasTestResult) -> Dict[str, List[any]]:
@@ -853,10 +876,10 @@ _test_suites = {
 
     # /shells/<AAS>/submodels/<SM>/submodel-elements/<ID>
     "GetSubmodelElementByPath_AasRepository": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath-Metadata_AasRepository": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath-ValueOnly_AasRepository": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath-Metadata_AasRepository": SubmodelElementMetadataBySuperpathSuite,
+    "GetSubmodelElementByPath-ValueOnly_AasRepository": SubmodelElementMetadataBySuperpathSuite,
     "GetSubmodelElementByPath-Reference_AasRepository": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath-Path_AasRepository": SubmodelElementBySuperpathSuite,
+    "GetSubmodelElementByPath-Path_AasRepository": SubmodelElementPathBySuperpathSuite,
     "GetFileByPath_AasRepository": GetFileByPathSuperpathSuite,
     'PutSubmodelElementByPath_AasRepository': SimpleSemanticTestSuite,
     'PostSubmodelElementByPath_AasRepository': SimpleSemanticTestSuite,
