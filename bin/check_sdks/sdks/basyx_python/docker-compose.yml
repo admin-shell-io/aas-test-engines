@@ -1,0 +1,9 @@
+services:
+  app:
+    image: python:3.8
+    command: ./build_and_run.sh
+    working_dir: /app
+    volumes:
+      - ./src:/app:ro
+      - ../../test_data:/test_data:ro
+      - ../../out/basyx_python:/out

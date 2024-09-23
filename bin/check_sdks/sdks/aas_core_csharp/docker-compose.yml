@@ -4,6 +4,6 @@ services:
     command: ./build_and_run.sh
     working_dir: /App
     volumes:
-      - ./src:/App
+      - ./src:/App:ro
       - ../../test_data:/test_data:ro
       - ../../out/aas_core_csharp:/out

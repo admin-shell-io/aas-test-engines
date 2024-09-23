@@ -54,7 +54,8 @@ print(f"#Invalid: {num_invalid}")
 print()
 
 sdks = [
-    'aas_core_csharp'
+    'aas_core_csharp',
+    'basyx_python',
 ]
 
 print("--- Execute SDKs ---")
@@ -66,9 +67,11 @@ for sdk in sdks:
     if is_non_empty(out_dir):
         print(f"{out_dir} already exists, reusing last results")
     else:
+        compose_file = os.path.join(sdk_dir, "docker-compose.yml")
+        print(f"compose={compose_file}")
         subprocess.check_call([
             "docker", "compose",
-            "-f", os.path.join(sdk_dir, "docker-compose.yml"),
+            "-f", compose_file,
             "run",
             "--remove-orphans",
             "app"
