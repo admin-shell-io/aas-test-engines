@@ -150,19 +150,26 @@ commands = {
     'generate_files': generate_files,
 }
 
-if len(sys.argv) <= 1:
-    print(f"Usage: {sys.argv[0]} COMMAND OPTIONS...")
-    print("Available commands:")
-    print("  check_file      Check a file for compliance.")
-    print("  check_server    Check a server instance for compliance.")
-    print("  generate_files  Generate files for testing")
-    exit(1)
 
-command = sys.argv[1]
+def main():
 
-if command not in commands:
-    print(f"Unknown command '{command}', must be one of {', '.join(commands)}")
-    exit(1)
+    if len(sys.argv) <= 1:
+        print(f"Usage: {sys.argv[0]} COMMAND OPTIONS...")
+        print("Available commands:")
+        print("  check_file      Check a file for compliance.")
+        print("  check_server    Check a server instance for compliance.")
+        print("  generate_files  Generate files for testing")
+        exit(1)
 
-remaining_args = sys.argv[2:]
-commands[command](remaining_args)
+    command = sys.argv[1]
+
+    if command not in commands:
+        print(f"Unknown command '{command}', must be one of {', '.join(commands)}")
+        exit(1)
+
+    remaining_args = sys.argv[2:]
+    commands[command](remaining_args)
+
+
+if __name__ == '__main__':
+    main()

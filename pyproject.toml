@@ -19,7 +19,7 @@ dynamic = ["dependencies"]
 Homepage = "https://github.com/admin-shell-io/aas-test-engines"
 
 [project.scripts]
-realpython = "reader.__main__:main"
+aas_test_engines = "aas_test_engines.__main__:main"
 
 [tool.setuptools.package-data]
 "*" = ["*.yml", "*.json"]

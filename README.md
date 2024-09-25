@@ -21,21 +21,21 @@ You may want to invoke the test tools using the simplified command line interfac
 
 ```sh
 # Check file
-python -m aas_test_engines check_file test.aasx
-python -m aas_test_engines check_file test.json --format json
+aas_test_engines check_file test.aasx
+aas_test_engines check_file test.json --format json
 
 # Check file including submodel template
-python -m aas_test_engines check_file test.aasx --submodel_template ContactInformation
+aas_test_engines check_file test.aasx --submodel_template ContactInformation
 
 # Check server
-python -m aas_test_engines check_server https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002
+aas_test_engines check_server https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002
 
 # Generate test data
-python -m aas_test_engines generate_files output_dir
+aas_test_engines generate_files output_dir
 
 # Alternative output formats
-python -m aas_test_engines check_file test.aasx --output html > output.html
-python -m aas_test_engines check_file test.aasx --output json > output.json
+aas_test_engines check_file test.aasx --output html > output.html
+aas_test_engines check_file test.aasx --output json > output.json
 ```
 
 ## Supported Versions and Suites
