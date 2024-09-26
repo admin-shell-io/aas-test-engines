@@ -1,6 +1,6 @@
 from typing import Dict, List, Union, Generator, Callable, Optional
 from .exception import AasTestToolsException
-from .result import AasTestResult, Level, ResultException
+from .result import AasTestResult, Level, start, abort, write
 from ._util import b64urlsafe
 
 from fences.open_api.open_api import OpenApi, Operation
@@ -19,37 +19,53 @@ from dataclasses import dataclass
 import requests
 
 
-def _assert(predicate: bool, message) -> Generator[AasTestResult, None, None]:
+def _assert(predicate: bool, message):
     if predicate:
-        yield AasTestResult(f'{message}: OK')
+        write(f'{message}: OK')
     else:
-        raise ResultException(f'{message}: Fail')
+        abort(f'{message}: Fail')
 
 
 def _stringify_path(path: List[Union[str, int]]) -> str:
     return "/".join(str(fragment) for fragment in path)
 
 
-def _lookup(value: any, path: List[Union[str, int]], idx: int = 0) -> any:
+class _NoDefault:
+    pass
+
+
+def _lookup(value: any, path: List[Union[str, int]], default=_NoDefault, idx: int = 0) -> any:
     if idx >= len(path):
         return value
 
     fragment = path[idx]
     if isinstance(fragment, str):
         if not isinstance(value, dict):
-            raise ResultException(f"Cannot look up {_stringify_path(path)}: should be an object")
+            if default is _NoDefault:
+                abort(f"Cannot look up {_stringify_path(path)}: should be an object")
+            else:
+                return default
         try:
             sub_value = value[fragment]
         except KeyError:
-            raise ResultException(f"Cannot look up {_stringify_path(path)}: key '{fragment}' does not exist")
+            if default is _NoDefault:
+                abort(f"Cannot look up {_stringify_path(path)}: key '{fragment}' does not exist")
+            else:
+                return default
     elif isinstance(fragment, int):
         if not isinstance(value, list):
-            raise ResultException(f"Cannot look up {_stringify_path(path)}: should be an array")
+            if default is _NoDefault:
+                abort(f"Cannot look up {_stringify_path(path)}: should be an array")
+            else:
+                return default
         try:
             sub_value = value[fragment]
         except IndexError:
-            raise ResultException(f"Cannot look up {_stringify_path(path)}: array too short")
-    return _lookup(sub_value, path, idx+1)
+            if default is _NoDefault:
+                abort(f"Cannot look up {_stringify_path(path)}: array too short")
+            else:
+                return default
+    return _lookup(sub_value, path, default, idx+1)
 
 
 def _extend(data: Dict[str, List[str]]) -> dict:
@@ -380,18 +396,19 @@ class ExecConf:
     remove_path_prefix: str = ""
 
 
-def _check_server(server: str, exec_conf: ExecConf) -> AasTestResult:
-    result = AasTestResult(f'Trying to reach {server}')
-    if exec_conf.dry:
-        result.append(AasTestResult("Skipped due to dry run", '', Level.WARNING))
-        return result
+def _check_server(server: str, exec_conf: ExecConf) -> bool:
+    with start(f'Trying to reach {server}'):
+        if exec_conf.dry:
+            write("Skipped due to dry run", Level.WARNING)
+            return True
 
-    try:
-        requests.get(server, verify=exec_conf.verify)
-        result.append(AasTestResult('OK', '', Level.INFO))
-    except requests.exceptions.RequestException as e:
-        result.append(AasTestResult('Failed to reach: {}'.format(e), '', Level.ERROR))
-    return result
+        try:
+            requests.get(server, verify=exec_conf.verify)
+            write('OK')
+            return True
+        except requests.exceptions.RequestException as e:
+            write('Failed to reach: {}'.format(e), Level.CRITICAL)
+            return False
 
 
 class AasSpec:
@@ -438,35 +455,32 @@ def _shorten(content: bytes, max_len: int = 300) -> str:
     return content
 
 
-def _make_invoke_result(request: Request) -> AasTestResult:
-    return AasTestResult(f"Invoke: {request.operation.method.upper()} {request.make_path()}")
+def _make_invoke_result(request: Request) -> str:
+    return f"Invoke: {request.operation.method.upper()} {request.make_path()}"
 
 
 def _get_json(response: requests.models.Response) -> dict:
     try:
         return response.json()
     except requests.exceptions.JSONDecodeError as e:
-        raise ResultException(f"Cannot decode as JSON: {e}")
+        abort(f"Cannot decode as JSON: {e}")
 
 
-def _invoke_impl(request: Request, server: str, positive_test: bool = True) -> Generator[AasTestResult, None, dict]:
+def _invoke_impl(request: Request, server: str, positive_test: bool = True):
     response = request.execute(server)
     if positive_test:
         if response.status_code < 200 or response.status_code > 299:
-            raise ResultException(f"Expected status code 2xx, but got {response.status_code}")
+            abort(f"Expected status code 2xx, but got {response.status_code}")
     else:
         if response.status_code < 400 or response.status_code > 499:
-            raise ResultException(f"Expected status code 4xx, but got {response.status_code}")
-    yield AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}")
-    data = _get_json(response)
-    return data
+            abort(f"Expected status code 4xx, but got {response.status_code}")
+    write(f"Ok ({response.status_code}): {_shorten(response.content)}")
+    return _get_json(response)
 
 
-def _invoke(request: Request, server: str, positive_test: bool = True) -> Generator[AasTestResult, None, dict]:
-    invoke_result = _make_invoke_result(request)
-    data = invoke_result.append_from(_invoke_impl(request, server, positive_test))
-    yield invoke_result
-    return data
+def _invoke(request: Request, server: str, positive_test: bool = True):
+    with start(_make_invoke_result(request)):
+        return _invoke_impl(request, server, positive_test)
 
 
 class ApiTestSuite:
@@ -481,83 +495,88 @@ class ApiTestSuite:
         self.valid_values: Dict[str, List[any]] = {}
 
     def setup(self):
-        yield from []
+        pass
 
-    def execute_syntactic_test(self, request: Request) -> Generator[AasTestResult, None, dict]:
-        yield from _invoke(request, self.server, False)
+    def execute_syntactic_test(self, request: Request):
+        _invoke(request, self.server, False)
 
-    def execute_semantic_test(self, request: Request, result: AasTestResult) -> requests.models.Response:
-        result_request = _make_invoke_result(request)
-        response = request.execute(self.server)
-        if response.status_code >= 500:
-            result_request.append(AasTestResult(f"Server crashed with code {response.status_code}: {_shorten(response.content)}", level=Level.CRITICAL))
-        elif response.status_code >= 400:
-            result_request.append(AasTestResult(f"Got status code {response.status_code}, but expected 2xx: {_shorten(response.content)}", level=Level.ERROR))
-        else:
-            result_request.append(AasTestResult(f"Ok ({response.status_code}): {_shorten(response.content)}"))
-        result.append(result_request)
-        return response
+    def execute_semantic_test(self, request: Request):
+        _invoke(request, self.server, True)
 
-    def execute_syntactic_tests(self, result_negative: AasTestResult):
+    def execute_syntactic_tests(self, mat: ConfusionMatrix):
         graph = generate_all(self.operation, self.sample_cache, self.valid_values)
         for i in graph.generate_paths():
             request: Request = graph.execute(i.path)
             if not i.is_valid:
-                result_negative.append_from(self.execute_syntactic_test(request), True)
+                self.execute_syntactic_test(request)
 
-    def execute_semantic_tests(self, result_positive: AasTestResult):
+    def execute_semantic_tests(self, mat: ConfusionMatrix):
         fns = [getattr(self, i) for i in dir(self) if i.startswith('test_')]
         fns.sort(key=lambda x: x.__code__.co_firstlineno)
         for test_fn in fns:
-            result = AasTestResult(test_fn.__doc__ or test_fn.__name__)
-            result.append_from(test_fn(), True)
-            result_positive.append(result)
+            with start(test_fn.__doc__ or test_fn.__name__):
+                test_fn()
 
-    def execute(self, result_positive: AasTestResult, result_negative: AasTestResult):
-        self.execute_syntactic_tests(result_negative)
-        self.execute_semantic_tests(result_positive)
+    def execute(self, mat: ConfusionMatrix):
+        with start("Negative Tests") as result:
+            self.execute_syntactic_tests(mat)
+        for i in result.sub_results:
+            mat.add(False, not i.ok())
+        with start("Positive Tests") as result:
+            self.execute_semantic_tests(mat)
+        for i in result.sub_results:
+            mat.add(True, i.ok())
 
     def teardown(self):
         pass
 
 
 class GetAllAasTestSuiteBase(ApiTestSuite):
-    id_short_path = []
 
-    def setup(self) -> Generator[AasTestResult, None, None]:
-        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+    def setup(self):
+        request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 2})
+        data = _invoke(request, self.server)
         self.valid_id_short: str = _lookup(data, ['result', 0, 'idShort'])
-        self.cursor: Optional[str] = None
-        try:
-            self.cursor = [_lookup(data, ['paging_metadata', 'cursor'])]
-        except ResultException as e:
-            yield AasTestResult("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING)
+        self.second_id_short: Optional[str] = _lookup(data, ['result', 1, 'idShort'], None)
+        self.cursor: Optional[str] = _lookup(data, ['paging_metadata', 'cursor'], None)
 
     def test_no_parameters(self):
         """
         Invoke without parameters
         """
         request = generate_one_valid(self.operation, self.sample_cache)
-        yield from _invoke(request, self.server)
+        _invoke(request, self.server)
 
     def test_get_one(self):
         """
         Fetch only one
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         data = _lookup(data, ['result'])
-        yield from _assert(len(data) == 1, 'Has exactly one result entry')
+        _assert(len(data) == 1, 'Has exactly one result entry')
 
     def test_filter_by_non_existing_idshort(self):
         """
         Filter by non-existing idShort
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': 'does-not-exist'})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         data = _lookup(data, ['result'])
-        yield from _assert(len(data) == 0, 'Result is empty')
+        _assert(len(data) == 0, 'Result is empty')
+
+    def test_pagination(self):
+        """
+        Test pagination
+        """
+        if self.cursor is None or self.second_id_short is None:
+            abort("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING)
+        request = generate_one_valid(self.operation, self.sample_cache, {'cursor': self.cursor, 'limit': 1})
+        data = _invoke(request, self.server)
+        data = _lookup(data, ['result'])
+        _assert(len(data) == 1, 'Exactly one entry')
+        data = _lookup(data, [0, 'idShort'])
+        _assert(self.second_id_short == data, 'Returns second')
 
 
 class GetAllAasTestSuite(GetAllAasTestSuiteBase):
@@ -566,9 +585,9 @@ class GetAllAasTestSuite(GetAllAasTestSuiteBase):
         Filter by idShort
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': self.valid_id_short})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         id_short = _lookup(data, ['result', 0, 'idShort'])
-        yield from _assert(id_short == self.valid_id_short, 'Result has the requested idShort')
+        _assert(id_short == self.valid_id_short, 'Result has the requested idShort')
 
 
 class GetAllAasRefsTestSuite(GetAllAasTestSuiteBase):
@@ -577,84 +596,84 @@ class GetAllAasRefsTestSuite(GetAllAasTestSuiteBase):
         Filter by idShort
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': self.valid_id_short})
-        data = yield from _invoke(request, self.server)
+        _invoke(request, self.server)
 
 
 class GetAasById(ApiTestSuite):
-    def setup(self) -> Generator[AasTestResult, None, None]:
+    def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
 
-    def test_get(self) -> Generator[AasTestResult, None, None]:
+    def test_get(self):
         """
         Fetch AAS by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         data = _lookup(data, ['id'])
-        yield from _assert(data == self.valid_id, 'Returned the correct one')
+        _assert(data == self.valid_id, 'Returned the correct one')
 
 
 class GetAasReferenceById(ApiTestSuite):
-    def setup(self) -> Generator[AasTestResult, None, None]:
+    def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
 
-    def test_simple(self) -> Generator[AasTestResult, None, None]:
+    def test_simple(self):
         """
         Fetch AAS reference by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         data = _lookup(data, ['keys', 0, 'value'])
-        yield from _assert(data == self.valid_id, 'Returned the correct one')
+        _assert(data == self.valid_id, 'Returned the correct one')
 
 
 class AasBySuperpathSuite(ApiTestSuite):
-    def setup(self) -> Generator[AasTestResult, None, None]:
+    def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         self.valid_id = _lookup(data, ['result', 0, 'id'])
         self.valid_values = {
             'aasIdentifier': [b64urlsafe(self.valid_id)]
         }
 
-    def test_simple(self) -> Generator[AasTestResult, None, None]:
+    def test_simple(self):
         """
         Fetch by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
-        yield from _invoke(request, self.server)
+        _invoke(request, self.server)
 
 
 class AasThumbnailBySuperpathSuite(ApiTestSuite):
-    def setup(self) -> Generator[AasTestResult, None, None]:
+    def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
 
-    def test_simple(self) -> Generator[AasTestResult, None, None]:
+    def test_simple(self):
         """
         Fetch thumbnail by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
             'aasIdentifier': b64urlsafe(self.valid_id),
         })
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         data = _lookup(data, ['result', 0, 'keys', 0, 'value'])
-        yield from _assert(data == self.valid_id, 'Returns the correct one')
+        _assert(data == self.valid_id, 'Returns the correct one')
 
 
 class SubmodelBySuperpathSuite(ApiTestSuite):
-    def setup(self) -> Generator[AasTestResult, None, None]:
+    def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
         self.valid_submodel_id: str = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
 
-    def test_simple(self) -> Generator[AasTestResult, None, None]:
+    def test_simple(self):
         """
         Fetch submodel by id
         """
@@ -662,9 +681,9 @@ class SubmodelBySuperpathSuite(ApiTestSuite):
             'aasIdentifier': b64urlsafe(self.valid_id),
             'submodelIdentfier': b64urlsafe(self.valid_submodel_id),
         })
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         data = _lookup(data, ['result', 0, 'keys', 0, 'value'])
-        yield from _assert(data == self.valid_submodel_id, 'Returns the correct one')
+        _assert(data == self.valid_submodel_id, 'Returns the correct one')
 
 
 def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_prefix: str):
@@ -698,10 +717,10 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
         'File',
     ]
 
-    def setup(self) -> Generator[AasTestResult, None, None]:
+    def setup(self):
         self.paths = {}
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         overwrites = {
@@ -709,40 +728,36 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
         request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         elements = _lookup(data, ['result'])
         _collect_submodel_elements(elements, self.paths, '')
         overwrites['idShortPath'] = [i[0] for i in self.paths.values()]
         self.valid_values = overwrites
 
-    def execute_semantic_tests(self, result_positive: AasTestResult):
+    def check_type(self, model_type: str):
+        if model_type not in self.paths:
+            abort("No such element present", level=Level.WARNING)
+        id_short_path = self.paths[model_type][0]
+        valid_values = self.valid_values.copy()
+        valid_values['idShortPath'] = [id_short_path]
+        graph = generate_all(self.operation, self.sample_cache, valid_values)
+        for i in graph.generate_paths():
+            request: Request = graph.execute(i.path)
+            if i.is_valid:
+                has_extend = 'extend' in request.query_parameters
+                has_level = 'level' in request.query_parameters
+                if (not has_extend and not has_level) or \
+                        model_type in ['SubmodelElementCollection', 'SubmodelElementList', 'Entity'] or \
+                        model_type in ['Blob'] and not has_level:
+                    self.execute_semantic_test(request)
+                else:
+                    self.execute_syntactic_test(request), True
+
+    def execute_semantic_tests(self, mat: ConfusionMatrix):
         # TODO: for unsupported elements, check if 4xx is returned
         for model_type in self.supported_submodel_elements:
-            result_type = AasTestResult(f"Checking {model_type}")
-            try:
-                id_short_path = self.paths[model_type][0]
-            except KeyError:
-                result_type.append(AasTestResult("No such element present", level=Level.WARNING))
-                id_short_path = None
-            if id_short_path:
-                valid_values = self.valid_values.copy()
-                valid_values['idShortPath'] = [id_short_path]
-                graph = generate_all(self.operation, self.sample_cache, valid_values)
-                for i in graph.generate_paths():
-                    request: Request = graph.execute(i.path)
-                    if i.is_valid:
-                        has_extend = 'extend' in request.query_parameters
-                        has_level = 'level' in request.query_parameters
-                        if (not has_extend and not has_level) or \
-                                model_type in ['SubmodelElementCollection', 'SubmodelElementList', 'Entity'] or \
-                                model_type in ['Blob'] and not has_level:
-                            self.execute_semantic_test(request, result_type)
-                        else:
-                            try:
-                                result_type.append_from(self.execute_syntactic_test(request), True)
-                            except ResultException as e:
-                                result_positive.append(AasTestResult(f"Failed {e}", level=Level.ERROR))
-            result_positive.append(result_type)
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type)
 
 
 class SubmodelElementMetadataBySuperpathSuite(SubmodelElementBySuperpathSuite):
@@ -773,7 +788,7 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuite):
 class GetFileByPathSuperpathSuite(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         overwrites = {
@@ -781,20 +796,20 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
         request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         paths = {}
         _collect_submodel_elements(_lookup(data, ['result']), paths, '')
         try:
             overwrites['idShortPath'] = [paths['File']]
         except KeyError:
-            raise ResultException("No submodel element of type 'File' found, skipping test.")
+            abort("No submodel element of type 'File' found, skipping test.")
         self.valid_values = overwrites
 
 
 class GenerateSerializationSuite(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = yield from _invoke(request, self.server)
+        data = _invoke(request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         self.valid_values = {
@@ -1111,55 +1126,37 @@ def execute_tests(server: str, suite: str, version: str = _DEFAULT_VERSION, conf
         raise AasTestToolsException(f"Unknown suite {suite}, must be one of:\n{all_suites}")
 
     sample_cache = SampleCache()
-    result_root = AasTestResult(f"Checking compliance to {suite}")
 
-    # Initial connection check
-    r = _check_server(server, conf)
-    result_root.append(r)
-    if not result_root.ok():
-        return result_root
+    with start(f"Checking compliance to {suite}") as result_root:
 
-    for operation in spec.open_api.operations.values():
-        if operation.path.startswith(conf.remove_path_prefix):
-            # TODO: this will be permanent so that you cannot call this function again
-            operation.path = operation.path[len(conf.remove_path_prefix):]
+        # Initial connection check
+        if not _check_server(server, conf):
+            return result_root
 
-    # Check individual operations
-    mat = ConfusionMatrix()
-    for operation in spec.open_api.operations.values():
-        if operation.operation_id not in operation_ids:
-            continue
-        result_op = AasTestResult(f"Checking {operation.method.upper()} {operation.path} ({operation.operation_id})")
-        if conf.dry:
-            result_root.append(result_op)
-            continue
+        for operation in spec.open_api.operations.values():
+            if operation.path.startswith(conf.remove_path_prefix):
+                # TODO: this will be permanent so that you cannot call this function again
+                operation.path = operation.path[len(conf.remove_path_prefix):]
 
-        ctr = _test_suites[operation.operation_id]
-        test_suite: ApiTestSuite = ctr(server, operation, conf, sample_cache, spec.open_api, suite)
+        # Check individual operations
+        mat = ConfusionMatrix()
+        for operation in spec.open_api.operations.values():
+            if operation.operation_id not in operation_ids:
+                continue
+            with start(f"Checking {operation.method.upper()} {operation.path} ({operation.operation_id})"):
+                if conf.dry:
+                    continue
 
-        result_before_suite = AasTestResult("Setup")
-        try:
-            result_before_suite.append_from(test_suite.setup(), True)
-            result_before_suite.append(AasTestResult(f"Valid values: {test_suite.valid_values}"))
-        except ResultException as e:
-            result_before_suite.append(AasTestResult(f"Failed: {e}", level=Level.ERROR))
-        result_op.append(result_before_suite)
+                ctr = _test_suites[operation.operation_id]
+                test_suite: ApiTestSuite = ctr(server, operation, conf, sample_cache, spec.open_api, suite)
 
-        if result_op.ok():
-            result_negative = AasTestResult("Syntactic tests")
-            result_positive = AasTestResult("Semantic tests")
-            test_suite.execute(result_positive, result_negative)
-            result_op.append(result_negative)
-            result_op.append(result_positive)
-            for i in result_positive.sub_results:
-                mat.add(True, i.ok())
-            for i in result_negative.sub_results:
-                mat.add(False, not i.ok())
-        result_root.append(result_op)
-    result_summary = AasTestResult("Summary")
-    result_summary.append(AasTestResult(f"Syntactic tests passed: {mat.invalid_rejected} / {mat.invalid_accepted + mat.invalid_rejected}"))
-    result_summary.append(AasTestResult(f"Semantic tests passed: {mat.valid_accepted} / {mat.valid_accepted + mat.valid_rejected}"))
-    result_root.append(result_summary)
+                with start("Setup"):
+                    test_suite.setup()
+
+                test_suite.execute(mat)
+        with start("Summary:"):
+            write(f"Syntactic tests passed: {mat.invalid_rejected} / {mat.invalid_accepted + mat.invalid_rejected}")
+            write(f"Semantic tests passed: {mat.valid_accepted} / {mat.valid_accepted + mat.valid_rejected}")
     return result_root
 
 

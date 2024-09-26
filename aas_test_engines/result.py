@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Generator
+from typing import List, TypeVar
 from enum import Enum
 import os
 import html
@@ -28,21 +28,6 @@ class Level(Enum):
         return '\033[94m'
 
 
-# https://stackoverflow.com/questions/34073370
-class ValueKeepingGenerator(object):
-    def __init__(self, generator):
-        self.generator = generator
-        self.return_value = None
-
-    def __iter__(self):
-        self.return_value = yield from self.generator
-
-class ResultException(Exception):
-    pass
-
-class _NoResultException(Exception):
-    pass
-
 class AasTestResult:
 
     def __init__(self, message: str, path_fragment: str = '', level=Level.INFO):
@@ -54,20 +39,6 @@ class AasTestResult:
     def append(self, result: "AasTestResult"):
         self.sub_results.append(result)
         self.level = self.level | result.level
-
-    def append_from(self, it: Generator["AasTestResult", any, T], is_root: bool = False) -> T:
-        val_it = ValueKeepingGenerator(it)
-        try:
-            for result in val_it:
-                self.append(result)
-        except ResultException as e:
-            self.append(AasTestResult(str(e), level=Level.ERROR))
-            if not is_root:
-                raise _NoResultException()
-        except _NoResultException as e:
-            if not is_root:
-                raise e
-        return val_it.return_value
 
     def ok(self) -> bool:
         return self.level == Level.INFO or self.level == Level.WARNING
@@ -133,3 +104,51 @@ class AasTestResult:
         for i in data['s']:
             v.append(AasTestResult.from_json(i))
         return v
+
+
+managers: List["ContextManager"] = []
+
+
+class ContextManager:
+
+    def __init__(self, result: AasTestResult):
+        self.result = result
+
+    def __enter__(self) -> AasTestResult:
+        managers.append(self)
+        return self.result
+
+    def __exit__(self, exc_type, exc_val, traceback):
+        m = managers.pop()
+        assert m is self
+        if exc_val is None:
+            if managers:
+                managers[-1].result.append(self.result)
+        elif isinstance(exc_val, ResultException):
+            self.result.append(exc_val.result)
+            if managers:
+                managers[-1].result.append(self.result)
+            return True
+        else:
+            return False
+
+
+class ResultException(Exception):
+    def __init__(self, result) -> None:
+        self.result = result
+
+
+def write(message: str, level=Level.INFO):
+    if not managers:
+        raise RuntimeError("No open context")
+    result = AasTestResult(message, level=level)
+    managers[-1].result.append(result)
+
+
+def start(message: str, level=Level.INFO) -> ContextManager:
+    result = AasTestResult(message, level=level)
+    return ContextManager(result)
+
+
+def abort(message: str, level=Level.ERROR):
+    raise ResultException(AasTestResult(message, level=level))
