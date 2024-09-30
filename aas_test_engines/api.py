@@ -466,7 +466,7 @@ def _get_json(response: requests.models.Response) -> dict:
         abort(f"Cannot decode as JSON: {e}")
 
 
-def _invoke_impl(request: Request, server: str, positive_test: bool = True):
+def _invoke(request: Request, server: str, positive_test: bool = True) -> requests.models.Response:
     response = request.execute(server)
     if positive_test:
         if response.status_code < 200 or response.status_code > 299:
@@ -475,13 +475,13 @@ def _invoke_impl(request: Request, server: str, positive_test: bool = True):
         if response.status_code < 400 or response.status_code > 499:
             abort(f"Expected status code 4xx, but got {response.status_code}")
     write(f"Ok ({response.status_code}): {_shorten(response.content)}")
-    return _get_json(response)
+    return response
 
 
-def _invoke(request: Request, server: str, positive_test: bool = True):
+def _invoke_and_decode(request: Request, server: str, positive_test: bool = True) -> dict:
     with start(_make_invoke_result(request)):
-        return _invoke_impl(request, server, positive_test)
-
+        response = _invoke(request, server, positive_test)
+        return _get_json(response)
 
 class ApiTestSuite:
 
@@ -498,10 +498,10 @@ class ApiTestSuite:
         pass
 
     def execute_syntactic_test(self, request: Request):
-        _invoke(request, self.server, False)
+        _invoke_and_decode(request, self.server, False)
 
     def execute_semantic_test(self, request: Request):
-        _invoke(request, self.server, True)
+        _invoke_and_decode(request, self.server, True)
 
     def execute_syntactic_tests(self, mat: ConfusionMatrix):
         graph = generate_all(self.operation, self.sample_cache, self.valid_values)
@@ -535,7 +535,7 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
 
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 2})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         self.valid_id_short: str = _lookup(data, ['result', 0, 'idShort'])
         self.second_id_short: Optional[str] = _lookup(data, ['result', 1, 'idShort'], None)
         self.cursor: Optional[str] = _lookup(data, ['paging_metadata', 'cursor'], None)
@@ -545,14 +545,14 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         Invoke without parameters
         """
         request = generate_one_valid(self.operation, self.sample_cache)
-        _invoke(request, self.server)
+        _invoke_and_decode(request, self.server)
 
     def test_get_one(self):
         """
         Fetch only one
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         data = _lookup(data, ['result'])
         _assert(len(data) == 1, 'Has exactly one result entry')
 
@@ -561,7 +561,7 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         Filter by non-existing idShort
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': 'does-not-exist'})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         data = _lookup(data, ['result'])
         _assert(len(data) == 0, 'Result is empty')
 
@@ -572,7 +572,7 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         if self.cursor is None or self.second_id_short is None:
             abort("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING)
         request = generate_one_valid(self.operation, self.sample_cache, {'cursor': self.cursor, 'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         data = _lookup(data, ['result'])
         _assert(len(data) == 1, 'Exactly one entry')
         data = _lookup(data, [0, 'idShort'])
@@ -585,7 +585,7 @@ class GetAllAasTestSuite(GetAllAasTestSuiteBase):
         Filter by idShort
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': self.valid_id_short})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         id_short = _lookup(data, ['result', 0, 'idShort'])
         _assert(id_short == self.valid_id_short, 'Result has the requested idShort')
 
@@ -596,13 +596,13 @@ class GetAllAasRefsTestSuite(GetAllAasTestSuiteBase):
         Filter by idShort
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': self.valid_id_short})
-        _invoke(request, self.server)
+        _invoke_and_decode(request, self.server)
 
 
 class GetAasById(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
 
     def test_get(self):
@@ -610,7 +610,7 @@ class GetAasById(ApiTestSuite):
         Fetch AAS by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         data = _lookup(data, ['id'])
         _assert(data == self.valid_id, 'Returned the correct one')
 
@@ -618,7 +618,7 @@ class GetAasById(ApiTestSuite):
 class GetAasReferenceById(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
 
     def test_simple(self):
@@ -626,7 +626,7 @@ class GetAasReferenceById(ApiTestSuite):
         Fetch AAS reference by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         data = _lookup(data, ['keys', 0, 'value'])
         _assert(data == self.valid_id, 'Returned the correct one')
 
@@ -634,7 +634,7 @@ class GetAasReferenceById(ApiTestSuite):
 class AasBySuperpathSuite(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         self.valid_id = _lookup(data, ['result', 0, 'id'])
         self.valid_values = {
             'aasIdentifier': [b64urlsafe(self.valid_id)]
@@ -645,13 +645,13 @@ class AasBySuperpathSuite(ApiTestSuite):
         Fetch by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
-        _invoke(request, self.server)
+        _invoke_and_decode(request, self.server)
 
 
 class AasThumbnailBySuperpathSuite(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
 
     def test_simple(self):
@@ -661,15 +661,13 @@ class AasThumbnailBySuperpathSuite(ApiTestSuite):
         request = generate_one_valid(self.operation, self.sample_cache, {
             'aasIdentifier': b64urlsafe(self.valid_id),
         })
-        data = _invoke(request, self.server)
-        data = _lookup(data, ['result', 0, 'keys', 0, 'value'])
-        _assert(data == self.valid_id, 'Returns the correct one')
+        _invoke(request, self.server)
 
 
 class SubmodelBySuperpathSuite(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
         self.valid_submodel_id: str = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
 
@@ -681,7 +679,7 @@ class SubmodelBySuperpathSuite(ApiTestSuite):
             'aasIdentifier': b64urlsafe(self.valid_id),
             'submodelIdentfier': b64urlsafe(self.valid_submodel_id),
         })
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         data = _lookup(data, ['result', 0, 'keys', 0, 'value'])
         _assert(data == self.valid_submodel_id, 'Returns the correct one')
 
@@ -720,7 +718,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
     def setup(self):
         self.paths = {}
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         overwrites = {
@@ -728,7 +726,7 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
         request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         elements = _lookup(data, ['result'])
         _collect_submodel_elements(elements, self.paths, '')
         overwrites['idShortPath'] = [i[0] for i in self.paths.values()]
@@ -788,7 +786,7 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuite):
 class GetFileByPathSuperpathSuite(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         overwrites = {
@@ -796,7 +794,7 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
             'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
         }
         request = generate_one_valid(self.open_api.operations["GetAllSubmodelElements_AasRepository"], self.sample_cache, overwrites)
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         paths = {}
         _collect_submodel_elements(_lookup(data, ['result']), paths, '')
         try:
@@ -809,7 +807,7 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
 class GenerateSerializationSuite(ApiTestSuite):
     def setup(self):
         request = generate_one_valid(self.open_api.operations["GetAllAssetAdministrationShells"], self.sample_cache, {'limit': 1})
-        data = _invoke(request, self.server)
+        data = _invoke_and_decode(request, self.server)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
         self.valid_values = {
