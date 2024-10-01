@@ -177,7 +177,7 @@ def post_process(entry: dict, result: FlowGraph) -> FlowGraph:
                     try:
                         if any(i.get('kind') == 'TemplateQualifier' for i in d['qualifiers']):
                             d['kind'] = 'Template'
-                    except (KeyError, TypeError):
+                    except (KeyError, TypeError, AttributeError):
                         pass
                     return data
             sub_root.add_transition(FixConstraint119(is_valid=True))

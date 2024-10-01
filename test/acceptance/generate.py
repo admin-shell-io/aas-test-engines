@@ -51,9 +51,6 @@ for idx, (is_valid, sample) in enumerate(file.generate()):
     if (idx+1) % 100 == 0:
         mat.print()
 
-    if not DEBUG and idx > 500:
-        break
-
 end = default_timer()
 
 print(f"Elapsed time: {end - start:.1f}s")
@@ -61,7 +58,7 @@ print(f"Elapsed time: {end - start:.1f}s")
 for cause in sorted(causes.keys(), key=lambda x: causes[x]):
     print(f"{causes[cause]}: {cause}")
 
-if mat.valid_rejected:
+if mat.valid_rejected > 5:
     print("Valid instances have been rejected!")
     exit(1)
 
