@@ -84,13 +84,13 @@ def _get_schema(version: str, submodel_templates: Set[str]) -> AasSchema:
     return schema
 
 
-def _map_error(parent: AasTestResult, error: SchemaValidationResult):
+def map_error(parent: AasTestResult, error: SchemaValidationResult):
     for i in error.keyword_results:
         if i.ok():
             continue
         kw_result = AasTestResult(i.error_message, '', Level.ERROR)
         for j in i.sub_schema_results:
-            _map_error(kw_result, j)
+            map_error(kw_result, j)
         parent.append(kw_result)
 
 
@@ -257,7 +257,7 @@ def _check_json_data(data: any, validator: SchemaValidator, short_circuit: bool)
     )
 
     error = validator.validate(data, config)
-    _map_error(result, error)
+    map_error(result, error)
     return result
 
 
@@ -296,7 +296,7 @@ def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templat
                 preprocessor=preprocess
             )
             error = validator.validate(data, config)
-            _map_error(submodel_result, error)
+            map_error(submodel_result, error)
             submodels_result.append(submodel_result)
         result.append(submodels_result)
     return result
@@ -391,7 +391,7 @@ def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION, submodel_
     )
     error = schema.validator.validate(data, config)
     result = AasTestResult('Check XML', '', Level.INFO)
-    _map_error(result, error)
+    map_error(result, error)
     return result
 
 

@@ -5,6 +5,9 @@ import json
 from aas_test_engines import api, file
 from enum import Enum
 
+# https://stackoverflow.com/questions/27981545
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class InputFormats(Enum):
     xml = 'xml'
@@ -108,11 +111,12 @@ def run_api_test(argv):
         suite = suites[0]
 
     exec_conf = api.ExecConf(
+        server=args.server,
         dry=args.dry,
         verify=not args.no_verify,
         remove_path_prefix=args.remove_path_prefix,
     )
-    result = api.execute_tests(args.server, suite, args.version, exec_conf)
+    result, mat = api.execute_tests(exec_conf, suite, args.version)
     if args.output == OutputFormats.TEXT:
         result.dump()
     elif args.output == OutputFormats.HTML:
