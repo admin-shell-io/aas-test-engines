@@ -56,6 +56,7 @@ print()
 sdks = [
     'aas_core_csharp',
     'basyx_python',
+    'aas4j',
 ]
 
 print("--- Execute SDKs ---")
@@ -87,6 +88,8 @@ for sdk in sdks:
             mat.invalid_accepted += 1
         else:
             mat.valid_accepted += 1
+    print(sdk)
     mat.valid_rejected = num_valid - mat.valid_accepted
     mat.invalid_rejected = num_invalid - mat.invalid_accepted
     mat.print()
+    print(f"Accuracy: {round(mat.accuracy()*100)}%")

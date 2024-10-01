@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    volumes:
+      - ./src:/app
+      - ../../test_data:/test_data:ro
+      - ../../out/aas4j:/out
+    working_dir: /app
+    command: sh -c 'mvn package && java -jar target/aastest-1.0-SNAPSHOT.jar'
