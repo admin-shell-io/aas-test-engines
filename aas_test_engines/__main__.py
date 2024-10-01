@@ -138,14 +138,10 @@ def generate_files(argv):
         print(f"Directory '{args.directory}' already exists, please remove it")
         exit(1)
     os.mkdir(args.directory)
-    i = 0
-    for is_valid, sample in file.generate():
+    for idx, (is_valid, sample) in enumerate(file.generate()):
         tag = 'valid' if is_valid else 'invalid'
-        with open(os.path.join(args.directory, f"{i}_{tag}.json"), "w") as f:
-            f.write(sample)
-        i += 1
-        if i > 2000:
-            break
+        with open(os.path.join(args.directory, f"{idx}_{tag}.json"), "w") as f:
+            json.dump(sample, f)
 
 
 commands = {
