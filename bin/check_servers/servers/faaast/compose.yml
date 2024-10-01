@@ -1,0 +1,9 @@
+version: '3.4'
+services:
+  FA3ST:
+    image: fraunhoferiosb/faaast-service:latest
+    volumes:
+      - ./../../test_data/:/app/data/:ro
+    ports:
+      - 8000:443
+    command: --model /app/data/TestDataWithThumbnail.aasx

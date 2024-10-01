@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  aas-env:
+    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    volumes:
+      - ./aas-env.properties:/application/application.properties:ro
+      - ./../../test_data:/application/aas:ro
+    ports:
+        - 8000:8081

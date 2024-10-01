@@ -1,0 +1,7 @@
+services:
+  app:
+    build: .
+    ports:
+    - 8000:80 
+    volumes:
+      - ./../../test_data:/app/storage:ro
