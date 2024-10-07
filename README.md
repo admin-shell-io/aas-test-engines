@@ -12,7 +12,7 @@ The tools in this repository offer measures to validate compliance of AAS implem
 You can install the AAS Test Engines via pip:
 
 ```sh
-python -m pip install aas_test_engines
+python -m pip install --upgrade aas_test_engines
 ```
 
 ## Command Line Interface
