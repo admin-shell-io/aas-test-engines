@@ -22,7 +22,7 @@ Homepage = "https://github.com/admin-shell-io/aas-test-engines"
 aas_test_engines = "aas_test_engines.__main__:main"
 
 [tool.setuptools.package-data]
-"*" = ["*.yml", "*.json"]
+"*" = ["*.yml", "*.json", '*.html']
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
