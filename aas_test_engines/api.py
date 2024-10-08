@@ -7,7 +7,7 @@ from .file import map_error
 from fences.open_api.open_api import OpenApi, Operation
 from fences.open_api.generate import SampleCache, generate_all, generate_one_valid, Request
 from fences.core.util import ConfusionMatrix
-from json_schema_tool.schema import parse_schema
+from json_schema_tool.schema import parse_schema, ParseConfig
 
 import os
 from yaml import load
@@ -390,6 +390,17 @@ _available_suites = _extend({
     ]
 })
 
+_test_suites: Dict[str, "ApiTestSuite"] = {}
+
+
+def operation(name: str):
+    assert name not in _test_suites
+
+    def decorator(fn):
+        _test_suites[name] = fn
+        return fn
+    return decorator
+
 
 @dataclass
 class ExecConf:
@@ -468,14 +479,15 @@ def _get_json(response: requests.models.Response) -> dict:
 def _invoke(request: Request, conf: ExecConf, positive_test) -> requests.models.Response:
     prepared_request = request.build(conf.server).prepare()
     response = requests.Session().send(prepared_request, verify=conf.verify)
-
+    write(f"Response: ({response.status_code}): {_shorten(response.content)}")
+    if response.status_code >= 500:
+        abort(f"Got status code {response.status_code}", Level.CRITICAL)
     if positive_test:
         if response.status_code < 200 or response.status_code > 299:
             abort(f"Expected status code 2xx, but got {response.status_code}")
     else:
         if response.status_code < 400 or response.status_code > 499:
             abort(f"Expected status code 4xx, but got {response.status_code}")
-    write(f"Ok ({response.status_code}): {_shorten(response.content)}")
     return response
 
 
@@ -488,7 +500,7 @@ def _invoke_and_decode(request: Request, conf: ExecConf, positive_test: bool) ->
         if not expected_responses:
             abort(f"Invalid status code {response.status_code}")
         data = _get_json(response)
-        validator = parse_schema({**expected_responses[0].schema, '$schema': 'https://json-schema.org/draft/2020-12/schema'})
+        validator = parse_schema({**expected_responses[0].schema, '$schema': 'https://json-schema.org/draft/2020-12/schema'}, ParseConfig(raise_on_unknown_format=False))
         validation_result = validator.validate(data)
         if validation_result.ok:
             write("Response conforms to schema")
@@ -545,6 +557,7 @@ class ApiTestSuite:
         pass
 
 
+# /shells
 class GetAllAasTestSuiteBase(ApiTestSuite):
 
     def setup(self):
@@ -595,6 +608,7 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         _assert(self.second_id_short == data, 'Returns second')
 
 
+@operation("GetAllAssetAdministrationShells")
 class GetAllAasTestSuite(GetAllAasTestSuiteBase):
     def test_filter_by_idshort(self):
         """
@@ -606,6 +620,7 @@ class GetAllAasTestSuite(GetAllAasTestSuiteBase):
         _assert(id_short == self.valid_id_short, 'Result has the requested idShort')
 
 
+@operation("GetAllAssetAdministrationShells-Reference")
 class GetAllAasRefsTestSuite(GetAllAasTestSuiteBase):
     def test_filter_by_idshort(self):
         """
@@ -614,7 +629,10 @@ class GetAllAasRefsTestSuite(GetAllAasTestSuiteBase):
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': self.valid_id_short})
         _invoke_and_decode(request, self.conf, True)
 
+# /shells/<AAS>
 
+
+@operation("GetAssetAdministrationShellById")
 class GetAasById(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
@@ -632,6 +650,7 @@ class GetAasById(ApiTestSuite):
         _assert(data == self.valid_id, 'Returned the correct one')
 
 
+@operation('GetAssetAdministrationShellById-Reference_AasRepository')
 class GetAasReferenceById(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
@@ -648,7 +667,17 @@ class GetAasReferenceById(ApiTestSuite):
         data = _lookup(data, ['keys', 0, 'value'])
         _assert(data == self.valid_id, 'Returned the correct one')
 
+# /shells/<AAS>/submodels
+# /shells/<AAS>/submodel-refs
 
+
+@operation("GetAllSubmodelReferences_AasRepository")
+@operation("GetAllSubmodels_AasRepository")
+@operation("GetAllSubmodels_AasRepository Metadata")
+@operation("GetAllSubmodels_AasRepository-ValueOnly")
+@operation("GetAllSubmodels_AasRepository-Reference")
+@operation("GetAllSubmodels_AasRepository-Path")
+@operation("GetAssetInformation_AasRepository")
 class AasBySuperpathSuite(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
@@ -666,7 +695,10 @@ class AasBySuperpathSuite(ApiTestSuite):
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
         _invoke_and_decode(request, self.conf, True)
 
+# /shells/<AAS>/asset-information
 
+
+@operation('GetThumbnail_AasRepository')
 class AasThumbnailBySuperpathSuite(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
@@ -683,8 +715,10 @@ class AasThumbnailBySuperpathSuite(ApiTestSuite):
         })
         _invoke(request, self.conf, True)
 
+# /shells/<AAS>/submodels/<SM>
 
-class SubmodelBySuperpathSuite(ApiTestSuite):
+
+class SubmodelBySuperpathSuiteBase(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
         request = generate_one_valid(op, self.sample_cache, {'limit': 1})
@@ -692,17 +726,57 @@ class SubmodelBySuperpathSuite(ApiTestSuite):
         self.valid_id: str = _lookup(data, ['result', 0, 'id'])
         self.valid_submodel_id: str = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
 
+
+@operation("GetSubmodelById_AasRepository")
+@operation("GetSubmodelById-Metadata_AasRepository")
+class SubmodelBySuperpathSuite(SubmodelBySuperpathSuiteBase):
     def test_simple(self):
         """
         Fetch submodel by id
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
             'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentfier': b64urlsafe(self.valid_submodel_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
         })
         data = _invoke_and_decode(request, self.conf, True)
-        data = _lookup(data, ['result', 0, 'keys', 0, 'value'])
+        data = _lookup(data, ['id'])
         _assert(data == self.valid_submodel_id, 'Returns the correct one')
+
+
+
+@operation("GetSubmodelById-ValueOnly_AasRepository")
+@operation("GetSubmodelById-Reference_AasRepository")
+@operation("GetSubmodelById-Path_AasRepository")
+class SubmodelRefBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+    def test_simple(self):
+        """
+        Fetch submodel by id
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+# /shells/<AAS>/submodels/<SM>/submodel-elements
+
+@operation("GetAllSubmodelElements_AasRepository")
+@operation("GetAllSubmodelElements-Metadata_AasRepository")
+@operation("GetAllSubmodelElements-ValueOnly_AasRepository")
+@operation("GetAllSubmodelElements-Reference_AasRepository")
+@operation("GetAllSubmodelElements-Path_AasRepository")
+class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+    def test_simple(self):
+        """
+        Fetch all submodel elements
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+# /shells/<AAS>/submodels/<SM>/submodel-elements/<ID>
 
 
 def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_prefix: str):
@@ -718,6 +792,8 @@ def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_pre
             _collect_submodel_elements(value, paths, id_short + ".")
 
 
+@operation("GetSubmodelElementByPath_AasRepository")
+@operation("GetSubmodelElementByPath-Reference_AasRepository")
 class SubmodelElementBySuperpathSuite(ApiTestSuite):
     supported_submodel_elements = [
         'SubmodelElementCollection',
@@ -781,6 +857,8 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
                 self.check_type(model_type)
 
 
+@operation("GetSubmodelElementByPath-Metadata_AasRepository")
+@operation("GetSubmodelElementByPath-ValueOnly_AasRepository")
 class SubmodelElementMetadataBySuperpathSuite(SubmodelElementBySuperpathSuite):
     supported_submodel_elements = [
         'SubmodelElementCollection',
@@ -798,6 +876,7 @@ class SubmodelElementMetadataBySuperpathSuite(SubmodelElementBySuperpathSuite):
     ]
 
 
+@operation("GetSubmodelElementByPath-Path_AasRepository")
 class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuite):
     supported_submodel_elements = [
         'SubmodelElementCollection',
@@ -806,6 +885,7 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuite):
     ]
 
 
+@operation("GetFileByPath_AasRepository")
 class GetFileByPathSuperpathSuite(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
@@ -829,6 +909,9 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
         self.valid_values = overwrites
 
 
+# /serialization
+
+@operation("GenerateSerializationByIds")
 class GenerateSerializationSuite(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
@@ -836,12 +919,27 @@ class GenerateSerializationSuite(ApiTestSuite):
         data = _invoke_and_decode(request, self.conf, True)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
-        self.valid_values = {
-            'aasIds': [[b64urlsafe(valid_id)]],
-            'submodelIds': [[b64urlsafe(valid_submodel_id)]],
-        }
+        self.valid_aas_id = b64urlsafe(valid_id)
+        self.valid_submod_id = b64urlsafe(valid_submodel_id)
+
+    def test_filter_by_aasids(self):
+        """
+        Filter by aas ids
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {'aasIds': self.valid_aas_id})
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_filter_by_(self):
+        """
+        Filter by submodel ids
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {'submodelIds': self.valid_submod_id})
+        _invoke_and_decode(request, self.conf, True)
 
 
+# /description
+
+@operation("GetDescription")
 class GetDescriptionTestSuite(ApiTestSuite):
     def test_contains_suite(self):
         """
@@ -853,275 +951,213 @@ class GetDescriptionTestSuite(ApiTestSuite):
         _assert(self.suite in suites, f"Contains {self.suite}")
 
 
+@operation('PostAssetAdministrationShell')
+@operation('PutAssetAdministrationShellById')
+@operation('DeleteAssetAdministrationShellById')
+@operation('PutAssetInformation_AasRepository')
+@operation('PutThumbnail_AasRepository')
+@operation('DeleteThumbnail_AasRepository')
+@operation('PostSubmodelReference_AasRepository')
+@operation('DeleteSubmodelReferenceById_AasRepository')
+@operation('PutSubmodelById_AasRepository')
+@operation('DeleteSubmodelById_AasRepository')
+@operation('PatchSubmodel_AasRepository')
+@operation('PatchSubmodelById-Metadata_AasRepository')
+@operation('PatchSubmodelById-ValueOnly_AasRepository')
+@operation("PostSubmodelElement_AasRepository")
+@operation('PutSubmodelElementByPath_AasRepository')
+@operation('PostSubmodelElementByPath_AasRepository')
+@operation('DeleteSubmodelElementByPath_AasRepository')
+@operation('PatchSubmodelElementValueByPath_AasRepository')
+@operation('PatchSubmodelElementValueByPath-Metadata')
+@operation('PatchSubmodelElementValueByPath-ValueOnly')
+@operation('PutFileByPath_AasRepository')
+@operation('DeleteFileByPath_AasRepository')
+@operation('InvokeOperation_AasRepository')
+@operation('InvokeOperation-ValueOnly_AasRepository')
+@operation('InvokeOperationAsync_AasRepository')
+@operation('InvokeOperationAsync-ValueOnly_AasRepository')
+@operation('GetOperationAsyncStatus_AasRepository')
+@operation('GetOperationAsyncResult_AasRepository')
+@operation('GetOperationAsyncResult-ValueOnly_AasRepository')
+# /aas
+@operation('GetAssetAdministrationShell')
+@operation('PutAssetAdministrationShell')
+@operation('GetAssetAdministrationShell-Reference')
+@operation('GetAssetInformation')
+@operation('PutAssetInformation')
+@operation('GetThumbnail')
+@operation('PutThumbnail')
+@operation('DeleteThumbnail')
+# /aas/submodel-refs
+@operation('GetAllSubmodelReferences')
+@operation('GetAllSubmodelReferences')
+@operation('PostSubmodelReference')
+@operation('DeleteSubmodelReferenceById')
+# /aas/submodels/<SM>
+@operation('GetSubmodel_AAS')
+@operation('PutSubmodel_AAS')
+@operation('DeleteSubmodelById_AAS')
+@operation('PatchSubmodel_AAS')
+@operation('GetSubmodel-Metadata_AAS')
+@operation('PatchSubmodelMetadata_AAS')
+@operation('GetSubmodel-ValueOnly_AAS')
+@operation('PatchSubmodel-ValueOnly_AAS')
+@operation('GetSubmodelMetadata-Reference_AAS')
+@operation('GetSubmodel-Path_AAS')
+# /aas/submodels/<SM>/submodel-elements
+@operation('GetAllSubmodelElements_AAS')
+@operation('PostSubmodelElement_AAS')
+@operation('GetAllSubmodelElements-Metadata_AAS')
+@operation('GetAllSubmodelElements-ValueOnly_AAS')
+@operation('GetAllSubmodelElementsReference_AAS')
+@operation('GetAllSubmodelElementsPath_AAS')
+@operation('GetSubmodelElementByPath_AAS')
+@operation('PutSubmodelElementByPath_AAS')
+@operation('PostSubmodelElementByPath_AAS')
+@operation('DeleteSubmodelElementByPath_AAS')
+@operation('PatchSubmodelElementValueByPath_AAS')
+@operation('GetSubmodelElementByPath-Metadata_AAS')
+@operation('PatchSubmodelElementValueByPath-Metadata_AAS')
+@operation('GetSubmodelElementByPath-ValueOnly_AAS')
+@operation('PatchSubmodelElementValueByPathValueOnly_AAS')
+@operation('GetSubmodelElementByPath-Reference_AAS')
+@operation('GetSubmodelElementByPath-Path_AAS')
+@operation('GetFileByPath_AAS')
+@operation('PutFileByPath_AAS')
+@operation('DeleteFileByPath_AAS')
+@operation('InvokeOperationSync_AAS')
+@operation('InvokeOperationSync-ValueOnly_AAS')
+@operation('InvokeOperationAsync_AAS')
+@operation('InvokeOperationAsync-ValueOnly_AAS')
+@operation('GetOperationAsyncStatus_AAS')
+@operation('GetOperationAsyncResult_AAS')
+@operation('GetOperationAsyncResult-ValueOnly_AAS')
+# /submodel
+@operation('GetSubmodel')
+@operation('PutSubmodel')
+@operation('PatchSubmodel')
+@operation('GetSubmodel-Metadata')
+@operation('PatchSubmodel-Metadata')
+@operation('GetSubmodel-ValueOnly')
+@operation('PatchSubmodel-ValueOnly')
+@operation('GetSubmodel-Reference')
+@operation('GetSubmodel-Path')
+# /submodel/submodel-elements
+@operation('GetAllSubmodelElements')
+@operation('PostSubmodelElement')
+@operation('GetAllSubmodelElements-Metadata')
+@operation('GetAllSubmodelElements-ValueOnly')
+@operation('GetAllSubmodelElements-Reference')
+@operation('GetAllSubmodelElements-Path')
+@operation('GetSubmodelElementByPath')
+@operation('PutSubmodelElementByPath')
+@operation('PostSubmodelElementByPath')
+@operation('DeleteSubmodelElementByPath')
+@operation('PatchSubmodelElementByPath')
+@operation('GetSubmodelElementByPath-Metadata')
+@operation('PatchSubmodelElementByPath-Metadata')
+@operation('GetSubmodelElementByPath-ValueOnly')
+@operation('PatchSubmodelElementByPath-ValueOnly')
+@operation('GetSubmodelElementByPath-Reference')
+@operation('GetSubmodelElementByPath-Path')
+@operation('GetFileByPath')
+@operation('PutFileByPath')
+@operation('DeleteFileByPath')
+@operation('InvokeOperation')
+@operation('InvokeOperationAsync')
+@operation('InvokeOperationSync-ValueOnly')
+@operation('InvokeOperationAsync-ValueOnly')
+@operation('GetOperationAsyncStatus')
+@operation('GetOperationAsyncResult')
+@operation('GetOperationAsyncResult-ValueOnly')
+# /submodels
+@operation('GetAllSubmodels')
+@operation('PostSubmodel')
+@operation('GetAllSubmodels-Metadata')
+@operation('GetAllSubmodels-ValueOnly')
+@operation('GetAllSubmodels-Reference')
+@operation('GetAllSubmodels-Path')
+# /submodels/<SM>
+@operation('GetSubmodelById')
+@operation('PutSubmodelById')
+@operation('DeleteSubmodelById')
+@operation('PatchSubmodelById')
+@operation('GetSubmodelById-Metadata')
+@operation('PatchSubmodelById-Metadata')
+@operation('GetSubmodelById-ValueOnly')
+@operation('PatchSubmodelById-ValueOnly')
+@operation('GetSubmodelById-Reference')
+@operation('GetSubmodelById-Path')
+# /submodels/<SM>/submodel-elements
+@operation('GetAllSubmodelElements_SubmodelRepository')
+@operation('PostSubmodelElement_SubmodelRepository')
+@operation('GetAllSubmodelElements-Metadata_SubmodelRepository')
+@operation('GetAllSubmodelElements-ValueOnly_SubmodelRepo')
+@operation('GetAllSubmodelElements-Reference_SubmodelRepo')
+@operation('GetAllSubmodelElements-Path_SubmodelRepo')
+@operation('GetSubmodelElementByPath_SubmodelRepo')
+@operation('PutSubmodelElementByPath_SubmodelRepo')
+@operation('PostSubmodelElementByPath_SubmodelRepo')
+@operation('DeleteSubmodelElementByPath_SubmodelRepo')
+@operation('PatchSubmodelElementByPath_SubmodelRepo')
+@operation('GetSubmodelElementByPath-Metadata_SubmodelRepo')
+@operation('PatchSubmodelElementByPath-Metadata_SubmodelRepo')
+@operation('GetSubmodelElementByPath-ValueOnly_SubmodelRepo')
+@operation('PatchSubmodelElementByPath-ValueOnly_SubmodelRepo')
+@operation('GetSubmodelElementByPath-Reference_SubmodelRepo')
+@operation('GetSubmodelElementByPath-Path_SubmodelRepo')
+@operation('GetFileByPath_SubmodelRepo')
+@operation('PutFileByPath_SubmodelRepo')
+@operation('DeleteFileByPath_SubmodelRepo')
+@operation('InvokeOperation_SubmodelRepo')
+@operation('InvokeOperation-ValueOnly_SubmodelRepo')
+@operation('InvokeOperationAsync_SubmodelRepo')
+@operation('InvokeOperationAsync-ValueOnly_SubmodelRepo')
+@operation('GetOperationAsyncStatus_SubmodelRepo')
+@operation('GetOperationAsyncResult_SubmodelRepo')
+@operation('GetOperationAsyncResult-ValueOnly_SubmodelRepo')
+@operation('GetAllConceptDescriptions')
+@operation('PostConceptDescription')
+@operation('GetConceptDescriptionById')
+@operation('PutConceptDescriptionById')
+@operation('DeleteConceptDescriptionById')
+# /shell-descriptors
+@operation('GetAllAssetAdministrationShellDescriptors')
+@operation('PostAssetAdministrationShellDescriptor')
+@operation('GetAssetAdministrationShellDescriptorById')
+@operation('PutAssetAdministrationShellDescriptorById')
+@operation('DeleteAssetAdministrationShellDescriptorById')
+# /shell-descriptors/<AAS>/submodel-descriptors
+@operation('GetAllSubmodelDescriptorsThroughSuperpath')
+@operation('PostSubmodelDescriptor-ThroughSuperpath')
+@operation('GetSubmodelDescriptorByIdThroughSuperpath')
+@operation('PutSubmodelDescriptorByIdThroughSuperpath')
+@operation('DeleteSubmodelDescriptorByIdThroughSuperpath')
+# /submodel-descriptors
+@operation('GetAllSubmodelDescriptors')
+@operation('PostSubmodelDescriptor')
+@operation('GetSubmodelDescriptorById')
+@operation('PutSubmodelDescriptorById')
+@operation('DeleteSubmodelDescriptorById')
+# /lookup/shells
+@operation('GetAllAssetAdministrationShellIdsByAssetLink')
+@operation('GetAllAssetLinksById')
+@operation('PostAllAssetLinksById')
+@operation('DeleteAllAssetLinksById')
+# /packages
+@operation('GetAllAASXPackageIds')
+@operation('PostAASXPackage')
+@operation('GetAASXByPackageId')
+@operation('PutAASXByPackageId')
+@operation('DeleteAASXByPackageId')
 class SimpleSemanticTestSuite(ApiTestSuite):
-    pass
-
-
-_test_suites = {
-    # /aas
-    'GetAssetAdministrationShell': SimpleSemanticTestSuite,
-    'PutAssetAdministrationShell': SimpleSemanticTestSuite,
-    'GetAssetAdministrationShell-Reference': SimpleSemanticTestSuite,
-    'GetAssetInformation': SimpleSemanticTestSuite,
-    'PutAssetInformation': SimpleSemanticTestSuite,
-    'GetThumbnail': SimpleSemanticTestSuite,
-    'PutThumbnail': SimpleSemanticTestSuite,
-    'DeleteThumbnail': SimpleSemanticTestSuite,
-
-    # /aas/submodel-refs
-    'GetAllSubmodelReferences': SimpleSemanticTestSuite,
-    'GetAllSubmodelReferences': SimpleSemanticTestSuite,
-    'PostSubmodelReference': SimpleSemanticTestSuite,
-    'DeleteSubmodelReferenceById': SimpleSemanticTestSuite,
-
-    # /aas/submodels/<SM>
-    'GetSubmodel_AAS': SimpleSemanticTestSuite,
-    'PutSubmodel_AAS': SimpleSemanticTestSuite,
-    'DeleteSubmodelById_AAS': SimpleSemanticTestSuite,
-    'PatchSubmodel_AAS': SimpleSemanticTestSuite,
-    'GetSubmodel-Metadata_AAS': SimpleSemanticTestSuite,
-    'PatchSubmodelMetadata_AAS': SimpleSemanticTestSuite,
-    'GetSubmodel-ValueOnly_AAS': SimpleSemanticTestSuite,
-    'PatchSubmodel-ValueOnly_AAS': SimpleSemanticTestSuite,
-    'GetSubmodelMetadata-Reference_AAS': SimpleSemanticTestSuite,
-    'GetSubmodel-Path_AAS': SimpleSemanticTestSuite,
-
-    # /aas/submodels/<SM>/submodel-elements
-    'GetAllSubmodelElements_AAS': SimpleSemanticTestSuite,
-    'PostSubmodelElement_AAS': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-Metadata_AAS': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-ValueOnly_AAS': SimpleSemanticTestSuite,
-    'GetAllSubmodelElementsReference_AAS': SimpleSemanticTestSuite,
-    'GetAllSubmodelElementsPath_AAS': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath_AAS': SimpleSemanticTestSuite,
-    'PutSubmodelElementByPath_AAS': SimpleSemanticTestSuite,
-    'PostSubmodelElementByPath_AAS': SimpleSemanticTestSuite,
-    'DeleteSubmodelElementByPath_AAS': SimpleSemanticTestSuite,
-    'PatchSubmodelElementValueByPath_AAS': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Metadata_AAS': SimpleSemanticTestSuite,
-    'PatchSubmodelElementValueByPath-Metadata_AAS': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-ValueOnly_AAS': SimpleSemanticTestSuite,
-    'PatchSubmodelElementValueByPathValueOnly_AAS': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Reference_AAS': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Path_AAS': SimpleSemanticTestSuite,
-    'GetFileByPath_AAS': SimpleSemanticTestSuite,
-    'PutFileByPath_AAS': SimpleSemanticTestSuite,
-    'DeleteFileByPath_AAS': SimpleSemanticTestSuite,
-    'InvokeOperationSync_AAS': SimpleSemanticTestSuite,
-    'InvokeOperationSync-ValueOnly_AAS': SimpleSemanticTestSuite,
-    'InvokeOperationAsync_AAS': SimpleSemanticTestSuite,
-    'InvokeOperationAsync-ValueOnly_AAS': SimpleSemanticTestSuite,
-    'GetOperationAsyncStatus_AAS': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult_AAS': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult-ValueOnly_AAS': SimpleSemanticTestSuite,
-
-    # /submodel
-    'GetSubmodel': SimpleSemanticTestSuite,
-    'PutSubmodel': SimpleSemanticTestSuite,
-    'PatchSubmodel': SimpleSemanticTestSuite,
-    'GetSubmodel-Metadata': SimpleSemanticTestSuite,
-    'PatchSubmodel-Metadata': SimpleSemanticTestSuite,
-    'GetSubmodel-ValueOnly': SimpleSemanticTestSuite,
-    'PatchSubmodel-ValueOnly': SimpleSemanticTestSuite,
-    'GetSubmodel-Reference': SimpleSemanticTestSuite,
-    'GetSubmodel-Path': SimpleSemanticTestSuite,
-
-    # /submodel/submodel-elements
-    'GetAllSubmodelElements': SimpleSemanticTestSuite,
-    'PostSubmodelElement': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-Metadata': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-ValueOnly': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-Reference': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-Path': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath': SimpleSemanticTestSuite,
-    'PutSubmodelElementByPath': SimpleSemanticTestSuite,
-    'PostSubmodelElementByPath': SimpleSemanticTestSuite,
-    'DeleteSubmodelElementByPath': SimpleSemanticTestSuite,
-    'PatchSubmodelElementByPath': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Metadata': SimpleSemanticTestSuite,
-    'PatchSubmodelElementByPath-Metadata': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-ValueOnly': SimpleSemanticTestSuite,
-    'PatchSubmodelElementByPath-ValueOnly': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Reference': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Path': SimpleSemanticTestSuite,
-    'GetFileByPath': SimpleSemanticTestSuite,
-    'PutFileByPath': SimpleSemanticTestSuite,
-    'DeleteFileByPath': SimpleSemanticTestSuite,
-    'InvokeOperation': SimpleSemanticTestSuite,
-    'InvokeOperationAsync': SimpleSemanticTestSuite,
-    'InvokeOperationSync-ValueOnly': SimpleSemanticTestSuite,
-    'InvokeOperationAsync-ValueOnly': SimpleSemanticTestSuite,
-    'GetOperationAsyncStatus': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult-ValueOnly': SimpleSemanticTestSuite,
-
-    # /shells
-    'GetAllAssetAdministrationShells': GetAllAasTestSuite,
-    'GetAllAssetAdministrationShells-Reference': GetAllAasRefsTestSuite,
-
-    # /shells/<AAS>
-    'GetAssetAdministrationShellById': GetAasById,
-    'GetAssetAdministrationShellById-Reference_AasRepository': GetAasReferenceById,
-    'PostAssetAdministrationShell': SimpleSemanticTestSuite,
-    'PutAssetAdministrationShellById': SimpleSemanticTestSuite,
-    'DeleteAssetAdministrationShellById': SimpleSemanticTestSuite,
-
-    # /shells/<AAS>/asset-information
-    "GetAssetInformation_AasRepository": AasBySuperpathSuite,
-    'PutAssetInformation_AasRepository': SimpleSemanticTestSuite,
-    "GetThumbnail_AasRepository": AasThumbnailBySuperpathSuite,
-    'PutThumbnail_AasRepository': SimpleSemanticTestSuite,
-    'DeleteThumbnail_AasRepository': SimpleSemanticTestSuite,
-
-    # /shells/<AAS>/submodel-refs
-    'PostSubmodelReference_AasRepository': SimpleSemanticTestSuite,
-    'DeleteSubmodelReferenceById_AasRepository': SimpleSemanticTestSuite,
-
-    # /shells/<AAS>/submodels
-    "GetAllSubmodelReferences_AasRepository": AasBySuperpathSuite,
-    "GetAllSubmodels_AasRepository": AasBySuperpathSuite,
-    "GetAllSubmodels_AasRepository Metadata": AasBySuperpathSuite,
-    "GetAllSubmodels_AasRepository-ValueOnly": AasBySuperpathSuite,
-    "GetAllSubmodels_AasRepository-Reference": AasBySuperpathSuite,
-    "GetAllSubmodels_AasRepository-Path": AasBySuperpathSuite,
-
-    # /shells/<AAS>/submodels/<SM>
-    "GetSubmodelById_AasRepository": SubmodelBySuperpathSuite,
-    "GetSubmodelById-Metadata_AasRepository": SubmodelBySuperpathSuite,
-    "GetSubmodelById-ValueOnly_AasRepository": SubmodelBySuperpathSuite,
-    "GetSubmodelById-Reference_AasRepository": SubmodelBySuperpathSuite,
-    "GetSubmodelById-Path_AasRepository": SubmodelBySuperpathSuite,
-    'PutSubmodelById_AasRepository': SimpleSemanticTestSuite,
-    'DeleteSubmodelById_AasRepository': SimpleSemanticTestSuite,
-    'PatchSubmodel_AasRepository': SimpleSemanticTestSuite,
-    'PatchSubmodelById-Metadata_AasRepository': SimpleSemanticTestSuite,
-    'PatchSubmodelById-ValueOnly_AasRepository': SimpleSemanticTestSuite,
-
-    # /shells/<AAS>/submodels/<SM>/submodel-elements
-    "GetAllSubmodelElements_AasRepository": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements-Metadata_AasRepository": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements-ValueOnly_AasRepository": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements-Reference_AasRepository": SubmodelBySuperpathSuite,
-    "GetAllSubmodelElements-Path_AasRepository": SubmodelBySuperpathSuite,
-    'PostSubmodelElement_AasRepository': SimpleSemanticTestSuite,
-
-    # /shells/<AAS>/submodels/<SM>/submodel-elements/<ID>
-    "GetSubmodelElementByPath_AasRepository": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath-Metadata_AasRepository": SubmodelElementMetadataBySuperpathSuite,
-    "GetSubmodelElementByPath-ValueOnly_AasRepository": SubmodelElementMetadataBySuperpathSuite,
-    "GetSubmodelElementByPath-Reference_AasRepository": SubmodelElementBySuperpathSuite,
-    "GetSubmodelElementByPath-Path_AasRepository": SubmodelElementPathBySuperpathSuite,
-    "GetFileByPath_AasRepository": GetFileByPathSuperpathSuite,
-    'PutSubmodelElementByPath_AasRepository': SimpleSemanticTestSuite,
-    'PostSubmodelElementByPath_AasRepository': SimpleSemanticTestSuite,
-    'DeleteSubmodelElementByPath_AasRepository': SimpleSemanticTestSuite,
-    'PatchSubmodelElementValueByPath_AasRepository': SimpleSemanticTestSuite,
-    'PatchSubmodelElementValueByPath-Metadata': SimpleSemanticTestSuite,
-    'PatchSubmodelElementValueByPath-ValueOnly': SimpleSemanticTestSuite,
-    'PutFileByPath_AasRepository': SimpleSemanticTestSuite,
-    'DeleteFileByPath_AasRepository': SimpleSemanticTestSuite,
-    'InvokeOperation_AasRepository': SimpleSemanticTestSuite,
-    'InvokeOperation-ValueOnly_AasRepository': SimpleSemanticTestSuite,
-    'InvokeOperationAsync_AasRepository': SimpleSemanticTestSuite,
-    'InvokeOperationAsync-ValueOnly_AasRepository': SimpleSemanticTestSuite,
-    'GetOperationAsyncStatus_AasRepository': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult_AasRepository': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult-ValueOnly_AasRepository': SimpleSemanticTestSuite,
-
-    # /submodels
-    'GetAllSubmodels': SimpleSemanticTestSuite,
-    'PostSubmodel': SimpleSemanticTestSuite,
-    'GetAllSubmodels-Metadata': SimpleSemanticTestSuite,
-    'GetAllSubmodels-ValueOnly': SimpleSemanticTestSuite,
-    'GetAllSubmodels-Reference': SimpleSemanticTestSuite,
-    'GetAllSubmodels-Path': SimpleSemanticTestSuite,
-
-    # /submodels/<SM>
-    'GetSubmodelById': SimpleSemanticTestSuite,
-    'PutSubmodelById': SimpleSemanticTestSuite,
-    'DeleteSubmodelById': SimpleSemanticTestSuite,
-    'PatchSubmodelById': SimpleSemanticTestSuite,
-    'GetSubmodelById-Metadata': SimpleSemanticTestSuite,
-    'PatchSubmodelById-Metadata': SimpleSemanticTestSuite,
-    'GetSubmodelById-ValueOnly': SimpleSemanticTestSuite,
-    'PatchSubmodelById-ValueOnly': SimpleSemanticTestSuite,
-    'GetSubmodelById-Reference': SimpleSemanticTestSuite,
-    'GetSubmodelById-Path': SimpleSemanticTestSuite,
-
-    # /submodels/<SM>/submodel-elements
-    'GetAllSubmodelElements_SubmodelRepository': SimpleSemanticTestSuite,
-    'PostSubmodelElement_SubmodelRepository': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-Metadata_SubmodelRepository': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-ValueOnly_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-Reference_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetAllSubmodelElements-Path_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'PutSubmodelElementByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'PostSubmodelElementByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'DeleteSubmodelElementByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'PatchSubmodelElementByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Metadata_SubmodelRepo': SimpleSemanticTestSuite,
-    'PatchSubmodelElementByPath-Metadata_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-ValueOnly_SubmodelRepo': SimpleSemanticTestSuite,
-    'PatchSubmodelElementByPath-ValueOnly_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Reference_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetSubmodelElementByPath-Path_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetFileByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'PutFileByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'DeleteFileByPath_SubmodelRepo': SimpleSemanticTestSuite,
-    'InvokeOperation_SubmodelRepo': SimpleSemanticTestSuite,
-    'InvokeOperation-ValueOnly_SubmodelRepo': SimpleSemanticTestSuite,
-    'InvokeOperationAsync_SubmodelRepo': SimpleSemanticTestSuite,
-    'InvokeOperationAsync-ValueOnly_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetOperationAsyncStatus_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetOperationAsyncResult-ValueOnly_SubmodelRepo': SimpleSemanticTestSuite,
-    'GetAllConceptDescriptions': SimpleSemanticTestSuite,
-    'PostConceptDescription': SimpleSemanticTestSuite,
-    'GetConceptDescriptionById': SimpleSemanticTestSuite,
-    'PutConceptDescriptionById': SimpleSemanticTestSuite,
-    'DeleteConceptDescriptionById': SimpleSemanticTestSuite,
-
-    # /shell-descriptors
-    'GetAllAssetAdministrationShellDescriptors': SimpleSemanticTestSuite,
-    'PostAssetAdministrationShellDescriptor': SimpleSemanticTestSuite,
-    'GetAssetAdministrationShellDescriptorById': SimpleSemanticTestSuite,
-    'PutAssetAdministrationShellDescriptorById': SimpleSemanticTestSuite,
-    'DeleteAssetAdministrationShellDescriptorById': SimpleSemanticTestSuite,
-
-    # /shell-descriptors/<AAS>/submodel-descriptors
-    'GetAllSubmodelDescriptorsThroughSuperpath': SimpleSemanticTestSuite,
-    'PostSubmodelDescriptor-ThroughSuperpath': SimpleSemanticTestSuite,
-    'GetSubmodelDescriptorByIdThroughSuperpath': SimpleSemanticTestSuite,
-    'PutSubmodelDescriptorByIdThroughSuperpath': SimpleSemanticTestSuite,
-    'DeleteSubmodelDescriptorByIdThroughSuperpath': SimpleSemanticTestSuite,
-
-    # /submodel-descriptors
-    'GetAllSubmodelDescriptors': SimpleSemanticTestSuite,
-    'PostSubmodelDescriptor': SimpleSemanticTestSuite,
-    'GetSubmodelDescriptorById': SimpleSemanticTestSuite,
-    'PutSubmodelDescriptorById': SimpleSemanticTestSuite,
-    'DeleteSubmodelDescriptorById': SimpleSemanticTestSuite,
-
-    # /lookup/shells
-    'GetAllAssetAdministrationShellIdsByAssetLink': SimpleSemanticTestSuite,
-    'GetAllAssetLinksById': SimpleSemanticTestSuite,
-    'PostAllAssetLinksById': SimpleSemanticTestSuite,
-    'DeleteAllAssetLinksById': SimpleSemanticTestSuite,
-
-    # /packages
-    'GetAllAASXPackageIds': SimpleSemanticTestSuite,
-    'PostAASXPackage': SimpleSemanticTestSuite,
-    'GetAASXByPackageId': SimpleSemanticTestSuite,
-    'PutAASXByPackageId': SimpleSemanticTestSuite,
-    'DeleteAASXByPackageId': SimpleSemanticTestSuite,
-
-    # /serialization
-    "GenerateSerializationByIds": GenerateSerializationSuite,
-
-    # /description
-    "GetDescription": GetDescriptionTestSuite,
-}
+    def test_semantic(self):
+        """
+        Perform a simple semantic test
+        """
+        request = generate_one_valid(self.operation, self.sample_cache)
+        _invoke_and_decode(request, self.conf, True)
 
 
 # Used by unit test
