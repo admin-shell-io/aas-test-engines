@@ -21,11 +21,11 @@ from dataclasses import dataclass
 import requests
 
 
-def _assert(predicate: bool, message):
+def _assert(predicate: bool, message, level: Level = Level.ERROR):
     if predicate:
         write(f'{message}: OK')
     else:
-        abort(f'{message}: Fail')
+        abort(f'{message}: Fail', level)
 
 
 def _stringify_path(path: List[Union[str, int]]) -> str:
@@ -948,7 +948,7 @@ class GetDescriptionTestSuite(ApiTestSuite):
         request = generate_one_valid(self.operation, self.sample_cache)
         data = _invoke_and_decode(request, self.conf, True)
         suites = _lookup(data, ['profiles'])
-        _assert(self.suite in suites, f"Contains {self.suite}")
+        _assert(self.suite in suites, f"Contains {self.suite}", Level.WARNING)
 
 
 @operation('PostAssetAdministrationShell')
