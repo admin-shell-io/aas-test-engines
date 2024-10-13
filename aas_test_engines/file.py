@@ -133,7 +133,7 @@ def check_constraints(instance: any, validator: SchemaValidator):
         elif check == 'Constraint_AASd-108':
             type_value = instance['typeValueListElement']
             for i in instance.get('value', []):
-                if i['modelType'] != type_value:
+                if i.get('modelType') != type_value:
                     raise PostProcessorException(f"AASd-108: Expected modelType {type_value}")
         elif check == 'Constraint_AASd-109':
             if instance['typeValueListElement'] in ['Property', 'Range']:
@@ -222,6 +222,8 @@ def check_constraints(instance: any, validator: SchemaValidator):
             if not isinstance(elements, list):
                 continue
             for element in elements:
+                if not isinstance(element, dict):
+                    continue
                 qualifiers = element.get('qualifiers')
                 if not isinstance(qualifiers, list):
                     continue
