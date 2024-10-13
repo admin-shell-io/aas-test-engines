@@ -743,7 +743,6 @@ class SubmodelBySuperpathSuite(SubmodelBySuperpathSuiteBase):
         _assert(data == self.valid_submodel_id, 'Returns the correct one')
 
 
-
 @operation("GetSubmodelById-ValueOnly_AasRepository")
 @operation("GetSubmodelById-Reference_AasRepository")
 @operation("GetSubmodelById-Path_AasRepository")
@@ -760,10 +759,8 @@ class SubmodelRefBySuperpathSuite(SubmodelBySuperpathSuiteBase):
 
 # /shells/<AAS>/submodels/<SM>/submodel-elements
 
+
 @operation("GetAllSubmodelElements_AasRepository")
-@operation("GetAllSubmodelElements-Metadata_AasRepository")
-@operation("GetAllSubmodelElements-ValueOnly_AasRepository")
-@operation("GetAllSubmodelElements-Reference_AasRepository")
 @operation("GetAllSubmodelElements-Path_AasRepository")
 class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
     def test_simple(self):
@@ -775,6 +772,100 @@ class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
             'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
         })
         _invoke_and_decode(request, self.conf, True)
+
+    def test_level_core(self):
+        """
+        Fetch all submodel elements with level=core
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            'level': 'core'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_level_deep(self):
+        """
+        Fetch all submodel elements with level=deep
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            'level': 'deep'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_extent_with_blob_value(self):
+        """
+        Fetch all submodel elements with extent=withBlobValue
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            'extent': 'withBlobValue'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_extent_without_blob_value(self):
+        """
+        Fetch all submodel elements with extent=withoutBlobValue
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            'extent': 'withoutBlobValue'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+
+@operation("GetAllSubmodelElements-ValueOnly_AasRepository")
+@operation("GetAllSubmodelElements-Reference_AasRepository")
+class GetAllSubmodelElementsValueOnlyBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+    def test_simple(self):
+        """
+        Fetch all submodel elements
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_level_core(self):
+        """
+        Fetch all submodel elements with level=core
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            'level': 'core'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_level_deep(self):
+        """
+        Fetch all submodel elements with level=deep
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            'level': 'deep'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+
+@operation("GetAllSubmodelElements-Metadata_AasRepository")
+class GetAllSubmodelElementRefsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+    def test_simple(self):
+        """
+        Fetch all submodel elements
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            'aasIdentifier': b64urlsafe(self.valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+        })
+        _invoke_and_decode(request, self.conf, True)
+
 
 # /shells/<AAS>/submodels/<SM>/submodel-elements/<ID>
 
