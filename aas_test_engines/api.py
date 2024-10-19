@@ -473,7 +473,7 @@ def _get_json(response: requests.models.Response) -> dict:
     try:
         return response.json()
     except requests.exceptions.JSONDecodeError as e:
-        abort(f"Cannot decode as JSON: {e}")
+        abort(f"Cannot decode as JSON: {e}", Level.CRITICAL)
 
 
 def _invoke(request: Request, conf: ExecConf, positive_test) -> requests.models.Response:
