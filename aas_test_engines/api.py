@@ -563,7 +563,7 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
     def setup(self):
         self.cursor: Optional[str] = None
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
-        request = generate_one_valid(op, self.sample_cache, {'limit': 2})
+        request = generate_one_valid(op, self.sample_cache, {'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
         self.valid_id_short: str = _lookup(data, ['result', 0, 'idShort'])
         self.second_id_short: Optional[str] = _lookup(data, ['result', 1, 'idShort'], None)
