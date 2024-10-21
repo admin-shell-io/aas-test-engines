@@ -15502,6 +15502,8 @@ components:
       - $ref: '#/components/schemas/ReferenceElement'
       - $ref: '#/components/schemas/SubmodelElementCollection'
       - $ref: '#/components/schemas/SubmodelElementList'
+      discriminator:
+        propertyName: modelType
     RelationshipElement:
       allOf:
       - $ref: '#/components/schemas/RelationshipElement_abstract'
@@ -15546,6 +15548,8 @@ components:
       - $ref: '#/components/schemas/Property'
       - $ref: '#/components/schemas/Range'
       - $ref: '#/components/schemas/ReferenceElement'
+      discriminator:
+        propertyName: modelType
     Blob:
       allOf:
       - $ref: '#/components/schemas/DataElement'
