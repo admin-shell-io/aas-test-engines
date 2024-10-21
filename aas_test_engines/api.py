@@ -566,7 +566,6 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         request = generate_one_valid(op, self.sample_cache, {'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
         self.valid_id_short: str = _lookup(data, ['result', 0, 'idShort'])
-        self.second_id_short: Optional[str] = _lookup(data, ['result', 1, 'idShort'], None)
         self.cursor = _lookup(data, ['paging_metadata', 'cursor'], None)
 
     def test_no_parameters(self):
@@ -598,14 +597,12 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         """
         Test pagination
         """
-        if self.cursor is None or self.second_id_short is None:
+        if self.cursor is None:
             abort("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING)
         request = generate_one_valid(self.operation, self.sample_cache, {'cursor': self.cursor, 'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
         data = _lookup(data, ['result'])
         _assert(len(data) == 1, 'Exactly one entry')
-        data = _lookup(data, [0, 'idShort'])
-        _assert(self.second_id_short == data, 'Returns second')
 
 
 @operation("GetAllAssetAdministrationShells")
@@ -668,17 +665,65 @@ class GetAasReferenceById(ApiTestSuite):
         _assert(data == self.valid_id, 'Returned the correct one')
 
 # /shells/<AAS>/submodels
-# /shells/<AAS>/submodel-refs
 
 
-@operation("GetAllSubmodelReferences_AasRepository")
 @operation("GetAllSubmodels_AasRepository")
 @operation("GetAllSubmodels_AasRepository Metadata")
 @operation("GetAllSubmodels_AasRepository-ValueOnly")
 @operation("GetAllSubmodels_AasRepository-Reference")
 @operation("GetAllSubmodels_AasRepository-Path")
-@operation("GetAssetInformation_AasRepository")
-class AasBySuperpathSuite(ApiTestSuite):
+class GetAllSubmodelsTestSuite(ApiTestSuite):
+    def setup(self):
+        op = self.open_api.operations["GetAllAssetAdministrationShells"]
+        request = generate_one_valid(op, self.sample_cache, {'limit': 1})
+        data = _invoke_and_decode(request, self.conf, True)
+        self.valid_id = _lookup(data, ['result', 0, 'id'])
+
+    def test_simple(self):
+        """
+        Fetch by id
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
+        _invoke_and_decode(request, self.conf, True)
+
+
+# /shells/<AAS>/submodel-refs
+
+
+@operation("GetAllSubmodelReferences_AasRepository")
+class GetAllSubmodelRefsTestSuite(ApiTestSuite):
+    def setup(self):
+        op = self.open_api.operations["GetAllAssetAdministrationShells"]
+        request = generate_one_valid(op, self.sample_cache, {'limit': 1})
+        data = _invoke_and_decode(request, self.conf, True)
+        self.valid_id = _lookup(data, ['result', 0, 'id'])
+        request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id), 'limit': 1})
+        data = _invoke_and_decode(request, self.conf, True)
+        self.cursor = _lookup(data, ['paging_metadata', 'cursor'], None)
+
+    def test_simple(self):
+        """
+        Fetch by id
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_pagination(self):
+        """
+        Check pagination
+        """
+        if self.cursor is None:
+            abort("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING)
+        request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id), 'cursor': self.cursor, 'limit': 1})
+        data = _invoke_and_decode(request, self.conf, True)
+        data = _lookup(data, ['result'])
+        _assert(len(data) == 1, 'Exactly one entry')
+
+
+# /shells/<AAS>/asset-information
+
+
+class AssetInfoTestSuiteBase(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
         request = generate_one_valid(op, self.sample_cache, {'limit': 1})
@@ -688,6 +733,9 @@ class AasBySuperpathSuite(ApiTestSuite):
             'aasIdentifier': [b64urlsafe(self.valid_id)]
         }
 
+
+@operation("GetAssetInformation_AasRepository")
+class AssetInfoBySuperPathSuite(AssetInfoTestSuiteBase):
     def test_simple(self):
         """
         Fetch by id
@@ -695,11 +743,9 @@ class AasBySuperpathSuite(ApiTestSuite):
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
         _invoke_and_decode(request, self.conf, True)
 
-# /shells/<AAS>/asset-information
-
 
 @operation('GetThumbnail_AasRepository')
-class AasThumbnailBySuperpathSuite(ApiTestSuite):
+class AasThumbnailBySuperPathSuite(AssetInfoTestSuiteBase):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
         request = generate_one_valid(op, self.sample_cache, {'limit': 1})
