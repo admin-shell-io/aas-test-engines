@@ -1,9 +1,14 @@
 from .adapter import Adapter, AdapterException
 
 from dataclasses import dataclass, fields, field, is_dataclass
-from typing import List, Dict, Optional, Tuple, Union, ForwardRef
+from typing import List, Dict, Optional, Tuple, Union, ForwardRef, Pattern
 from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
+import re
+
+class CheckConstraintException(Exception):
+    pass
+
 
 INVALID = object()
 
@@ -44,15 +49,22 @@ def collect_subclasses(cls, result: Dict[str, type]):
 class StringFormattedValue:
     min_length: Optional[int] = None
     max_length: Optional[int] = None
+    pattern: Optional[Pattern] = None
 
     def __init__(self, raw_value: str):
         self.raw_value = raw_value
         if self.min_length is not None:
-            if len(raw_value) < 0:
+            if len(raw_value) < self.min_length:
                 raise ValueError("String is too short")
         if self.max_length is not None:
             if len(raw_value) > self.max_length:
                 raise ValueError("String is too long")
+        if self.pattern:
+            if not re.match(self.pattern, raw_value):
+                raise ValueError("String does not match pattern")
+
+    def __eq__(self, other: "StringFormattedValue") -> bool:
+        return self.raw_value == other.raw_value
 
 
 def parse_string_formatted_value(cls, value: Adapter, result: AasTestResult) -> StringFormattedValue:
@@ -67,7 +79,7 @@ def parse_list(item_cls, value: Adapter, result: AasTestResult) -> list:
     try:
         items = value.as_list()
     except AdapterException as e:
-        result.append(AasTestResult(str(e), level=Level.ERROR))
+        result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
         return INVALID
     return [parse(item_cls, i, result) for i in items]
 
@@ -76,7 +88,7 @@ def parse_bool(value: Adapter, result: AasTestResult) -> bool:
     try:
         return value.as_bool()
     except AdapterException as e:
-        result.append(AasTestResult(str(e), level=Level.ERROR))
+        result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
         return INVALID
 
 
@@ -84,7 +96,7 @@ def parse_string(value: Adapter, result: AasTestResult) -> str:
     try:
         return value.as_string()
     except AdapterException as e:
-        result.append(AasTestResult(str(e), level=Level.ERROR))
+        result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
         return INVALID
 
 
@@ -92,12 +104,12 @@ def parse_enum(cls, value: Adapter, result: AasTestResult):
     try:
         str_val = value.as_string()
     except AdapterException as e:
-        result.append(AasTestResult(str(e), level=Level.ERROR))
+        result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
         return INVALID
     try:
         return cls(str_val)
     except ValueError as e:
-        result.append(AasTestResult(f"{e}", level=Level.ERROR))
+        result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
     return INVALID
 
 
@@ -105,7 +117,7 @@ def parse_abstract_object(cls, adapter: Adapter, result: AasTestResult):
     try:
         discriminator = adapter.get_model_type()
     except AdapterException as e:
-        result.append(AasTestResult(str(e), level=Level.ERROR))
+        result.append(AasTestResult(f"{e} @ {adapter.path}", level=Level.ERROR))
         return INVALID
     subclasses = {}
     collect_subclasses(cls, subclasses)
@@ -121,7 +133,7 @@ def parse_concrete_object(cls, adapter: Adapter, result: AasTestResult):
     try:
         obj = adapter.as_object()
     except AdapterException as e:
-        result.append(AasTestResult(str(e), level=Level.ERROR))
+        result.append(AasTestResult(f"{e} @ {adapter.path}", level=Level.ERROR))
         return INVALID
     args = {}
     for field in fields(cls):
@@ -136,6 +148,7 @@ def parse_concrete_object(cls, adapter: Adapter, result: AasTestResult):
             continue
         args[field.name] = parse(field_type, obj_value, result)
     return cls(**args)
+
 
 def parse(cls, obj_value: Adapter, result: AasTestResult):
     # Unwrap a forward reference
@@ -180,7 +193,10 @@ def check_constraints(obj, result: AasTestResult):
         return
     fns = [getattr(obj, i) for i in dir(obj) if i.startswith('check_')]
     for fn in fns:
-        fn(result)
+        try:
+            fn()
+        except CheckConstraintException as e:
+            result.append(AasTestResult(f"{e}", level=Level.ERROR))
     for field in fields(obj):
         value = getattr(obj, field.name)
         if isinstance(value, list):
