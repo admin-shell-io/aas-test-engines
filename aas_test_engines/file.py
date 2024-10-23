@@ -19,6 +19,8 @@ from json_schema_tool.types import JsonType, values_are_equal
 from json_schema_tool.exception import PreprocessorException, PostProcessorException
 import zipfile
 
+from aas_test_engines.test_cases.file.v3 import json_to_env
+
 from ._util import un_group, normpath, splitpath
 
 JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
@@ -262,44 +264,46 @@ def _check_json_data(data: any, validator: SchemaValidator, short_circuit: bool)
 
 
 def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
-    schema = _get_schema(version, submodel_templates)
-    result = _check_json_data(data, schema.validator, False)
-
-    if submodel_templates and result.ok():
-
-        def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
-            try:
-                group_by = validator.schema['groupBy']
-            except KeyError:
-                return data
-            result: Dict[str, List[any]] = {}
-            if not isinstance(data, list):
-                raise PreprocessorException("Expected an array")
-            for idx, value in enumerate(data):
-                try:
-                    key = value[group_by]
-                except KeyError:
-                    raise PreprocessorException(f"Property {group_by} is missing at idx {idx}")
-                if not isinstance(key, str):
-                    raise PreprocessorException(f"{key} must be a string at idx {idx}")
-                try:
-                    result[key].append(value)
-                except KeyError:
-                    result[key] = [value]
-            return result
-
-        submodels_result = AasTestResult('Checking submodel templates')
-        for name in submodel_templates:
-            submodel_result = AasTestResult(f"Checking for {name}")
-            validator = schema.submodel_templates[name]
-            config = ValidationConfig(
-                preprocessor=preprocess
-            )
-            error = validator.validate(data, config)
-            map_error(submodel_result, error)
-            submodels_result.append(submodel_result)
-        result.append(submodels_result)
+    result, env = json_to_env(data)
     return result
+    # schema = _get_schema(version, submodel_templates)
+    # result = _check_json_data(data, schema.validator, False)
+
+    # if submodel_templates and result.ok():
+
+    #     def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
+    #         try:
+    #             group_by = validator.schema['groupBy']
+    #         except KeyError:
+    #             return data
+    #         result: Dict[str, List[any]] = {}
+    #         if not isinstance(data, list):
+    #             raise PreprocessorException("Expected an array")
+    #         for idx, value in enumerate(data):
+    #             try:
+    #                 key = value[group_by]
+    #             except KeyError:
+    #                 raise PreprocessorException(f"Property {group_by} is missing at idx {idx}")
+    #             if not isinstance(key, str):
+    #                 raise PreprocessorException(f"{key} must be a string at idx {idx}")
+    #             try:
+    #                 result[key].append(value)
+    #             except KeyError:
+    #                 result[key] = [value]
+    #         return result
+
+    #     submodels_result = AasTestResult('Checking submodel templates')
+    #     for name in submodel_templates:
+    #         submodel_result = AasTestResult(f"Checking for {name}")
+    #         validator = schema.submodel_templates[name]
+    #         config = ValidationConfig(
+    #             preprocessor=preprocess
+    #         )
+    #         error = validator.validate(data, config)
+    #         map_error(submodel_result, error)
+    #         submodels_result.append(submodel_result)
+    #     result.append(submodels_result)
+    # return result
 
 
 def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
