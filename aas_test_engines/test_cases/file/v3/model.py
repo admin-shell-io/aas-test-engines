@@ -3,7 +3,7 @@ from .parse import StringFormattedValue, abstract, CheckConstraintException
 from dataclasses import dataclass
 from typing import List, Optional, Set
 from enum import Enum
-from .data_types import _is_bounded_integer
+from .data_types import _is_bounded_integer, is_bcp_lang_string
 
 # 5.3.11.2 Primitive Data Types
 
@@ -35,7 +35,11 @@ class MessageTopicString(StringFormattedValue):
 class MultiLanguageNameType(StringFormattedValue):
     min_length = 1
     max_length = 128
-    # TODO: bcp lang string
+
+    def __init__(self, raw_value):
+        super().__init__(raw_value)
+        if not is_bcp_lang_string(raw_value):
+            raise ValueError(f"{raw_value} is not a BCP lang string")
 
 
 class MultiLanguageTextType(StringFormattedValue):
@@ -87,6 +91,12 @@ class DataType(StringFormattedValue):
 
 class ValueType(StringFormattedValue):
     min_length = 1
+
+
+@dataclass
+class LangStringSet:
+    language: MultiLanguageNameType
+    text: MultiLanguageTextType
 
 
 class DataTypeDefXsd(Enum):
@@ -211,7 +221,7 @@ class ReferenceType(Enum):
     ModelReference = 'ModelReference'
 
 
-@ dataclass
+@dataclass
 class Reference:
     type: ReferenceType
     referred_semantic_id: Optional["Reference"]
@@ -328,29 +338,30 @@ class Reference:
 # 5.3.2.3 Has Data Specification
 
 
-@ dataclass
+@dataclass
+@abstract
 class DataSpecificationContent:
     pass
 
 
-@ dataclass
+@dataclass
 class EmbeddedDataSpecification:
     data_specification: Reference
     data_specification_content: DataSpecificationContent
 
 
-@ dataclass
+@dataclass
 class HasDataSpecification:
     embedded_data_specifications: Optional[List[EmbeddedDataSpecification]]
 
 
-@ dataclass
+@dataclass
 class ValueReferencePair:
     value: IdentifierString
     value_id: Reference
 
 
-@ dataclass
+@dataclass
 class ValueList:
     value_reference_pairs: List[ValueReferencePair]
 
@@ -377,7 +388,7 @@ class DataTypeIec61360(Enum):
     TIMESTAMP = 'TIMESTAMP'
 
 
-@ dataclass
+@dataclass
 class LevelType:
     min: bool
     nom: bool
@@ -385,37 +396,66 @@ class LevelType:
     max: bool
 
 
+class DataTypeIec61360(Enum):
+    BLOB = "BLOB"
+    BOOLEAN = "BOOLEAN"
+    DATE = "DATE"
+    FILE = "FILE"
+    HTML = "HTML"
+    INTEGER_COUNT = "INTEGER_COUNT"
+    INTEGER_CURRENCY = "INTEGER_CURRENCY"
+    INTEGER_MEASURE = "INTEGER_MEASURE"
+    IRDI = "IRDI"
+    IRI = "IRI"
+    RATIONAL = "RATIONAL"
+    RATIONAL_MEASURE = "RATIONAL_MEASURE"
+    REAL_COUNT = "REAL_COUNT"
+    REAL_CURRENCY = "REAL_CURRENCY"
+    REAL_MEASURE = "REAL_MEASURE"
+    STRING = "STRING"
+    STRING_TRANSLATABLE = "STRING_TRANSLATABLE"
+    TIME = "TIME"
+    TIMESTAMP = "TIMESTAMP"
+
+
+DefinitionTypeIec61360 = LangStringSet
+PreferredNameTypeIec61360 = LangStringSet  # TODO: max_length = 255
+ShortNameTypeIec61360 = LangStringSet  # TODO: max_length = 18
+
+
+class ValueFormatTypeIec61360(StringFormattedValue):
+    min_length = 1
+
+
+class ValueTypeIec61360(StringFormattedValue):
+    min_length = 1
+    max_length = 2000
+
+
 class NonEmptyString(StringFormattedValue):
     min_length = 1
 
 
-@ dataclass
+@dataclass
 class DataSpecificationIec61360(DataSpecificationContent):
-    preferred_name: List[NonEmptyString]
-    short_name: Optional[List[NonEmptyString]]
-    unit: Optional[List[NonEmptyString]]
-    unit_id: Optional[List[Reference]]
-    source_of_definition: Optional[NonEmptyString]
-    symbol: Optional[NonEmptyString]
+    preferred_name: List[PreferredNameTypeIec61360]
+    short_name: Optional[List[ShortNameTypeIec61360]]
+    unit: Optional[NonEmptyString]  # TODO: according to spec, an empty string is ok
+    unit_id: Optional[Reference]
+    source_of_definition: Optional[NonEmptyString]  # TODO: according to spec, an empty string is ok
+    symbol: Optional[NonEmptyString]  # TODO: according to spec, an empty string is ok
     data_type: Optional[DataTypeIec61360]
-    definition: Optional[List[NonEmptyString]]
-    value_format: Optional[NonEmptyString]
+    definition: Optional[List[DefinitionTypeIec61360]]
+    value_format: Optional[ValueFormatTypeIec61360]
     value_list: Optional[ValueList]
-    value: Optional[NonEmptyString]
+    value: Optional[ValueTypeIec61360]
     level_type: Optional[LevelType]
 
-
-# Identifiable
-
-@ dataclass
-class MultiLanguageNameType:
-    language: MultiLanguageNameType
-    text: MultiLanguageTextType
 
 # 5.3.2.6 Has Semantics
 
 
-@ dataclass
+@dataclass
 class HasSemantics:
     # TODO: Note: it is recommended to use an external reference
     semantic_id: Optional[Reference]
@@ -434,7 +474,7 @@ class HasSemantics:
 # 5.3.2.4 Extensions
 
 
-@ dataclass
+@dataclass
 class Extension(HasSemantics):
     name: NameTypeString
     # TODO: default: xs:string
@@ -444,22 +484,23 @@ class Extension(HasSemantics):
     refers_to: Optional[List[Reference]]
 
 
-@ dataclass
+@dataclass
 class HasExtensions:
     extensions: Optional[List[Extension]]
 
 # 5.3.2.10 Referable
 
 
-@ dataclass
+@dataclass
 class Referable(HasExtensions):
     # TODO: category is deprecated
     category: Optional[NameTypeString]
     id_short: Optional[NameTypeString]
-    display_name: Optional[List[MultiLanguageNameType]]
-    description: Optional[List[MultiLanguageNameType]]
+    display_name: Optional[List[LangStringSet]]
+    description: Optional[List[LangStringSet]]
     # TODO: Constraint AASd-002: idShort of Referables shall only feature letters, digits, underscore ("_");
     # starting mandatory with a letter, i.e. [a-zA-Z][a-zA-Z0-9_]*.
+
 
 # 5.3.2.5 Has Kind
 
@@ -469,14 +510,14 @@ class ModellingKind(Enum):
     Template = "Template"
 
 
-@ dataclass
+@dataclass
 class HasKind:
     kind: Optional[ModellingKind]
 
 # 5.3.2.2 Administrative Information
 
 
-@ dataclass
+@dataclass
 class AdministrativeInformation(HasDataSpecification):
     version: Optional[VersionString]
     revision: Optional[RevisionString]
@@ -495,7 +536,7 @@ class AdministrativeInformation(HasDataSpecification):
 # 5.3.2.7 Identifiable
 
 
-@ dataclass
+@dataclass
 class Identifiable(Referable):
     administration: Optional[AdministrativeInformation]
     id: IdentifierString
@@ -510,7 +551,7 @@ class QualifierKind(Enum):
     ValueQualifier = 'ValueQualifier'
 
 
-@ dataclass
+@dataclass
 class Qualifier(HasSemantics):
     # TODO: Default: ConceptQualifier
     kind: Optional[QualifierKind]
@@ -537,14 +578,14 @@ class Qualifier(HasSemantics):
         pass
 
 
-@ dataclass
+@dataclass
 class Qualifiable:
     qualifiers: Optional[List[Qualifier]]
 
 # 5.3.4 Asset Information
 
 
-@ dataclass
+@dataclass
 class SpecificAssetId(HasSemantics):
     name: LabelString
     value: IdentifierString
@@ -559,7 +600,7 @@ class SpecificAssetId(HasSemantics):
             raise CheckConstraintException("Constraint AASd-133 violated: type must be ExternalReference")
 
 
-@ dataclass
+@dataclass
 class Resource:
     path: Path
     content_type: Optional[ContentType]
@@ -571,7 +612,7 @@ class AssetKind(Enum):
     TYPE = 'Type'
 
 
-@ dataclass
+@dataclass
 class AssetInformation:
     asset_kind: AssetKind
     global_asset_id: Optional[IdentifierString]
@@ -590,7 +631,7 @@ class AssetInformation:
 # 5.3.6 Submodel Element
 
 
-@ dataclass
+@dataclass
 @ abstract
 class SubmodelElement(Referable, HasSemantics, Qualifiable, HasDataSpecification):
     pass
@@ -598,7 +639,7 @@ class SubmodelElement(Referable, HasSemantics, Qualifiable, HasDataSpecification
 # 5.3.7.6 Data Element
 
 
-@ dataclass
+@dataclass
 @ abstract
 class DataElement(SubmodelElement):
 
@@ -614,7 +655,7 @@ class DataElement(SubmodelElement):
 
 # 5.3.7.15 Relationship Element
 
-@ dataclass
+@dataclass
 class RelationshipElement(SubmodelElement):
     first: Reference
     second: Reference
@@ -622,14 +663,14 @@ class RelationshipElement(SubmodelElement):
 # 5.3.7.2 Annotated Relationship Element
 
 
-@ dataclass
+@dataclass
 class AnnotatedRelationshipElement(RelationshipElement):
     annotations: Optional[List[DataElement]]
 
 
 # 5.3.7.8 Event Element
 
-@ dataclass
+@dataclass
 class EventElement(SubmodelElement):
     pass
 
@@ -646,7 +687,7 @@ class Direction(Enum):
     OUTPUT = 'output'
 
 
-@ dataclass
+@dataclass
 class BasicEventElement(EventElement):
     observed: Reference
     direction: Direction
@@ -668,7 +709,7 @@ class BasicEventElement(EventElement):
 # 5.3.7.4 Blob
 
 
-@ dataclass
+@dataclass
 class Blob(DataElement):
     value: Optional[BlobString]
     content_type: ContentType
@@ -676,7 +717,7 @@ class Blob(DataElement):
 # 5.3.7.5 Capability
 
 
-@ dataclass
+@dataclass
 class Capability(SubmodelElement):
     pass
 
@@ -688,7 +729,7 @@ class EntityType(Enum):
     SelfManagedEntity = 'SelfManagedEntity'
 
 
-@ dataclass
+@dataclass
 class Entity(SubmodelElement):
     statements: Optional[List[SubmodelElement]]
     entity_type: EntityType
@@ -710,7 +751,7 @@ class Entity(SubmodelElement):
 # 5.3.7.9 File
 
 
-@ dataclass
+@dataclass
 class File(DataElement):
     value: Optional[Path]
     content_type: ContentType
@@ -719,10 +760,9 @@ class File(DataElement):
 # 5.3.7.10 Multi Language Property
 
 
-@ dataclass
+@dataclass
 class MultiLanguageProperty(DataElement):
-    # TODO: MultiLanguageNameType ?
-    value: Optional[List[MultiLanguageNameType]]
+    value: Optional[List[LangStringSet]]
     # TODO: Note: it is recommended to use an external reference.
     value_id: Optional[Reference]
 
@@ -738,12 +778,12 @@ class MultiLanguageProperty(DataElement):
 # 5.3.7.11 Operation
 
 
-@ dataclass
+@dataclass
 class OperationVariable:
     value: SubmodelElement
 
 
-@ dataclass
+@dataclass
 class Operation(SubmodelElement):
     input_variables: Optional[List[OperationVariable]]
     output_variables: Optional[List[OperationVariable]]
@@ -772,7 +812,7 @@ class Operation(SubmodelElement):
 # 5.3.7.12 Property
 
 
-@ dataclass
+@dataclass
 class Property(DataElement):
     value_type: DataTypeDefXsd
     value: Optional[ValueDataType]
@@ -791,7 +831,7 @@ class Property(DataElement):
 # 5.3.7.13 Range
 
 
-@ dataclass
+@dataclass
 class Range(DataElement):
     value_type: DataTypeDefXsd
     min: Optional[ValueDataType]
@@ -800,21 +840,21 @@ class Range(DataElement):
 # 5.3.7.14 Reference Element
 
 
-@ dataclass
+@dataclass
 class ReferenceElement(DataElement):
     value: Optional[Reference]
 
 
 # 5.3.7.16 Submodel Element Collection
 
-@ dataclass
+@dataclass
 class SubmodelElementCollection(SubmodelElement):
     value: Optional[List[SubmodelElement]]
 
 # 5.3.7.17 Submodel Element List
 
 
-@ dataclass
+@dataclass
 class SubmodelElementList(SubmodelElement):
     # TODO: default: true
     order_relevant: Optional[bool]
@@ -833,10 +873,10 @@ class SubmodelElementList(SubmodelElement):
         Constraint AASd-107: If a first level child element in a SubmodelElementList has a
         semanticId, it shall be identical to SubmodelElementList/semanticIdListElement.
         """
-        if not self.value or not self.semantic_id:
+        if not self.value or not self.semantic_id_list_element:
             return
         for idx, el in enumerate(self.value):
-            if not el.semantic_id:
+            if el.semantic_id is None:
                 continue
             if el.semantic_id != self.semantic_id_list_element:
                 raise CheckConstraintException(f"Constraint AASd-107 violated: Element {idx} has invalid semantic id {el.semantic_id}, should be {self.semantic_id_list_element}")
@@ -895,11 +935,21 @@ class SubmodelElementList(SubmodelElement):
                 if el.value_type != self.value_type_list_element:
                     raise CheckConstraintException(f"Constraint AASd-109 violated: value type of element {idx} does not match valueTypeListElement")
 
+    def check_aasd_120(self):
+        """
+        Constraint AASd-117: idShort of non-identifiable Referables not being a direct child of a
+        SubmodelElementList shall be specified.
+        """
+        if not self.value:
+            return
+        for idx, el in enumerate(self.value):
+            if el.id_short:
+                raise CheckConstraintException(f"Constraint AASd-120 violated: element {idx} must not have an idShort")
 
 # 5.3.3 Asset Administration Shell
 
 
-@ dataclass
+@dataclass
 class AssetAdministrationShell(Identifiable, HasDataSpecification):
     derived_from: Optional[Reference]
     asset_information: AssetInformation
@@ -918,14 +968,14 @@ class AssetAdministrationShell(Identifiable, HasDataSpecification):
 # 5.3.5 Submodel
 
 
-@ dataclass
+@dataclass
 class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecification):
     submodel_elements: Optional[List[SubmodelElement]]
 
 
 # 5.3.8 Concept Description
 
-@ dataclass
+@dataclass
 class ConceptDescription(Identifiable, HasDataSpecification):
     # TODO: Note: it is recommended to use an external reference, i.e. Reference/type = ExternalReference.
     is_case_of: Optional[List[Reference]]
@@ -933,7 +983,7 @@ class ConceptDescription(Identifiable, HasDataSpecification):
 # 5.3.9 Environment
 
 
-@ dataclass
+@dataclass
 class Environment:
     asset_administration_shells: Optional[List[AssetAdministrationShell]]
     submodels: Optional[List[Submodel]]

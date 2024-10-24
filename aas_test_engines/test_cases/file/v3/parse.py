@@ -6,6 +6,7 @@ from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
 import re
 
+
 class CheckConstraintException(Exception):
     pass
 
@@ -46,6 +47,9 @@ def collect_subclasses(cls, result: Dict[str, type]):
         collect_subclasses(i, result)
 
 
+_REGEX_MATCHES_XML_SERIALIZABLE_STRING = r"[\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]*"
+
+
 class StringFormattedValue:
     min_length: Optional[int] = None
     max_length: Optional[int] = None
@@ -59,12 +63,19 @@ class StringFormattedValue:
         if self.max_length is not None:
             if len(raw_value) > self.max_length:
                 raise ValueError("String is too long")
+
+        if re.fullmatch(_REGEX_MATCHES_XML_SERIALIZABLE_STRING, raw_value) is None:
+            raise ValueError("String is not XML serializable")
+
         if self.pattern:
-            if not re.match(self.pattern, raw_value):
+            if re.fullmatch(self.pattern, raw_value) is None:
                 raise ValueError("String does not match pattern")
 
     def __eq__(self, other: "StringFormattedValue") -> bool:
         return self.raw_value == other.raw_value
+
+    def __str__(self) -> str:
+        return f"*{self.raw_value}"
 
 
 def parse_string_formatted_value(cls, value: Adapter, result: AasTestResult) -> StringFormattedValue:
