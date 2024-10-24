@@ -5,6 +5,7 @@ from typing import List, Dict, Optional, Tuple, Union, ForwardRef, Pattern, Call
 from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
 import re
+from .adapter import AdapterPath
 
 
 class CheckConstraintException(Exception):
@@ -216,7 +217,7 @@ def parse(cls, obj_value: Adapter, result: AasTestResult):
     raise NotImplementedError()
 
 
-def check_constraints(obj, result: AasTestResult):
+def check_constraints(obj, result: AasTestResult, path: AdapterPath = AdapterPath()):
     if not is_dataclass(obj):
         return
     fns = [getattr(obj, i) for i in dir(obj) if i.startswith('check_')]
@@ -224,11 +225,11 @@ def check_constraints(obj, result: AasTestResult):
         try:
             fn()
         except CheckConstraintException as e:
-            result.append(AasTestResult(f"{e}", level=Level.ERROR))
+            result.append(AasTestResult(f"{e} @ {path}", level=Level.ERROR))
     for field in fields(obj):
         value = getattr(obj, field.name)
         if isinstance(value, list):
-            for i in value:
-                check_constraints(i, result)
+            for idx, i in enumerate(value):
+                check_constraints(i, result, path + field.name + idx)
         else:
-            check_constraints(value, result)
+            check_constraints(value, result, path + field.name)
