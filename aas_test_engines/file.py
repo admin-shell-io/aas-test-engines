@@ -266,44 +266,6 @@ def _check_json_data(data: any, validator: SchemaValidator, short_circuit: bool)
 def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
     result, env = json_to_env(data)
     return result
-    # schema = _get_schema(version, submodel_templates)
-    # result = _check_json_data(data, schema.validator, False)
-
-    # if submodel_templates and result.ok():
-
-    #     def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
-    #         try:
-    #             group_by = validator.schema['groupBy']
-    #         except KeyError:
-    #             return data
-    #         result: Dict[str, List[any]] = {}
-    #         if not isinstance(data, list):
-    #             raise PreprocessorException("Expected an array")
-    #         for idx, value in enumerate(data):
-    #             try:
-    #                 key = value[group_by]
-    #             except KeyError:
-    #                 raise PreprocessorException(f"Property {group_by} is missing at idx {idx}")
-    #             if not isinstance(key, str):
-    #                 raise PreprocessorException(f"{key} must be a string at idx {idx}")
-    #             try:
-    #                 result[key].append(value)
-    #             except KeyError:
-    #                 result[key] = [value]
-    #         return result
-
-    #     submodels_result = AasTestResult('Checking submodel templates')
-    #     for name in submodel_templates:
-    #         submodel_result = AasTestResult(f"Checking for {name}")
-    #         validator = schema.submodel_templates[name]
-    #         config = ValidationConfig(
-    #             preprocessor=preprocess
-    #         )
-    #         error = validator.validate(data, config)
-    #         map_error(submodel_result, error)
-    #         submodels_result.append(submodel_result)
-    #     result.append(submodels_result)
-    # return result
 
 
 def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
@@ -314,91 +276,8 @@ def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION, submodel_temp
     return check_json_data(data, version, submodel_templates)
 
 
-def _get_model_type(el: ElementTree.Element, expected_namespace: str):
-    model_type = el.tag[len(expected_namespace):]
-    model_type = model_type[0].upper() + model_type[1:]
-    return model_type
-
-
-def _get_single_child(el: ElementTree.Element) -> ElementTree.Element:
-    if len(el) != 1:
-        raise PreprocessorException("DataSpecificationContent must have exactly one child")
-    return el[0]
-
-
-def _is_json(data: any) -> bool:
-    if data is None:
-        return True
-    return isinstance(data, (dict, list, str, bool, int, float))
-
-
-def _assert_no_children(el: ElementTree.Element):
-    if next(iter(el), None):
-        raise PreprocessorException("No child elements allowed")
-
-
-def _assert_no_text(el: ElementTree.Element):
-    if el.text is None:
-        return
-    if el.text.strip():
-        raise PreprocessorException("No inline text allowed")
-
-
 def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION, submodel_templates: Set[str] = set()) -> AasTestResult:
     result, env = xml_to_env(data)
-    return result
-
-    expected_namespace = '{https://admin-shell.io/aas/3/0}'
-
-    def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:
-
-        if _is_json(data):
-            return data
-
-        if not data.tag.startswith(expected_namespace):
-            raise PreprocessorException(f"invalid namespace, got '{data.tag}'")
-
-        types = validator.get_types()
-
-        if types == {JsonType.OBJECT}:
-
-            _assert_no_text(data)
-
-            # Special handling for data specification content
-            if data.tag.endswith('dataSpecificationContent'):
-                data = _get_single_child(data)
-
-            result = {}
-            result['modelType'] = _get_model_type(data, expected_namespace)
-            for child in data:
-                if not child.tag.startswith(expected_namespace):
-                    raise PreprocessorException(f"invalid namespace, got {child.tag}")
-                tag = child.tag[len(expected_namespace):]
-                if result['modelType'] == 'OperationVariable' and tag == 'value':
-                    result[tag] = _get_single_child(child)
-                else:
-                    result[tag] = child
-            return result
-        elif types == {JsonType.ARRAY}:
-            result = []
-            for child in data:
-                result.append(child)
-            return result
-        elif types == {JsonType.STRING}:
-            _assert_no_children(data)
-            return data.text or ""
-        elif types == {JsonType.BOOLEAN}:
-            _assert_no_children(data)
-            return data.text == 'true'
-        else:
-            raise Exception(f"Unknown type {types} at {validator.pointer}")
-    schema = _get_schema(version, submodel_templates)
-    config = ValidationConfig(
-        preprocessor=preprocess,
-    )
-    error = schema.validator.validate(data, config)
-    result = AasTestResult('Check XML', '', Level.INFO)
-    map_error(result, error)
     return result
 
 
