@@ -19,7 +19,7 @@ from json_schema_tool.types import JsonType, values_are_equal
 from json_schema_tool.exception import PreprocessorException, PostProcessorException
 import zipfile
 
-from aas_test_engines.test_cases.file.v3 import json_to_env
+from aas_test_engines.test_cases.file.v3 import json_to_env, xml_to_env
 
 from ._util import un_group, normpath, splitpath
 
@@ -345,6 +345,9 @@ def _assert_no_text(el: ElementTree.Element):
 
 
 def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION, submodel_templates: Set[str] = set()) -> AasTestResult:
+    result, env = xml_to_env(data)
+    return result
+
     expected_namespace = '{https://admin-shell.io/aas/3/0}'
 
     def preprocess(data: ElementTree.Element, validator: SchemaValidator) -> JSON:

@@ -2,6 +2,8 @@ from decimal import Decimal, DecimalException
 from typing import Pattern, Dict, Mapping
 import re
 import base64
+from enum import Enum
+from .parse import CheckConstraintException
 
 
 def is_decimal(s: str) -> bool:
@@ -42,7 +44,7 @@ def is_hex_binary(s: str) -> bool:
     try:
         bytes.fromhex(s)
         return True
-    except KeyError:
+    except (KeyError, ValueError):
         return False
 
 
@@ -322,44 +324,80 @@ def is_bcp_47_for_english(text: str) -> bool:
     return _REGEX_IS_BCP_47_FOR_ENGLISH.match(text) is not None
 
 
-validators = {
-    'xs:decimal': is_decimal,
-    'xs:integer': lambda s: _is_bounded_integer(s, float('-inf'), float('inf')),
+class DataTypeDefXsd(Enum):
+    anyURI = "xs:anyURI"
+    base64Binary = "xs:base64Binary"
+    boolean = "xs:boolean"
+    byte = "xs:byte"
+    date = "xs:date"
+    dateTime = "xs:dateTime"
+    decimal = "xs:decimal"
+    double = "xs:double"
+    duration = "xs:duration"
+    float = "xs:float"
+    gDay = "xs:gDay"
+    gMonth = "xs:gMonth"
+    gMonthDay = "xs:gMonthDay"
+    gYear = "xs:gYear"
+    gYearMonth = "xs:gYearMonth"
+    hexBinary = "xs:hexBinary"
+    int = "xs:int"
+    integer = "xs:integer"
+    long = "xs:long"
+    negativeInteger = "xs:negativeInteger"
+    nonNegativeInteger = "xs:nonNegativeInteger"
+    nonPositiveInteger = "xs:nonPositiveInteger"
+    positiveInteger = "xs:positiveInteger"
+    short = "xs:short"
+    string = "xs:string"
+    time = "xs:time"
+    unsignedByte = "xs:unsignedByte"
+    unsignedInt = "xs:unsignedInt"
+    unsignedLong = "xs:unsignedLong"
+    unsignedShort = "xs:unsignedShort"
 
-    'xs:float': is_float,
-    'xs:double': is_double,
 
-    'xs:byte': lambda s: _is_bounded_integer(s, -128, 127),
-    'xs:short': lambda s: _is_bounded_integer(s, -32768, 32767),
-    'xs:int': lambda s: _is_bounded_integer(s, -2147483648, 2147483647),
-    'xs:long': lambda s: _is_bounded_integer(s, -9223372036854775808, 9223372036854775807),
+_validators = {
+    DataTypeDefXsd.string: lambda _: True,
+    DataTypeDefXsd.boolean: lambda x: x in {"true", "false", "1", "0"},
+    DataTypeDefXsd.decimal: is_decimal,
+    DataTypeDefXsd.integer: lambda s: _is_bounded_integer(s, float('-inf'), float('inf')),
 
-    'xs:unsignedByte': lambda s: _is_bounded_integer(s, 0, 255),
-    'xs:unsignedShort': lambda s: _is_bounded_integer(s, 0, 65535),
-    'xs:unsignedInt': lambda s: _is_bounded_integer(s, 0, 4294967295),
-    'xs:unsignedLong': lambda s: _is_bounded_integer(s, 0, 18446744073709551615),
+    DataTypeDefXsd.float: is_float,
+    DataTypeDefXsd.double: is_double,
 
-    'xs:positiveInteger': lambda s: _is_bounded_integer(s, 1, float('inf')),
-    'xs:nonNegativeInteger': lambda s: _is_bounded_integer(s, 0, float('inf')),
-    'xs:negativeInteger': lambda s: _is_bounded_integer(s, float('-inf'), -1),
-    'xs:nonPositiveInteger': lambda s: _is_bounded_integer(s, float('-inf'), 0),
+    DataTypeDefXsd.byte: lambda s: _is_bounded_integer(s, -128, 127),
+    DataTypeDefXsd.short: lambda s: _is_bounded_integer(s, -32768, 32767),
+    DataTypeDefXsd.int: lambda s: _is_bounded_integer(s, -2147483648, 2147483647),
+    DataTypeDefXsd.long: lambda s: _is_bounded_integer(s, -9223372036854775808, 9223372036854775807),
 
-    'xs:date': is_xs_date,
-    'xs:dateTime': is_xs_date_time,
-    'xs:gMonthDay': is_xs_g_month_day,
-    'xs:dateTimeUTC': is_xs_date_time_utc,
-    'xs:gYearMonth': lambda x: True,
-    'xs:gDay': lambda x: True,
-    'xs:gMonth': lambda x: True,
-    'xs:gYear': lambda x: True,
-    'xs:time': lambda x: True,
-    'xs:duration': lambda x: True,
+    DataTypeDefXsd.unsignedByte: lambda s: _is_bounded_integer(s, 0, 255),
+    DataTypeDefXsd.unsignedShort: lambda s: _is_bounded_integer(s, 0, 65535),
+    DataTypeDefXsd.unsignedInt: lambda s: _is_bounded_integer(s, 0, 4294967295),
+    DataTypeDefXsd.unsignedLong: lambda s: _is_bounded_integer(s, 0, 18446744073709551615),
 
-    'xs:anyURI': is_any_uri,
-    'xs:base64Binary': is_base64_binary,
+    DataTypeDefXsd.positiveInteger: lambda s: _is_bounded_integer(s, 1, float('inf')),
+    DataTypeDefXsd.nonNegativeInteger: lambda s: _is_bounded_integer(s, 0, float('inf')),
+    DataTypeDefXsd.negativeInteger: lambda s: _is_bounded_integer(s, float('-inf'), -1),
+    DataTypeDefXsd.nonPositiveInteger: lambda s: _is_bounded_integer(s, float('-inf'), 0),
 
-    'bcpLangString': is_bcp_lang_string,
-    'version': is_version_string,
-    'contentType': lambda x: True,
-    'path': lambda x: True,
+    DataTypeDefXsd.date: is_xs_date,
+    DataTypeDefXsd.dateTime: is_xs_date_time,
+    DataTypeDefXsd.gMonthDay: is_xs_g_month_day,
+    DataTypeDefXsd.gYearMonth: lambda x: re.fullmatch(r"-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x) is not None,
+    DataTypeDefXsd.gDay: lambda x: re.fullmatch(r"---(0[1-9]|[12][0-9]|3[01])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x) is not None,
+    DataTypeDefXsd.gMonth: lambda x: re.fullmatch(r"--(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x) is not None,
+    DataTypeDefXsd.gYear: lambda x: re.fullmatch(r"-?([1-9][0-9]{3,}|0[0-9]{3})(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x) is not None,
+    DataTypeDefXsd.time: lambda x: re.fullmatch(r"(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x) is not None,
+    DataTypeDefXsd.duration: lambda x: re.fullmatch(r"-?P((([0-9]+Y([0-9]+M)?([0-9]+D)?|([0-9]+M)([0-9]+D)?|([0-9]+D))(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S)))?)|(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S))))", x) is not None,
+
+    DataTypeDefXsd.anyURI: is_any_uri,
+    DataTypeDefXsd.base64Binary: is_base64_binary,
+    DataTypeDefXsd.hexBinary: is_hex_binary,
 }
+
+
+def validate(value: str, value_type: DataTypeDefXsd):
+    validator = _validators[value_type]
+    if not validator(value):
+        raise CheckConstraintException("Invalid")

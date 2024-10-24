@@ -1,11 +1,47 @@
-from .parse import StringFormattedValue, abstract, CheckConstraintException
+from .parse import StringFormattedValue, abstract, CheckConstraintException, requires_model_type
 
 from dataclasses import dataclass
 from typing import List, Optional, Set
 from enum import Enum
-from .data_types import _is_bounded_integer, is_bcp_lang_string
+from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc
+
+# TODO: AASd-021
+# TODO: AASd-022
+# TODO: AASd-077
+
 
 # 5.3.11.2 Primitive Data Types
+
+@dataclass
+class LangStringSet:
+    language: str
+    text: str
+
+    def __init_subclass__(cls, max_len_text):
+        cls._max_len_text = max_len_text
+        return super().__init_subclass__()
+
+    def check_language(self):
+        if not is_bcp_lang_string(self.language):
+            raise CheckConstraintException("Invalid language")
+        if len(self.language) <= 1:
+            raise CheckConstraintException("language too short")
+
+    def check_text(self):
+        if not is_bcp_lang_string(self.language):
+            raise CheckConstraintException("Invalid language")
+        if len(self.text) <= 1:
+            raise CheckConstraintException("text too short")
+        if len(self.text) > self._max_len_text:
+            raise CheckConstraintException("text too long")
+
+
+class MultiLanguageNameType(LangStringSet, max_len_text=128):
+    pass
+
+
+class MultiLanguageTextType(LangStringSet, max_len_text=1023):
+    pass
 
 
 class BlobString(StringFormattedValue):
@@ -15,6 +51,7 @@ class BlobString(StringFormattedValue):
 class ContentType(StringFormattedValue):
     min_length = 1
     max_length = 100
+    pattern = r"^([!#$%&'*+\-.^_`|~0-9a-zA-Z])+/([!#$%&'*+\-.^_`|~0-9a-zA-Z])+([        \t]*;[ \t]*([!#$%&'*+\-.^_`|~0-9a-zA-Z])+=(([!#$%&'*+\-.^_`|~0-9a-zA-Z])+|\"(([\t        !#-\[\]-~]|[\x80-ÿ])|\\([\t !-~]|[\x80-ÿ]))*\"))*$"
 
 
 class IdentifierString(StringFormattedValue):
@@ -32,30 +69,15 @@ class MessageTopicString(StringFormattedValue):
     max_length = 255
 
 
-class MultiLanguageNameType(StringFormattedValue):
-    min_length = 1
-    max_length = 128
-
-    def __init__(self, raw_value):
-        super().__init__(raw_value)
-        if not is_bcp_lang_string(raw_value):
-            raise ValueError(f"{raw_value} is not a BCP lang string")
-
-
-class MultiLanguageTextType(StringFormattedValue):
-    min_length = 1
-    max_length = 1023
-
-
 class NameTypeString(StringFormattedValue):
     min_length = 1
     max_length = 128
     pattern = r"[a-zA-Z][a-zA-Z0-9_]*"
 
 
-class Path(StringFormattedValue):
+class PathString(StringFormattedValue):
     min_length = 1
-    max_length = 2048
+    max_length = 2000
 
 
 class RevisionString(StringFormattedValue):
@@ -80,9 +102,15 @@ class ValueDataType(StringFormattedValue):
 class DateTimeUtc(StringFormattedValue):
     min_length = 1
 
+    def __init__(self, raw_value):
+        super().__init__(raw_value)
+        if not is_xs_date_time_utc(self.raw_value):
+            raise ValueError("Not an xs:dateTimeUtc")
+
 
 class Duration(StringFormattedValue):
     min_length = 1
+    pattern = r"-?P((([0-9]+Y([0-9]+M)?([0-9]+D)?|([0-9]+M)([0-9]+D)?|([0-9]+D))(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S)))?)|(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S))))"
 
 
 class DataType(StringFormattedValue):
@@ -93,43 +121,19 @@ class ValueType(StringFormattedValue):
     min_length = 1
 
 
-@dataclass
-class LangStringSet:
-    language: MultiLanguageNameType
-    text: MultiLanguageTextType
+# 5.3.12.2 Constraints for Referables and Identifiables
 
 
-class DataTypeDefXsd(Enum):
-    anyURI = "xs:anyURI"
-    base64Binary = "xs:base64Binary"
-    boolean = "xs:boolean"
-    byte = "xs:byte"
-    date = "xs:date"
-    dateTime = "xs:dateTime"
-    decimal = "xs:decimal"
-    double = "xs:double"
-    duration = "xs:duration"
-    float = "xs:float"
-    gDay = "xs:gDay"
-    gMonth = "xs:gMonth"
-    gMonthDay = "xs:gMonthDay"
-    gYear = "xs:gYear"
-    gYearMonth = "xs:gYearMonth"
-    hexBinary = "xs:hexBinary"
-    int = "xs:int"
-    integer = "xs:integer"
-    long = "xs:long"
-    negativeInteger = "xs:negativeInteger"
-    nonNegativeInteger = "xs:nonNegativeInteger"
-    nonPositiveInteger = "xs:nonPositiveInteger"
-    positiveInteger = "xs:positiveInteger"
-    short = "xs:short"
-    string = "xs:string"
-    time = "xs:time"
-    unsignedByte = "xs:unsignedByte"
-    unsignedInt = "xs:unsignedInt"
-    unsignedLong = "xs:unsignedLong"
-    unsignedShort = "xs:unsignedShort"
+def ensure_have_id_shorts(elements: Optional[List["Referable"]]):
+    """
+    Constraint AASd-117: idShort of non-identifiable Referables not being a direct child of a
+    SubmodelElementList shall be specified.
+    """
+    if elements is None:
+        return
+    for idx, val in enumerate(elements):
+        if val.id_short is None:
+            raise CheckConstraintException(f"Constraint AASd-117 violated: element {idx} has no idShort")
 
 
 # 5.3.10.2 Reference
@@ -225,7 +229,7 @@ class ReferenceType(Enum):
 class Reference:
     type: ReferenceType
     referred_semantic_id: Optional["Reference"]
-    keys: Optional[List[Key]]
+    keys: List[Key]
 
     def check_aasd_121(self):
         """
@@ -418,9 +422,16 @@ class DataTypeIec61360(Enum):
     TIMESTAMP = "TIMESTAMP"
 
 
-DefinitionTypeIec61360 = LangStringSet
-PreferredNameTypeIec61360 = LangStringSet  # TODO: max_length = 255
-ShortNameTypeIec61360 = LangStringSet  # TODO: max_length = 18
+class DefinitionTypeIec61360(LangStringSet, max_len_text=128):
+    pass
+
+
+class PreferredNameTypeIec61360(LangStringSet, max_len_text=255):
+    pass
+
+
+class ShortNameTypeIec61360(LangStringSet, max_len_text=18):
+    pass
 
 
 class ValueFormatTypeIec61360(StringFormattedValue):
@@ -483,6 +494,10 @@ class Extension(HasSemantics):
     # TODO: must be a model reference
     refers_to: Optional[List[Reference]]
 
+    def check_value_type(self):
+        if self.value:
+            validate(self.value.raw_value, self.value_type)
+
 
 @dataclass
 class HasExtensions:
@@ -496,8 +511,8 @@ class Referable(HasExtensions):
     # TODO: category is deprecated
     category: Optional[NameTypeString]
     id_short: Optional[NameTypeString]
-    display_name: Optional[List[LangStringSet]]
-    description: Optional[List[LangStringSet]]
+    display_name: Optional[List[MultiLanguageNameType]]
+    description: Optional[List[MultiLanguageTextType]]
     # TODO: Constraint AASd-002: idShort of Referables shall only feature letters, digits, underscore ("_");
     # starting mandatory with a letter, i.e. [a-zA-Z][a-zA-Z0-9_]*.
 
@@ -537,10 +552,10 @@ class AdministrativeInformation(HasDataSpecification):
 
 
 @dataclass
+@requires_model_type
 class Identifiable(Referable):
     administration: Optional[AdministrativeInformation]
     id: IdentifierString
-
 
 # 5.3.2.8 Qualifiable
 
@@ -577,6 +592,10 @@ class Qualifier(HasSemantics):
         # TODO
         pass
 
+    def check_value_type(self):
+        if self.value:
+            validate(self.value.raw_value, self.value_type)
+
 
 @dataclass
 class Qualifiable:
@@ -602,7 +621,7 @@ class SpecificAssetId(HasSemantics):
 
 @dataclass
 class Resource:
-    path: Path
+    path: PathString
     content_type: Optional[ContentType]
 
 
@@ -627,6 +646,17 @@ class AssetInformation:
         """
         if not self.global_asset_id and not self.specific_asset_ids:
             raise CheckConstraintException("Constraint AASd-131 violated: neither globalAssetId nor specificAssetIds given")
+
+    def check_aasd_116(self):
+        """
+        Constraint AASd-116: : "globalAssetId" (case-insensitive) is a reserved key for SpecificAssetId/name with the
+        semantics as defined in https://admin-shell.io/aas/3/0/AssetInformation/globalAssetId.
+        """
+        if self.specific_asset_ids is None:
+            return
+        for idx, specific_asset_id in enumerate(self.specific_asset_ids):
+            if specific_asset_id.name.raw_value == 'globalAssetId':
+                raise CheckConstraintException(f"Constraint AASd-116 violated: specific asset id {idx} must not have name 'globalAssetId'")
 
 # 5.3.6 Submodel Element
 
@@ -666,6 +696,9 @@ class RelationshipElement(SubmodelElement):
 @dataclass
 class AnnotatedRelationshipElement(RelationshipElement):
     annotations: Optional[List[DataElement]]
+
+    def check_aasd_117(self):
+        ensure_have_id_shorts(self.annotations)
 
 
 # 5.3.7.8 Event Element
@@ -748,12 +781,15 @@ class Entity(SubmodelElement):
             if self.global_asset_id or self.specific_asset_ids:
                 raise CheckConstraintException("Constraint AASd-014 violated: entity is co-manged by either globalAssetId or specificAssetId are set")
 
+    def check_aad_117(self):
+        ensure_have_id_shorts(self.statements)
+
 # 5.3.7.9 File
 
 
 @dataclass
 class File(DataElement):
-    value: Optional[Path]
+    value: Optional[PathString]
     content_type: ContentType
 
 
@@ -762,7 +798,7 @@ class File(DataElement):
 
 @dataclass
 class MultiLanguageProperty(DataElement):
-    value: Optional[List[LangStringSet]]
+    value: Optional[List[MultiLanguageTextType]]
     # TODO: Note: it is recommended to use an external reference.
     value_id: Optional[Reference]
 
@@ -781,6 +817,14 @@ class MultiLanguageProperty(DataElement):
 @dataclass
 class OperationVariable:
     value: SubmodelElement
+
+    def check_aasd_117(self):
+        """
+        Constraint AASd-117: idShort of non-identifiable Referables not being a direct child of a
+        SubmodelElementList shall be specified.
+        """
+        if self.value.id_short is None:
+            raise CheckConstraintException("Constraint AASd-117 is violated: idShort missing")
 
 
 @dataclass
@@ -828,6 +872,10 @@ class Property(DataElement):
         """
         pass
 
+    def check_value_type(self):
+        if self.value:
+            validate(self.value.raw_value, self.value_type)
+
 # 5.3.7.13 Range
 
 
@@ -836,6 +884,14 @@ class Range(DataElement):
     value_type: DataTypeDefXsd
     min: Optional[ValueDataType]
     max: Optional[ValueDataType]
+
+    def check_value_type_min(self):
+        if self.min:
+            validate(self.min.raw_value, self.value_type)
+
+    def check_value_type_max(self):
+        if self.max:
+            validate(self.max.raw_value, self.value_type)
 
 # 5.3.7.14 Reference Element
 
@@ -850,6 +906,9 @@ class ReferenceElement(DataElement):
 @dataclass
 class SubmodelElementCollection(SubmodelElement):
     value: Optional[List[SubmodelElement]]
+
+    def check_aasd_117(self):
+        ensure_have_id_shorts(self.value)
 
 # 5.3.7.17 Submodel Element List
 
@@ -943,7 +1002,7 @@ class SubmodelElementList(SubmodelElement):
         if not self.value:
             return
         for idx, el in enumerate(self.value):
-            if el.id_short:
+            if el.id_short is not None:
                 raise CheckConstraintException(f"Constraint AASd-120 violated: element {idx} must not have an idShort")
 
 # 5.3.3 Asset Administration Shell
@@ -972,8 +1031,40 @@ class AssetAdministrationShell(Identifiable, HasDataSpecification):
 class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecification):
     submodel_elements: Optional[List[SubmodelElement]]
 
+    def check_aasd_117(self):
+        ensure_have_id_shorts(self.submodel_elements)
+
+    def check_aasd119(self):
+        """
+        Constraint AASd-119: If any Qualifier/kind value of a Qualifiable/qualifier is equal to TemplateQualifier and
+        the qualified element inherits from "hasKind", the qualified element shall be of kind Template (HasKind/kind =
+        "Template").
+        """
+        if self.qualifiers is None:
+            return
+        if any(qualifier.kind == QualifierKind.TemplateQualifier for qualifier in self.qualifiers):
+            if self.kind != ModellingKind.Template:
+                raise CheckConstraintException("Constraint AASd-129 violated: kind must be Template as at least one qualifier is a TemplateQualifier")
+
+    def check_aasd_129(self):
+        """
+        Constraint AASd-129: If any Qualifier/kind value of a SubmodelElement/qualifier (attribute qualifier inherited
+        via Qualifiable) is equal to TemplateQualifier, the submodel element shall be part of a submodel template,
+        i.e. a Submodel with Submodel/kind (attribute kind inherited via HasKind) value equal to Template.
+        """
+        if self.submodel_elements is None:
+            return
+
+        for element in self.submodel_elements:
+            if element.qualifiers is None:
+                continue
+            if any(qualifier.kind == QualifierKind.TemplateQualifier for qualifier in element.qualifiers):
+                if self.kind != ModellingKind.Template:
+                    raise CheckConstraintException("Constraint AASd-129 violated: kind must be Template as at least one qualifier is a TemplateQualifier")
+
 
 # 5.3.8 Concept Description
+
 
 @dataclass
 class ConceptDescription(Identifiable, HasDataSpecification):

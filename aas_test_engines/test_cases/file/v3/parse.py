@@ -1,7 +1,7 @@
 from .adapter import Adapter, AdapterException
 
 from dataclasses import dataclass, fields, field, is_dataclass
-from typing import List, Dict, Optional, Tuple, Union, ForwardRef, Pattern
+from typing import List, Dict, Optional, Tuple, Union, ForwardRef, Pattern, Callable
 from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
 import re
@@ -32,6 +32,7 @@ def unwrap_optional(cls) -> Tuple[bool, type]:
 
 
 def abstract(cls):
+    # Prefix with cls to apply only to base class
     setattr(cls, f'_{cls}_abstract', True)
     return cls
 
@@ -40,14 +41,20 @@ def isabstract(cls):
     return hasattr(cls, f'_{cls}_abstract')
 
 
+def requires_model_type(cls):
+    setattr(cls, f'_requires_model_type', True)
+    return cls
+
+
+def has_requires_model_type(cls):
+    return hasattr(cls, f'_requires_model_type')
+
+
 def collect_subclasses(cls, result: Dict[str, type]):
     if not isabstract(cls):
         result[cls.__name__] = cls
     for i in cls.__subclasses__():
         collect_subclasses(i, result)
-
-
-_REGEX_MATCHES_XML_SERIALIZABLE_STRING = r"[\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]*"
 
 
 class StringFormattedValue:
@@ -64,7 +71,10 @@ class StringFormattedValue:
             if len(raw_value) > self.max_length:
                 raise ValueError("String is too long")
 
-        if re.fullmatch(_REGEX_MATCHES_XML_SERIALIZABLE_STRING, raw_value) is None:
+        # Constraint AASd-130: An attribute with data type "string" shall be restricted to the characters as defined in
+        # XML Schema 1.0, i.e. the string shall consist of these characters only: ^[\x09\x0A\x0D\x20-\uD7FF\uE000-
+        # \uFFFD\u00010000-\u0010FFFF]*$.
+        if re.fullmatch(r"[\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]*", raw_value) is None:
             raise ValueError("String is not XML serializable")
 
         if self.pattern:
@@ -135,7 +145,7 @@ def parse_abstract_object(cls, adapter: Adapter, result: AasTestResult):
     try:
         cls = subclasses[discriminator]
     except KeyError:
-        result.append(AasTestResult(f"Invalid model type {discriminator}", level=Level.ERROR))
+        result.append(AasTestResult(f"Invalid model type {discriminator} @ {adapter.path}", level=Level.ERROR))
         return INVALID
     return parse_concrete_object(cls, adapter, result)
 
@@ -146,6 +156,14 @@ def parse_concrete_object(cls, adapter: Adapter, result: AasTestResult):
     except AdapterException as e:
         result.append(AasTestResult(f"{e} @ {adapter.path}", level=Level.ERROR))
         return INVALID
+    if has_requires_model_type(cls):
+        try:
+            discriminator = adapter.get_model_type()
+            if discriminator != cls.__name__:
+                result.append(AasTestResult(f"Wrong model type @ {adapter.path}", level=Level.ERROR))
+        except AdapterException as e:
+            result.append(AasTestResult(f"Model typ missing @ {adapter.path}", level=Level.ERROR))
+
     args = {}
     for field in fields(cls):
         field_name = to_lower_camel_case(field.name)
@@ -170,7 +188,6 @@ def parse(cls, obj_value: Adapter, result: AasTestResult):
             cls = cls._evaluate(globals(), locals(), frozenset())
         except TypeError:
             # Python < 3.9
-            print(cls)
             cls = cls._evaluate(globals(), locals())
 
     origin = getattr(cls, '__origin__', None)
