@@ -11,8 +11,6 @@ def is_blacklisted(path):
         'Double/lowest.',
         'Double/max.',
         'Float/largest_normal.',
-        'ConstraintViolation/reference',
-        'ConstraintViolation/submodelElementList',
     ]
     for i in blacklist:
         if i in path:
