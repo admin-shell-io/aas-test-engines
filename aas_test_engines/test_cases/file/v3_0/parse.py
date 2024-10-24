@@ -186,7 +186,7 @@ def parse(cls, obj_value: Adapter, result: AasTestResult):
         # TODO: this is a hack to get our only ForwardRef["Reference"] into scope
         from .model import Reference
         try:
-            cls = cls._evaluate(globals(), locals(), frozenset())
+            cls = cls._evaluate(globals(), locals(), recursive_guard=frozenset())
         except TypeError:
             # Python < 3.9
             cls = cls._evaluate(globals(), locals())
