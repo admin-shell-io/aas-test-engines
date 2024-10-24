@@ -495,7 +495,7 @@ class Extension(HasSemantics):
     refers_to: Optional[List[Reference]]
 
     def check_value_type(self):
-        if self.value:
+        if self.value and self.value_type:
             validate(self.value.raw_value, self.value_type)
 
 

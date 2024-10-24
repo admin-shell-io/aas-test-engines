@@ -10,13 +10,11 @@ except ImportError:
 
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level
-from .data_types import validators, is_bcp_47_for_english
-from ._generate import generate_graph, FlowGraph
+from .data_types import validators
+from ._generate import generate_graph
 
 from xml.etree import ElementTree
-from json_schema_tool.schema import SchemaValidator, SchemaValidator, ValidationConfig, ParseConfig, SchemaValidationResult, KeywordValidationResult, parse_schema
-from json_schema_tool.types import JsonType, values_are_equal
-from json_schema_tool.exception import PreprocessorException, PostProcessorException
+from json_schema_tool.schema import SchemaValidator, SchemaValidator, ParseConfig, parse_schema
 import zipfile
 
 from aas_test_engines.test_cases.file.v3_0 import json_to_env, xml_to_env
@@ -84,183 +82,6 @@ def _get_schema(version: str, submodel_templates: Set[str]) -> AasSchema:
     if unknown:
         raise AasTestToolsException(f"Unknown submodel templates {unknown}, must be in {sorted(all_templates)}")
     return schema
-
-
-def map_error(parent: AasTestResult, error: SchemaValidationResult):
-    for i in error.keyword_results:
-        if i.ok():
-            continue
-        kw_result = AasTestResult(i.error_message, '', Level.ERROR)
-        for j in i.sub_schema_results:
-            map_error(kw_result, j)
-        parent.append(kw_result)
-
-
-FRAGMENT_KEYS = [
-    'FragmentReference',
-    'Referable',
-    'AnnotatedRelationshipElement',
-    'BasicEventElement',
-    'Blob',
-    'Capability',
-    'DataElement',
-    'Entity',
-    'EventElement',
-    'File',
-    'MultiLanguageProperty',
-    'Operation',
-    'Property',
-    'Range',
-    'ReferenceElement',
-    'RelationshipElement',
-    'SubmodelElement',
-    'SubmodelElementCollection',
-    'SubmodelElementList',
-]
-
-
-def check_constraints(instance: any, validator: SchemaValidator):
-    for check in validator.schema.get('check', []):
-        if check == 'Constraint_AASd-107':
-            try:
-                semantic_id = instance['semanticIdListElement']
-            except KeyError:
-                continue
-            for i in instance.get('value', []):
-                try:
-                    if not values_are_equal(i['semanticId'], semantic_id):
-                        raise PostProcessorException(f"AASd-107: Invalid semantic id")
-                except KeyError:
-                    pass
-        elif check == 'Constraint_AASd-108':
-            type_value = instance['typeValueListElement']
-            for i in instance.get('value', []):
-                if i['modelType'] != type_value:
-                    raise PostProcessorException(f"AASd-108: Expected modelType {type_value}")
-        elif check == 'Constraint_AASd-109':
-            if instance['typeValueListElement'] in ['Property', 'Range']:
-                try:
-                    value_type = instance['valueTypeListElement']
-                except KeyError as e:
-                    raise PostProcessorException("AASd-109: valueTypeListElement must be set")
-                for i in instance.get('value', []):
-                    if i['valueType'] != value_type:
-                        raise PostProcessorException("Invalid valueType")
-        elif check == 'Constraint_AASd-114':
-            last_semantic_id = None
-            for i in instance.get('value', []):
-                try:
-                    semantic_id = i['semanticId']
-                except KeyError:
-                    continue
-                if last_semantic_id and not values_are_equal(last_semantic_id, semantic_id):
-                    raise PostProcessorException(f"AASd-114: Invalid semanticId")
-                last_semantic_id = semantic_id
-        elif check == 'Constraint_AASd-124':
-            if not isinstance(instance, dict) or 'keys' not in instance:
-                continue
-            keys = instance['keys']
-            if not isinstance(keys, list) or len(keys) == 0:
-                continue
-            last_key = keys[-1]
-            if not isinstance(last_key, dict) or 'type' not in last_key:
-                continue
-            if last_key['type'] not in ['GlobalReference', 'FragmentReference']:
-                raise PostProcessorException(f"AASd-125: invalid last key")
-        elif check == 'Constraint_AASd-125':
-            if not isinstance(instance, dict) or 'keys' not in instance:
-                continue
-            keys = instance['keys']
-            if not isinstance(keys, list):
-                continue
-            for idx, key in enumerate(keys):
-                if idx == 0:
-                    continue
-                if not isinstance(key, dict) or 'type' not in key:
-                    continue
-                if key['type'] not in FRAGMENT_KEYS:
-                    raise PostProcessorException("AASd-125: Not a fragment key")
-        elif check == 'Constraint_AASd-127':
-            if not isinstance(instance, dict) or 'keys' not in instance:
-                continue
-            keys = instance['keys']
-            if not isinstance(keys, list):
-                continue
-            for idx, key in enumerate(keys):
-                if not isinstance(key, dict) or 'type' not in key:
-                    continue
-                if key['type'] == 'FragmentReference':
-                    if idx == 0 or keys[idx-1]['type'] not in ['File', 'Blob']:
-                        raise PostProcessorException("AASd-127: FragmentReference not preceded by File or Blob")
-                # TODO
-                # else:
-                #     raise PostProcessorException("AASd-127: FragmentReference not allowed")
-        elif check == 'Constraint_AASd-128':
-            if not isinstance(instance, dict) or 'keys' not in instance:
-                continue
-            keys = instance['keys']
-            if not isinstance(keys, list):
-                continue
-            for idx, key in enumerate(keys):
-                if not isinstance(key, dict) or 'type' not in key:
-                    continue
-                if key['type'] != 'SubmodelElementList':
-                    continue
-                if idx + 1 == len(keys) or not keys[idx+1]['value'].isdigit():
-                    raise PostProcessorException("AASd-128: SubmodelElementList must be succeeded by an integer")
-        elif check == 'Constraint_AASd-119':
-            if not isinstance(instance, dict):
-                continue
-            qualifiers = instance.get('qualifiers', [])
-            if not isinstance(qualifiers, list):
-                continue
-            if any(qualifier.get('kind') == 'TemplateQualifier' for qualifier in qualifiers):
-                if instance.get('kind') != 'Template':
-                    raise PostProcessorException("AASd-129: kind must be Template as at least one qualifier is a TemplateQualifier")
-        elif check == 'Constraint_AASd-129':
-            if not isinstance(instance, dict):
-                continue
-            elements = instance.get('submodelElements')
-            if not isinstance(elements, list):
-                continue
-            for element in elements:
-                qualifiers = element.get('qualifiers')
-                if not isinstance(qualifiers, list):
-                    continue
-                if any(qualifier.get('kind') == 'TemplateQualifier' for qualifier in qualifiers):
-                    if instance.get('kind') != 'Template':
-                        raise PostProcessorException("AASd-129: kind must be Template as at least one qualifier is a TemplateQualifier")
-        elif check == 'Constraint_AASd-134':
-            # TODO
-            pass
-        elif check == 'Constraint_AASc-3a-002':
-            try:
-                if not any(is_bcp_47_for_english(name.get('language')) for name in instance['preferredName']):
-                    raise PostProcessorException("AASc-3a-008: preferredName must be provided at least in english")
-            except (KeyError, TypeError, AttributeError):
-                pass
-        elif check == 'Constraint_AASc-3a-008':
-            try:
-                if 'value' not in instance:
-                    if not any(is_bcp_47_for_english(definition.get('language')) for definition in instance['definition']):
-                        raise PostProcessorException("AASc-3a-008: definition must be provided at least in english")
-            except (KeyError, TypeError, AttributeError):
-                pass
-        else:
-            # This should not happen
-            raise RuntimeError(f"Invalid check {check}")
-
-
-def _check_json_data(data: any, validator: SchemaValidator, short_circuit: bool) -> AasTestResult:
-    result = AasTestResult('Check JSON', '', Level.INFO)
-    config = ValidationConfig(
-        postprocessor=check_constraints,
-        short_circuit_evaluation=short_circuit,
-    )
-
-    error = validator.validate(data, config)
-    map_error(result, error)
-    return result
 
 
 def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
@@ -470,7 +291,7 @@ def generate(version: str = _DEFAULT_VERSION, submodel_template: Optional[str] =
             if i.is_valid:
                 valid = True
             else:
-                valid = _check_json_data(sample, aas.validator, True).ok()
+                valid = check_json_data(sample, version).ok()
             yield valid, sample
     else:
         aas = _get_schema(version, set([submodel_template]))

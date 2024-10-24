@@ -2,12 +2,11 @@ from typing import Dict, List, Union, Optional, Tuple
 from .exception import AasTestToolsException
 from .result import AasTestResult, Level, start, abort, write, ResultException
 from ._util import b64urlsafe
-from .file import map_error
 
 from fences.open_api.open_api import OpenApi, Operation
 from fences.open_api.generate import SampleCache, generate_all, generate_one_valid, Request
 from fences.core.util import ConfusionMatrix
-from json_schema_tool.schema import parse_schema, ParseConfig
+from json_schema_tool.schema import parse_schema, ParseConfig, SchemaValidationResult
 
 import os
 from yaml import load
@@ -19,6 +18,16 @@ except ImportError:
 
 from dataclasses import dataclass
 import requests
+
+def _map_error(parent: AasTestResult, error: SchemaValidationResult):
+    for i in error.keyword_results:
+        if i.ok():
+            continue
+        kw_result = AasTestResult(i.error_message, '', Level.ERROR)
+        for j in i.sub_schema_results:
+            _map_error(kw_result, j)
+        parent.append(kw_result)
+
 
 
 def _assert(predicate: bool, message):
@@ -506,7 +515,7 @@ def _invoke_and_decode(request: Request, conf: ExecConf, positive_test: bool) ->
             write("Response conforms to schema")
         else:
             result = AasTestResult(f"Invalid response for schema", level=Level.ERROR)
-            map_error(result, validation_result)
+            _map_error(result, validation_result)
             raise ResultException(result)
         return data
 
