@@ -422,7 +422,7 @@ class DataTypeIec61360(Enum):
     TIMESTAMP = "TIMESTAMP"
 
 
-class DefinitionTypeIec61360(LangStringSet, max_len_text=128):
+class DefinitionTypeIec61360(LangStringSet, max_len_text=1023):
     pass
 
 
