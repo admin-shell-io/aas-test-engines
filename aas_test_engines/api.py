@@ -19,6 +19,7 @@ except ImportError:
 from dataclasses import dataclass
 import requests
 
+
 def _map_error(parent: AasTestResult, error: SchemaValidationResult):
     for i in error.keyword_results:
         if i.ok():
@@ -27,7 +28,6 @@ def _map_error(parent: AasTestResult, error: SchemaValidationResult):
         for j in i.sub_schema_results:
             _map_error(kw_result, j)
         parent.append(kw_result)
-
 
 
 def _assert(predicate: bool, message):
@@ -752,7 +752,6 @@ class SubmodelBySuperpathSuite(SubmodelBySuperpathSuiteBase):
         _assert(data == self.valid_submodel_id, 'Returns the correct one')
 
 
-
 @operation("GetSubmodelById-ValueOnly_AasRepository")
 @operation("GetSubmodelById-Reference_AasRepository")
 @operation("GetSubmodelById-Path_AasRepository")
@@ -768,6 +767,7 @@ class SubmodelRefBySuperpathSuite(SubmodelBySuperpathSuiteBase):
         _invoke_and_decode(request, self.conf, True)
 
 # /shells/<AAS>/submodels/<SM>/submodel-elements
+
 
 @operation("GetAllSubmodelElements_AasRepository")
 @operation("GetAllSubmodelElements-Metadata_AasRepository")
@@ -801,10 +801,8 @@ def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_pre
             _collect_submodel_elements(value, paths, id_short + ".")
 
 
-@operation("GetSubmodelElementByPath_AasRepository")
-@operation("GetSubmodelElementByPath-Reference_AasRepository")
-class SubmodelElementBySuperpathSuite(ApiTestSuite):
-    supported_submodel_elements = [
+class SubmodelElementBySuperpathSuiteBase(ApiTestSuite):
+    all_submodel_elements = [
         'SubmodelElementCollection',
         'SubmodelElementList',
         'Entity',
@@ -840,36 +838,67 @@ class SubmodelElementBySuperpathSuite(ApiTestSuite):
         overwrites['idShortPath'] = [i[0] for i in self.paths.values()]
         self.valid_values = overwrites
 
-    def check_type(self, model_type: str):
+
+@operation("GetSubmodelElementByPath_AasRepository")
+class SubmodelElementBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+    supported_submodel_elements = {
+        'SubmodelElementCollection',
+        'SubmodelElementList',
+        'Entity',
+        'BasicEventElement',
+        'Capability',
+        'Operation',
+        'Property',
+        'MultiLanguageProperty',
+        'Range',
+        'ReferenceElement',
+        'RelationshipElement',
+        'AnnotatedRelationshipElement',
+        'Blob',
+        'File',
+    }
+
+    def check_type(self, model_type: str, level: str, extent: str):
         if model_type not in self.paths:
             abort("No such element present", level=Level.WARNING)
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
-        graph = generate_all(self.operation, self.sample_cache, valid_values)
-        for i in graph.generate_paths():
-            request: Request = graph.execute(i.path)
-            if i.is_valid:
-                has_extend = 'extend' in request.query_parameters
-                has_level = 'level' in request.query_parameters
-                if (not has_extend and not has_level) or \
-                        model_type in ['SubmodelElementCollection', 'SubmodelElementList', 'Entity'] or \
-                        model_type in ['Blob'] and not has_level:
-                    _invoke(request, self.conf, True)
-                else:
-                    self.execute_syntactic_test(request)
+        valid_values['level'] = level
+        valid_values['extent'] = extent
 
-    def execute_semantic_tests(self):
-        # TODO: for unsupported elements, check if 4xx is returned
-        for model_type in self.supported_submodel_elements:
+        request = generate_one_valid(self.operation, self.sample_cache, valid_values)
+        data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
+
+    def test_no_params(self):
+        for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type)
+                self.check_type(model_type, level='', extent='')
+
+    def test_level_deep(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='deep', extent='')
+
+    def test_level_core(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='core', extent='')
+
+    def test_extend_with_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='', extent='withBlobValue')
+
+    def test_extend_without_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='', extent='withoutBlobValue')
 
 
-@operation("GetSubmodelElementByPath-Metadata_AasRepository")
 @operation("GetSubmodelElementByPath-ValueOnly_AasRepository")
-class SubmodelElementMetadataBySuperpathSuite(SubmodelElementBySuperpathSuite):
-    supported_submodel_elements = [
+class SubmodelElementValueOnlyBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+    supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
         'Entity',
@@ -882,16 +911,156 @@ class SubmodelElementMetadataBySuperpathSuite(SubmodelElementBySuperpathSuite):
         'AnnotatedRelationshipElement',
         'Blob',
         'File',
-    ]
+    }
+
+    def check_type(self, model_type: str, level: str, extent: str):
+        if model_type not in self.paths:
+            abort("No such element present", level=Level.WARNING)
+        id_short_path = self.paths[model_type][0]
+        valid_values = self.valid_values.copy()
+        valid_values['idShortPath'] = [id_short_path]
+        valid_values['level'] = level
+        valid_values['extent'] = extent
+
+        request = generate_one_valid(self.operation, self.sample_cache, valid_values)
+        data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
+
+    def test_no_params(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='', extent='')
+
+    def test_level_deep(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='deep', extent='')
+
+    def test_level_core(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='core', extent='')
+
+    def test_extend_with_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='', extent='withBlobValue')
+
+    def test_extend_without_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='', extent='withoutBlobValue')
 
 
 @operation("GetSubmodelElementByPath-Path_AasRepository")
-class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuite):
-    supported_submodel_elements = [
+class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+    supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
         'Entity',
-    ]
+        'BasicEventElement',
+        'Capability',
+        'Operation',
+        'Property',
+        'MultiLanguageProperty',
+        'Range',
+        'ReferenceElement',
+        'RelationshipElement',
+        'AnnotatedRelationshipElement',
+        'Blob',
+        'File',
+    }
+
+    def check_type(self, model_type: str, level: str):
+        if model_type not in self.paths:
+            abort("No such element present", level=Level.WARNING)
+        id_short_path = self.paths[model_type][0]
+        valid_values = self.valid_values.copy()
+        valid_values['idShortPath'] = [id_short_path]
+        valid_values['level'] = level
+
+        request = generate_one_valid(self.operation, self.sample_cache, valid_values)
+        data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
+
+    def test_no_params(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='')
+
+    def test_level_deep(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='deep')
+
+    def test_level_core(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='core')
+
+
+@operation("GetSubmodelElementByPath-Reference_AasRepository")
+class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+    supported_submodel_elements = {
+        'SubmodelElementCollection',
+        'SubmodelElementList',
+        'Entity',
+        'BasicEventElement',
+        'Capability',
+        'Operation',
+        'Property',
+        'MultiLanguageProperty',
+        'Range',
+        'ReferenceElement',
+        'RelationshipElement',
+        'AnnotatedRelationshipElement',
+        'Blob',
+        'File',
+    }
+
+    def check_type(self, model_type: str):
+        if model_type not in self.paths:
+            abort("No such element present", level=Level.WARNING)
+        id_short_path = self.paths[model_type][0]
+        valid_values = self.valid_values.copy()
+        valid_values['idShortPath'] = [id_short_path]
+        request = generate_one_valid(self.operation, self.sample_cache, valid_values)
+        data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
+
+    def test_no_params(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type)
+
+
+@operation("GetSubmodelElementByPath-Metadata_AasRepository")
+class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+    supported_submodel_elements = {
+        'SubmodelElementCollection',
+        'SubmodelElementList',
+        'Entity',
+        'BasicEventElement',
+        'Property',
+        'MultiLanguageProperty',
+        'Range',
+        'ReferenceElement',
+        'RelationshipElement',
+        'AnnotatedRelationshipElement',
+        'Blob',
+        'File',
+    }
+
+    def check_type(self, model_type: str):
+        if model_type not in self.paths:
+            abort("No such element present", level=Level.WARNING)
+        id_short_path = self.paths[model_type][0]
+        valid_values = self.valid_values.copy()
+        valid_values['idShortPath'] = [id_short_path]
+        request = generate_one_valid(self.operation, self.sample_cache, valid_values)
+        data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
+
+    def test_no_params(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type)
 
 
 @operation("GetFileByPath_AasRepository")
