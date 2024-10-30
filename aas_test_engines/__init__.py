@@ -1,2 +1,2 @@
 def version() -> str:
-    return "1.4.0"
+    return "0.6.0"
