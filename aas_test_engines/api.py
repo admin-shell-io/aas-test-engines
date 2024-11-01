@@ -1094,17 +1094,6 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
         'SubmodelElementCollection',
         'SubmodelElementList',
         'Entity',
-        'BasicEventElement',
-        'Capability',
-        'Operation',
-        'Property',
-        'MultiLanguageProperty',
-        'Range',
-        'ReferenceElement',
-        'RelationshipElement',
-        'AnnotatedRelationshipElement',
-        'Blob',
-        'File',
     }
 
     def check_type(self, model_type: str, level: str):
