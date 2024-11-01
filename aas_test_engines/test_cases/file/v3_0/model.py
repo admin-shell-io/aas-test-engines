@@ -3,14 +3,14 @@ from .parse import StringFormattedValue, abstract, CheckConstraintException, req
 from dataclasses import dataclass
 from typing import List, Optional, Set
 from enum import Enum
-from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc
+from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc, is_bcp_47_for_english
 
 # TODO: AASd-021
 # TODO: AASd-022
 # TODO: AASd-077
 
-
 # 5.3.11.2 Primitive Data Types
+
 
 @dataclass
 class LangStringSet:
@@ -23,17 +23,15 @@ class LangStringSet:
 
     def check_language(self):
         if not is_bcp_lang_string(self.language):
-            raise CheckConstraintException("Invalid language")
+            raise CheckConstraintException("Property 'language' does not contain a language")
         if len(self.language) <= 1:
-            raise CheckConstraintException("language too short")
+            raise CheckConstraintException("property 'language' must not be empty")
 
     def check_text(self):
-        if not is_bcp_lang_string(self.language):
-            raise CheckConstraintException("Invalid language")
         if len(self.text) <= 1:
-            raise CheckConstraintException("text too short")
+            raise CheckConstraintException("Property 'text' must not be empty")
         if len(self.text) > self._max_len_text:
-            raise CheckConstraintException("text too long")
+            raise CheckConstraintException(f"Property 'text' is too long ({len(self.text)} > {self._max_len_text}")
 
 
 class MultiLanguageNameType(LangStringSet, max_len_text=128):
@@ -370,28 +368,6 @@ class ValueList:
     value_reference_pairs: List[ValueReferencePair]
 
 
-class DataTypeIec61360(Enum):
-    BLOB = 'BLOB'
-    BOOLEAN = 'BOOLEAN'
-    DATE = 'DATE'
-    FILE = 'FILE'
-    HTML = 'HTML'
-    INTEGER_COUNT = 'INTEGER_COUNT'
-    INTEGER_CURRENCY = 'INTEGER_CURRENCY'
-    INTEGER_MEASURE = 'INTEGER_MEASURE'
-    IRDI = 'IRDI'
-    IRI = 'IRI'
-    RATIONAL = 'RATIONAL'
-    RATIONAL_MEASURE = 'RATIONAL_MEASURE'
-    REAL_COUNT = 'REAL_COUNT'
-    REAL_CURRENCY = 'REAL_CURRENCY'
-    REAL_MEASURE = 'REAL_MEASURE'
-    STRING = 'STRING'
-    STRING_TRANSLATABLE = 'STRING_TRANSLATABLE'
-    TIME = 'TIME'
-    TIMESTAMP = 'TIMESTAMP'
-
-
 @dataclass
 class LevelType:
     min: bool
@@ -434,10 +410,6 @@ class ShortNameTypeIec61360(LangStringSet, max_len_text=18):
     pass
 
 
-class ValueFormatTypeIec61360(StringFormattedValue):
-    min_length = 1
-
-
 class ValueTypeIec61360(StringFormattedValue):
     min_length = 1
     max_length = 2000
@@ -451,16 +423,49 @@ class NonEmptyString(StringFormattedValue):
 class DataSpecificationIec61360(DataSpecificationContent):
     preferred_name: List[PreferredNameTypeIec61360]
     short_name: Optional[List[ShortNameTypeIec61360]]
-    unit: Optional[NonEmptyString]  # TODO: according to spec, an empty string is ok
+    unit: Optional[NonEmptyString]
     unit_id: Optional[Reference]
-    source_of_definition: Optional[NonEmptyString]  # TODO: according to spec, an empty string is ok
-    symbol: Optional[NonEmptyString]  # TODO: according to spec, an empty string is ok
+    source_of_definition: Optional[NonEmptyString]
+    symbol: Optional[NonEmptyString]
     data_type: Optional[DataTypeIec61360]
     definition: Optional[List[DefinitionTypeIec61360]]
-    value_format: Optional[ValueFormatTypeIec61360]
+    value_format: Optional[NonEmptyString]
     value_list: Optional[ValueList]
     value: Optional[ValueTypeIec61360]
     level_type: Optional[LevelType]
+
+    def check_aasc_3a_002(self):
+        """
+        Constraint AASc-3a-002: DataSpecificationIec61360/preferredName shall be provided at
+        least in English.
+        """
+        if not any(is_bcp_47_for_english(i.language) for i in self.preferred_name):
+            raise CheckConstraintException("Constraint AASc-3a-002: English language is missing")
+
+    def check_aasc_3a_009(self):
+        """
+        Constraint AASc-3a-009: If DataSpecificationIec61360/dataType is one of
+        INTEGER_MEASURE, REAL_MEASURE, RATIONAL_MEASURE,
+        INTEGER_CURRENCY, REAL_CURRENCY, then DataSpecificationIec61360/unit or
+        DataSpecificationIec61360/unitId shall be defined.
+        """
+        types = {
+            DataTypeIec61360.INTEGER_MEASURE,
+            DataTypeIec61360.REAL_MEASURE,
+            DataTypeIec61360.RATIONAL_MEASURE,
+            DataTypeIec61360.INTEGER_CURRENCY,
+            DataTypeIec61360.REAL_CURRENCY,
+        }
+        if self.data_type in types and (self.unit is None and self.unit_id is None):
+            raise CheckConstraintException("Constraint AASc-3a-009 violated: neither unit nor unit_id is set")
+
+    def check_aasc_3a_010(self):
+        """
+        Constraint AASc-3a-010: If DataSpecificationIec61360/value is not empty,
+        DataSpecificationIec61360/valueList shall be empty, and vice versa
+        """
+        if self.value is not None and self.value_list is not None:
+            raise CheckConstraintException("AASc-3a-010 violated: value and value_list cannot be set simultaneously")
 
 
 # 5.3.2.6 Has Semantics
@@ -662,15 +667,22 @@ class AssetInformation:
 
 
 @dataclass
-@ abstract
+@abstract
 class SubmodelElement(Referable, HasSemantics, Qualifiable, HasDataSpecification):
-    pass
+    def check_aasc_3a_050(self):
+        """
+        Constraint AASc-3a-050: If the DataSpecificationContent DataSpecificationIec61360 is used for an element,
+        the value of HasDataSpecification/dataSpecification shall contain the external reference to the IRI of the
+        corresponding data specification template https://adminshell.io/DataSpecificationTemplates/DataSpecificationIec61360/3.
+        """
+        # TODO
+
 
 # 5.3.7.6 Data Element
 
 
 @dataclass
-@ abstract
+@abstract
 class DataElement(SubmodelElement):
 
     def check_aasd_090(self):
@@ -1070,6 +1082,114 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
 class ConceptDescription(Identifiable, HasDataSpecification):
     # TODO: Note: it is recommended to use an external reference, i.e. Reference/type = ExternalReference.
     is_case_of: Optional[List[Reference]]
+
+    def _check_iec_61360(self, categories: Set[str], types, constraint):
+        if self.category is None or self.category.raw_value not in categories:
+            return
+        if self.embedded_data_specifications is None:
+            return
+        for idx, ds in enumerate(self.embedded_data_specifications):
+            if isinstance(ds.data_specification_content, DataSpecificationIec61360):
+                if ds.data_specification_content.data_type not in types:
+                    raise CheckConstraintException(f"Constraint {constraint} violated: embeddedDataSpecifications[{idx}].dataType is invalid")
+
+    def check_aasc_3a_004(self):
+        """
+        Constraint AASc-3a-004: For a ConceptDescription with category PROPERTY or VALUE using data
+        specification template IEC61360 (https://adminshell.io/DataSpecificationTemplates/DataSpecificationIec61360/3), DataSpecificationIec61360/dataType is
+        mandatory and shall be one of DATE, STRING, STRING_TRANSLATABLE, INTEGER_MEASURE,
+        INTEGER_COUNT, INTEGER_CURRENCY, REAL_MEASURE, REAL_COUNT, REAL_CURRENCY,
+        BOOLEAN, RATIONAL, RATIONAL_MEASURE, TIME, TIMESTAMP.
+        """
+        self._check_iec_61360({
+            'PROPERTY',
+            'VALUE'
+        }, {
+            'DATE',
+            'STRING',
+            'STRING_TRANSLATABLE',
+            'INTEGER_MEASURE',
+            'INTEGER_COUNT',
+            'INTEGER_CURRENCY',
+            'REAL_MEASURE',
+            'REAL_COUNT',
+            'REAL_CURRENCY',
+            'BOOLEAN',
+            'RATIONAL',
+            'RATIONAL_MEASURE',
+            'TIME',
+            'TIMESTAMP',
+        }, "AASc-3a-004")
+
+    def check_aasc_3a_005(self):
+        """
+        Constraint AASc-3a-005: For a ConceptDescription with category REFERENCE using data specification
+        template IEC61360 (https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIec61360/3),
+        DataSpecificationIec61360/dataType shall be one of STRING, IRI, IRDI.
+        """
+        self._check_iec_61360({
+            'REFERENCE',
+        }, {
+            'STRING',
+            'IRI',
+            'IRDI',
+        }, "AASc-3a-005")
+
+    def check_aasc_3a_006(self):
+        """
+        Constraint AASc-3a-006: For a ConceptDescription with category DOCUMENT using data specification
+        template IEC61360 (https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIec61360/3),
+        DataSpecificationIec61360/dataType shall be one of FILE, BLOB, HTML.
+        """
+        self._check_iec_61360({
+            'DOCUMENT',
+        }, {
+            'FILE',
+            'BLOB',
+            'HTML',
+        }, "AASc-3a-006")
+
+    def check_aasc_3a_007(self):
+        """
+        Constraint AASc-3a-007: For a ConceptDescription with category QUALIFIER_TYPE using data
+        specification template IEC61360 (https://adminshell.io/DataSpecificationTemplates/DataSpecificationIec61360/3), DataSpecificationIec61360/dataType is
+        mandatory and shall be defined.
+        """
+        if self.category is None or self.category.raw_value != 'QUALIFIER_TYPE':
+            return
+        if self.embedded_data_specifications is None:
+            return
+        for idx, ds in enumerate(self.embedded_data_specifications):
+            if isinstance(ds.data_specification_content, DataSpecificationIec61360):
+                if ds.data_specification_content.data_type is None:
+                    raise CheckConstraintException(f"Constraint AASc-3a-007 violated: embeddedDataSpecifications[{idx}].dataType is missing")
+
+    def check_aasc_3a_008(self):
+        """
+        Constraint AASc-3a-008: For a ConceptDescription using data specification template IEC61360
+        (https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIec61360/3),
+        DataSpecificationIec61360/definition is mandatory and shall be defined at least in English. Exception: the
+        concept description describes a value, i.e. DataSpecificationIec61360/value is defined.
+        """
+        if self.embedded_data_specifications is None:
+            return
+        for idx, ds in enumerate(self.embedded_data_specifications):
+            if isinstance(ds.data_specification_content, DataSpecificationIec61360):
+                if ds.data_specification_content.value is not None:
+                    continue
+                if ds.data_specification_content.definition is None:
+                    raise CheckConstraintException(f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition is missing")
+                if not any(is_bcp_47_for_english(i) for i in ds.data_specification_content.definition):
+                    raise CheckConstraintException(f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition.language is missing English.")
+
+    def check_aasc_3a_003(self):
+        """
+        Constraint AASc-3a-003: For a ConceptDescription referenced via ValueList/valueId and using data
+        specification template IEC61360 (https://adminshell.io/DataSpecificationTemplates/DataSpecificationIec61360/3), DataSpecificationIec61360/value shall be
+        set.
+        -> not checked
+        """
+        pass
 
 # 5.3.9 Environment
 
