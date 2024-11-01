@@ -1246,6 +1246,13 @@ class GenerateSerializationSuite(ApiTestSuite):
         request = generate_one_valid(self.operation, self.sample_cache, {'submodelIds': self.valid_submod_id})
         _invoke_and_decode(request, self.conf, True)
 
+    def test_include_concept_descriptions(self):
+        """
+        Invoke with includeConceptDescriptions
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {'includeConceptDescriptions': True})
+        _invoke_and_decode(request, self.conf, True)
+
 
 # /description
 
