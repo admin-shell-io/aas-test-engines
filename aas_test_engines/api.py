@@ -1197,20 +1197,26 @@ class GetFileByPathSuperpathSuite(ApiTestSuite):
         data = _invoke_and_decode(request, self.conf, True)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
-        overwrites = {
-            'aasIdentifier': [b64urlsafe(valid_id)],
-            'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
+        self.valid_values = {
+            'aasIdentifier': b64urlsafe(valid_id),
+            'submodelIdentifier': b64urlsafe(valid_submodel_id),
         }
         op = self.open_api.operations["GetAllSubmodelElements_AasRepository"]
-        request = generate_one_valid(op, self.sample_cache, overwrites)
+        request = generate_one_valid(op, self.sample_cache, self.valid_values)
         data = _invoke_and_decode(request, self.conf, True)
         paths = {}
         _collect_submodel_elements(_lookup(data, ['result']), paths, '')
         try:
-            overwrites['idShortPath'] = [paths['File']]
+            self.valid_values['idShortPath'] = paths['File']
         except KeyError:
             abort("No submodel element of type 'File' found, skipping test.")
-        self.valid_values = overwrites
+
+    def test_no_params(self):
+        """
+        Invoke without params
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
+        _invoke(request, self.conf, True)
 
 
 # /serialization
