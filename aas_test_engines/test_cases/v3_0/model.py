@@ -745,11 +745,11 @@ class BasicEventElement(EventElement):
 
     def check_observed(self):
         if self.observed.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("observed must be a model reference")
+            raise CheckConstraintException("Property 'observed' must be a model reference")
 
     def check_message_broker(self):
         if self.message_broker and self.message_broker.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("observed must be a model reference")
+            raise CheckConstraintException("Property 'observed' must be a model reference")
 
 # 5.3.7.4 Blob
 
@@ -788,10 +788,10 @@ class Entity(SubmodelElement):
         """
         if self.entity_type == EntityType.SelfManagedEntity:
             if self.global_asset_id is None and self.specific_asset_ids is None:
-                raise CheckConstraintException("Constraint AASd-014 violated: entity is self-manged by neither globalAssetId nor specificAssetId are set")
+                raise CheckConstraintException("Constraint AASd-014 violated: entity is self-manged but neither globalAssetId nor specificAssetId are set")
         else:
             if self.global_asset_id or self.specific_asset_ids:
-                raise CheckConstraintException("Constraint AASd-014 violated: entity is co-manged by either globalAssetId or specificAssetId are set")
+                raise CheckConstraintException("Constraint AASd-014 violated: entity is co-manged but either globalAssetId or specificAssetId are set")
 
     def check_aad_117(self):
         ensure_have_id_shorts(self.statements)
