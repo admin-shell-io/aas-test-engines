@@ -5,7 +5,7 @@ from typing import List, Dict, Optional, Tuple, Union, ForwardRef, Pattern, Call
 from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
 import re
-from .adapter import AdapterPath
+from .adapter import AdapterPath, JsonAdapter, XmlAdapter
 
 
 class CheckConstraintException(Exception):
@@ -233,3 +233,21 @@ def check_constraints(obj, result: AasTestResult, path: AdapterPath = AdapterPat
                 check_constraints(i, result, path + field.name + idx)
         else:
             check_constraints(value, result, path + field.name)
+
+
+def _parse_and_check(cls, adapter: Adapter) -> Tuple[object, AasTestResult]:
+    result_root = AasTestResult("Check")
+    result_meta_model = AasTestResult("Check meta model")
+    env = parse(cls, adapter, result_meta_model)
+    result_root.append(result_meta_model)
+    if result_root.ok():
+        result_constraints = AasTestResult("Check constraints")
+        check_constraints(env, result_constraints)
+        result_root.append(result_constraints)
+    return result_root, env
+
+def parse_and_check_json(cls, value: any) -> Tuple[object, AasTestResult]:
+    return _parse_and_check(cls, JsonAdapter(value, AdapterPath()))
+
+def parse_and_check_xml(cls, value: any) -> Tuple[object, AasTestResult]:
+    return _parse_and_check(cls, XmlAdapter(value, AdapterPath()))

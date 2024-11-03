@@ -20,6 +20,9 @@ import requests
 
 import base64
 
+from .model import AssetAdministrationShell, Environment
+from .parse import parse_and_check_json
+
 
 def b64urlsafe(value: str) -> str:
     return base64.urlsafe_b64encode(value.encode()).decode()
@@ -39,7 +42,7 @@ def _assert(predicate: bool, message, level: Level = Level.ERROR):
     if predicate:
         write(f'{message}: OK')
     else:
-        abort(f'{message}: Fail', level)
+        abort(AasTestResult('{message}: Fail', level))
 
 
 def _stringify_path(path: List[Union[str, int]]) -> str:
@@ -427,7 +430,7 @@ class ExecConf:
 def _check_server(exec_conf: ExecConf) -> bool:
     with start(f'Trying to reach {exec_conf.server}'):
         if exec_conf.dry:
-            write("Skipped due to dry run", Level.WARNING)
+            write(AasTestResult("Skipped due to dry run", Level.WARNING))
             return True
 
         try:
@@ -435,7 +438,7 @@ def _check_server(exec_conf: ExecConf) -> bool:
             write('OK')
             return True
         except requests.exceptions.RequestException as e:
-            write('Failed to reach: {}'.format(e), Level.CRITICAL)
+            write(AasTestResult('Failed to reach: {}'.format(e), Level.CRITICAL))
             return False
 
 
@@ -456,7 +459,6 @@ def _load_spec() -> AasSpec:
 _spec = _load_spec()
 
 
-
 def _shorten(content: bytes, max_len: int = 300) -> str:
     try:
         content = content.decode()
@@ -471,7 +473,7 @@ def _get_json(response: requests.models.Response) -> dict:
     try:
         return response.json()
     except requests.exceptions.JSONDecodeError as e:
-        abort(f"Cannot decode as JSON: {e}", Level.CRITICAL)
+        abort(AasTestResult(f"Cannot decode as JSON: {e}", Level.CRITICAL))
 
 
 def _invoke(request: Request, conf: ExecConf, positive_test) -> requests.models.Response:
@@ -479,7 +481,7 @@ def _invoke(request: Request, conf: ExecConf, positive_test) -> requests.models.
     response = requests.Session().send(prepared_request, verify=conf.verify)
     write(f"Response: ({response.status_code}): {_shorten(response.content)}")
     if response.status_code >= 500:
-        abort(f"Got status code {response.status_code}", Level.CRITICAL)
+        abort(AasTestResult(f"Got status code {response.status_code}", Level.CRITICAL))
     if positive_test:
         if response.status_code < 200 or response.status_code > 299:
             abort(f"Expected status code 2xx, but got {response.status_code}")
@@ -498,6 +500,22 @@ def _invoke_and_decode(request: Request, conf: ExecConf, positive_test: bool) ->
         if not expected_responses:
             abort(f"Invalid status code {response.status_code}")
         data = _get_json(response)
+        ref = expected_responses[0].schema.get('$ref')
+        if ref == '#/components/schemas/AssetAdministrationShell':
+            result, aas = parse_and_check_json(AssetAdministrationShell, data)
+            write(result)
+            return data
+        if ref == '#/components/schemas/Environment':
+            result, aas = parse_and_check_json(Environment, data)
+            write(result)
+            return data
+        if ref == '#/components/schemas/GetAssetAdministrationShellsResult':
+            entries = data.get('result', None)
+            if entries:
+                result, aas = parse_and_check_json(List[AssetAdministrationShell], entries)
+                write(result)
+            # Fallthrough to check against schema for paging_metadata
+
         validator = parse_schema({**expected_responses[0].schema, '$schema': 'https://json-schema.org/draft/2020-12/schema'}, ParseConfig(raise_on_unknown_format=False))
         validation_result = validator.validate(data)
         if validation_result.ok:
@@ -596,7 +614,7 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         Test pagination
         """
         if self.cursor is None:
-            abort("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING)
+            abort(AasTestResult("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING))
         request = generate_one_valid(self.operation, self.sample_cache, {'cursor': self.cursor, 'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
         data = _lookup(data, ['result'])
@@ -711,7 +729,7 @@ class GetAllSubmodelRefsTestSuite(ApiTestSuite):
         Check pagination
         """
         if self.cursor is None:
-            abort("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING)
+            abort(AasTestResult("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING))
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id), 'cursor': self.cursor, 'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
         data = _lookup(data, ['result'])
@@ -986,7 +1004,7 @@ class SubmodelElementBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
 
     def check_type(self, model_type: str, level: str, extent: str):
         if model_type not in self.paths:
-            abort("No such element present", level=Level.WARNING)
+            abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
@@ -1041,7 +1059,7 @@ class SubmodelElementValueOnlyBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
 
     def check_type(self, model_type: str, level: str, extent: str):
         if model_type not in self.paths:
-            abort("No such element present", level=Level.WARNING)
+            abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
@@ -1087,7 +1105,7 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
 
     def check_type(self, model_type: str, level: str):
         if model_type not in self.paths:
-            abort("No such element present", level=Level.WARNING)
+            abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
@@ -1133,7 +1151,7 @@ class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
 
     def check_type(self, model_type: str):
         if model_type not in self.paths:
-            abort("No such element present", level=Level.WARNING)
+            abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
@@ -1165,7 +1183,7 @@ class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
 
     def check_type(self, model_type: str):
         if model_type not in self.paths:
-            abort("No such element present", level=Level.WARNING)
+            abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]

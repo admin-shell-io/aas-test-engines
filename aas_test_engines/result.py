@@ -1,4 +1,4 @@
-from typing import List, TypeVar
+from typing import List, TypeVar, Union
 from enum import Enum
 import os
 import html
@@ -137,18 +137,25 @@ class ResultException(Exception):
     def __init__(self, result) -> None:
         self.result = result
 
+def _as_result(message: Union[str, AasTestResult], level: Level):
+    if isinstance(message, AasTestResult):
+        return message
+    assert isinstance(message, str)
+    return AasTestResult(message, level=level)
 
-def write(message: str, level=Level.INFO):
+
+def write(message: Union[str, AasTestResult]):
     if not managers:
         raise RuntimeError("No open context")
-    result = AasTestResult(message, level=level)
-    managers[-1].result.append(result)
+    message = _as_result(message, Level.INFO)
+    managers[-1].result.append(message)
 
 
-def start(message: str, level=Level.INFO) -> ContextManager:
-    result = AasTestResult(message, level=level)
+def start(message: Union[str, AasTestResult]) -> ContextManager:
+    result = _as_result(message, Level.INFO)
     return ContextManager(result)
 
 
-def abort(message: str, level=Level.ERROR):
-    raise ResultException(AasTestResult(message, level=level))
+def abort(message: Union[str, AasTestResult]):
+    result = _as_result(message, Level.ERROR)
+    raise ResultException(result)
