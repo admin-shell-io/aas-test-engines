@@ -17,7 +17,7 @@ from xml.etree import ElementTree
 from json_schema_tool.schema import SchemaValidator, SchemaValidator, ParseConfig, parse_schema
 import zipfile
 
-from aas_test_engines.test_cases.file.v3_0 import json_to_env, xml_to_env
+from aas_test_engines.test_cases.v3_0 import json_to_env, xml_to_env
 
 from ._util import un_group, normpath, splitpath
 
