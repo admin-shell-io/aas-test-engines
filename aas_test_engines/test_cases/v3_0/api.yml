@@ -9,7 +9,7 @@ info:
   license:
     name: CC BY 4.0
     url: https://creativecommons.org/licenses/by/4.0/
-  version: V3.0.2
+  version: V3.0.3
 servers:
 - url: "{protocol}://{host_name}:{port}/api/{version_prefix}"
   variables:
@@ -987,7 +987,7 @@ paths:
     patch:
       tags:
       - Asset Administration Shell API
-      summary: Updates teh values of the Submodel
+      summary: Updates the values of the Submodel
       operationId: PatchSubmodel-ValueOnly_AAS
       parameters:
       - name: submodelIdentifier
@@ -5429,7 +5429,7 @@ paths:
       parameters:
       - name: assetIds
         in: query
-        description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.2#/components/schemas/SpecificAssetId)."
+        description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.3#/components/schemas/SpecificAssetId)."
         required: false
         style: form
         explode: true
@@ -5575,7 +5575,7 @@ paths:
       parameters:
       - name: assetIds
         in: query
-        description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.2#/components/schemas/SpecificAssetId)."
+        description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.3#/components/schemas/SpecificAssetId)."
         required: false
         style: form
         explode: true
@@ -6981,7 +6981,7 @@ paths:
     patch:
       tags:
       - Asset Administration Shell Repository API
-      summary: Updates teh values of the Submodel
+      summary: Updates the values of the Submodel
       operationId: PatchSubmodelById-ValueOnly_AasRepository
       parameters:
       - name: aasIdentifier
@@ -14268,7 +14268,7 @@ paths:
       parameters:
       - name: assetIds
         in: query
-        description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.2#/components/schemas/SpecificAssetId)."
+        description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.3#/components/schemas/SpecificAssetId)."
         required: false
         style: form
         explode: true
@@ -14988,6 +14988,12 @@ components:
           items:
             $ref: '#/components/schemas/Reference'
     Reference:
+      allOf:
+      - $ref: '#/components/schemas/ReferenceParent'
+      - properties:
+          referredSemanticId:
+            $ref: '#/components/schemas/ReferenceParent'
+    ReferenceParent:
       required:
       - keys
       - type
@@ -14995,8 +15001,6 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/ReferenceTypes'
-        referredSemanticId:
-          $ref: '#/components/schemas/Reference'
         keys:
           minItems: 1
           type: array
@@ -15917,44 +15921,12 @@ components:
       type: object
       properties:
         semanticId:
-          $ref: '#/components/schemas/Reference_1'
+          $ref: '#/components/schemas/Reference'
         supplementalSemanticIds:
           minItems: 1
           type: array
           items:
-            $ref: '#/components/schemas/Reference_1'
-    Reference_1:
-      allOf:
-      - $ref: '#/components/schemas/ReferenceParent'
-      - properties:
-          referredSemanticId:
-            $ref: '#/components/schemas/ReferenceParent'
-    ReferenceParent:
-      required:
-      - keys
-      - type
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/ReferenceTypes'
-        keys:
-          minItems: 1
-          type: array
-          items:
-            $ref: '#/components/schemas/Key_1'
-    Key_1:
-      required:
-      - type
-      - value
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/KeyTypes'
-        value:
-          maxLength: 2000
-          minLength: 1
-          pattern: "^([\\t\\n\\r -퟿-�]|\\ud800[\\udc00-\\udfff]|[\\ud801-\\udbfe][\\udc00-\\udfff]|\\udbff[\\udc00-\\udfff])*$"
-          type: string
+            $ref: '#/components/schemas/Reference'
     Qualifiable_1:
       required:
       - modelType
@@ -15986,7 +15958,7 @@ components:
           value:
             type: string
           valueId:
-            $ref: '#/components/schemas/Reference_1'
+            $ref: '#/components/schemas/Reference'
     HasKind_1:
       type: object
       properties:
@@ -16795,7 +16767,7 @@ components:
     AssetIds:
       name: assetIds
       in: query
-      description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.2#/components/schemas/SpecificAssetId)."
+      description: "A list of specific Asset identifiers. Every single value asset identifier is a base64-url-encoded [SpecificAssetId](https://api.swaggerhub.com/domains/Plattform_i40/Part1-MetaModel-Schemas/V3.0.3#/components/schemas/SpecificAssetId)."
       required: false
       style: form
       explode: true
