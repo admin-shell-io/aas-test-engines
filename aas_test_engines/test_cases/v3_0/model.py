@@ -1179,7 +1179,7 @@ class ConceptDescription(Identifiable, HasDataSpecification):
                     continue
                 if ds.data_specification_content.definition is None:
                     raise CheckConstraintException(f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition is missing")
-                if not any(is_bcp_47_for_english(i) for i in ds.data_specification_content.definition):
+                if not any(is_bcp_47_for_english(i.language) for i in ds.data_specification_content.definition):
                     raise CheckConstraintException(f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition.language is missing English.")
 
     def check_aasc_3a_003(self):
