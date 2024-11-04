@@ -438,7 +438,7 @@ def _check_server(exec_conf: ExecConf) -> bool:
             write('OK')
             return True
         except requests.exceptions.RequestException as e:
-            write(AasTestResult('Failed to reach: {}'.format(e), Level.CRITICAL))
+            write(AasTestResult('Failed to reach: {}'.format(e), level=Level.CRITICAL))
             return False
 
 
@@ -471,7 +471,10 @@ def _shorten(content: bytes, max_len: int = 300) -> str:
 
 def _get_json(response: requests.models.Response) -> dict:
     try:
-        return response.json()
+        data = response.json()
+        if not isinstance(data, (dict, list)):
+            abort(f"Expected JSON, got {type(data)}")
+        return data
     except requests.exceptions.JSONDecodeError as e:
         abort(AasTestResult(f"Cannot decode as JSON: {e}", Level.CRITICAL))
 
@@ -1002,14 +1005,16 @@ class SubmodelElementBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
         'File',
     }
 
-    def check_type(self, model_type: str, level: str, extent: str):
+    def check_type(self, model_type: str, level: Optional[str], extent: Optional[str]):
         if model_type not in self.paths:
             abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
-        valid_values['level'] = level
-        valid_values['extent'] = extent
+        if level:
+            valid_values['level'] = level
+        if extent:
+            valid_values['extent'] = extent
 
         request = generate_one_valid(self.operation, self.sample_cache, valid_values)
         data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
@@ -1017,7 +1022,7 @@ class SubmodelElementBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
     def test_no_params(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='', extent='')
+                self.check_type(model_type, level=None, extent='')
 
     def test_level_deep(self):
         for model_type in self.all_submodel_elements:
@@ -1032,12 +1037,12 @@ class SubmodelElementBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
     def test_extend_with_blob_value(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='', extent='withBlobValue')
+                self.check_type(model_type, level=None, extent='withBlobValue')
 
     def test_extend_without_blob_value(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='', extent='withoutBlobValue')
+                self.check_type(model_type, level=None, extent='withoutBlobValue')
 
 
 @operation("GetSubmodelElementByPath-ValueOnly_AasRepository")
@@ -1057,14 +1062,16 @@ class SubmodelElementValueOnlyBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
         'File',
     }
 
-    def check_type(self, model_type: str, level: str, extent: str):
+    def check_type(self, model_type: str, level: Optional[str], extent: Optional[str]):
         if model_type not in self.paths:
             abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
-        valid_values['level'] = level
-        valid_values['extent'] = extent
+        if level:
+            valid_values['level'] = level
+        if extent:
+            valid_values['extent'] = extent
 
         request = generate_one_valid(self.operation, self.sample_cache, valid_values)
         data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
@@ -1072,27 +1079,27 @@ class SubmodelElementValueOnlyBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
     def test_no_params(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='', extent='')
+                self.check_type(model_type, level=None, extent=None)
 
     def test_level_deep(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='deep', extent='')
+                self.check_type(model_type, level='deep', extent=None)
 
     def test_level_core(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='core', extent='')
+                self.check_type(model_type, level='core', extent=None)
 
     def test_extend_with_blob_value(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='', extent='withBlobValue')
+                self.check_type(model_type, level=None, extent='withBlobValue')
 
     def test_extend_without_blob_value(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='', extent='withoutBlobValue')
+                self.check_type(model_type, level=None, extent='withoutBlobValue')
 
 
 @operation("GetSubmodelElementByPath-Path_AasRepository")
@@ -1103,13 +1110,14 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
         'Entity',
     }
 
-    def check_type(self, model_type: str, level: str):
+    def check_type(self, model_type: str, level: Optional[str]):
         if model_type not in self.paths:
             abort(AasTestResult("No such element present", level=Level.WARNING))
         id_short_path = self.paths[model_type][0]
         valid_values = self.valid_values.copy()
         valid_values['idShortPath'] = [id_short_path]
-        valid_values['level'] = level
+        if level:
+            valid_values['level'] = level
 
         request = generate_one_valid(self.operation, self.sample_cache, valid_values)
         data = _invoke_and_decode(request, self.conf, model_type in self.supported_submodel_elements)
@@ -1117,7 +1125,7 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
     def test_no_params(self):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
-                self.check_type(model_type, level='')
+                self.check_type(model_type, level=None)
 
     def test_level_deep(self):
         for model_type in self.all_submodel_elements:
@@ -1258,7 +1266,8 @@ class GenerateSerializationSuite(ApiTestSuite):
         Invoke with includeConceptDescriptions
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'includeConceptDescriptions': True})
-        _invoke_and_decode(request, self.conf, True)
+        data = _invoke_and_decode(request, self.conf, True)
+        _assert('conceptDescriptions' in data, 'contains conceptDescriptions', Level.WARNING)
 
 
 # /description
