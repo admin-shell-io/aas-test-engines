@@ -17,12 +17,30 @@
                 {
                     "modelType": "SubmodelElementCollection",
                     "idShort": "ContactInformation",
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    },
                     "value": [
                         {
                             "modelType": "Property",
                             "idShort": "RoleOfContactPerson",
                             "valueType": "xs:string",
-                            "value": "0173-1#07-AAS931#001"
+                            "value": "0173-1#07-AAS931#001",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "0173-1#02-AAO204#003"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            }
                         },
                         {
                             "modelType": "MultiLanguageProperty",
@@ -38,7 +56,16 @@
                             "modelType": "Property",
                             "idShort": "Language",
                             "valueType": "xs:string",
-                            "value": "de"
+                            "value": "de",
+                            "semanticId": {
+                                "keys": [
+                                    {
+                                        "type": "GlobalReference",
+                                        "value": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Language"
+                                    }
+                                ],
+                                "type": "ExternalReference"
+                            }
                         },
                         {
                             "modelType": "Property",
