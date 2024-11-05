@@ -732,7 +732,7 @@ class GetAllSubmodelRefsTestSuite(ApiTestSuite):
         Check pagination
         """
         if self.cursor is None:
-            abort(AasTestResult("Cannot check pagination, there must be at least 2 shells", level=Level.WARNING))
+            abort(AasTestResult("Cannot check pagination, there must be at least 2 submodels", level=Level.WARNING))
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id), 'cursor': self.cursor, 'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
         data = _lookup(data, ['result'])
