@@ -86,7 +86,7 @@ class StringFormattedValue:
         return self.raw_value == other.raw_value
 
     def __str__(self) -> str:
-        return f"*{self.raw_value}"
+        return self.raw_value
 
 
 def parse_string_formatted_value(cls, value: Adapter, result: AasTestResult) -> StringFormattedValue:
@@ -166,17 +166,27 @@ def parse_concrete_object(cls, adapter: Adapter, result: AasTestResult):
             result.append(AasTestResult(f"Model typ missing @ {adapter.path}", level=Level.ERROR))
 
     args = {}
+    all_fields = set()
     for field in fields(cls):
         field_name = to_lower_camel_case(field.name)
+        all_fields.add(field_name)
         required, field_type = unwrap_optional(field.type)
         try:
             obj_value = obj[field_name]
         except KeyError:
             if required:
-                result.append(AasTestResult(f"Missing attribute {field_name}", level=Level.ERROR))
-            args[field.name] = None
+                result.append(AasTestResult(f"Missing attribute {field_name} @ {adapter.path}", level=Level.ERROR))
+                args[field.name] = INVALID
+            else:
+                args[field.name] = None
             continue
         args[field.name] = parse(field_type, obj_value, result)
+
+    # Check unknown additional attributes
+    for key in obj.keys():
+        if key not in all_fields:
+            result.append(AasTestResult(f"Unknown additional attribute {key} @ {adapter.path}", level=Level.ERROR))
+
     return cls(**args)
 
 
@@ -210,11 +220,13 @@ def parse(cls, obj_value: Adapter, result: AasTestResult):
             return parse_enum(cls, obj_value, result)
         elif isinstance(cls, StringFormattedValue.__class__):
             return parse_string_formatted_value(cls, obj_value, result)
-    print(origin)
-    print(getattr(cls, '__args__', None))
-    print(obj_value)
-    print(cls)
-    raise NotImplementedError()
+    raise NotImplementedError(
+        f"There is no parsing implemented for:\n"
+        f"  origin:    {origin}\n"
+        f"  args:      {getattr(cls, '__args__', None)}\n"
+        f"  obj_value: {obj_value}\n"
+        f"  cls:       {cls}\n"
+    )
 
 
 def check_constraints(obj, result: AasTestResult, path: AdapterPath = AdapterPath()):
@@ -246,8 +258,10 @@ def _parse_and_check(cls, adapter: Adapter) -> Tuple[object, AasTestResult]:
         result_root.append(result_constraints)
     return result_root, env
 
-def parse_and_check_json(cls, value: any) -> Tuple[object, AasTestResult]:
+
+def parse_and_check_json(cls, value: any) -> Tuple[AasTestResult, object]:
     return _parse_and_check(cls, JsonAdapter(value, AdapterPath()))
 
-def parse_and_check_xml(cls, value: any) -> Tuple[object, AasTestResult]:
+
+def parse_and_check_xml(cls, value: any) -> Tuple[AasTestResult, object]:
     return _parse_and_check(cls, XmlAdapter(value, AdapterPath()))

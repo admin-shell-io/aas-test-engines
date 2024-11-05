@@ -24,11 +24,11 @@ class LangStringSet:
     def check_language(self):
         if not is_bcp_lang_string(self.language):
             raise CheckConstraintException("Property 'language' does not contain a language")
-        if len(self.language) <= 1:
+        if len(self.language) < 1:
             raise CheckConstraintException("property 'language' must not be empty")
 
     def check_text(self):
-        if len(self.text) <= 1:
+        if len(self.text) < 1:
             raise CheckConstraintException("Property 'text' must not be empty")
         if len(self.text) > self._max_len_text:
             raise CheckConstraintException(f"Property 'text' is too long ({len(self.text)} > {self._max_len_text}")
