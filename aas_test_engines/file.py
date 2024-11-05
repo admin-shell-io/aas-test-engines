@@ -84,17 +84,17 @@ def _get_schema(version: str, submodel_templates: Set[str]) -> AasSchema:
     return schema
 
 
-def check_json_data(data: any, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
+def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult:
     result, env = json_to_env(data)
     return result
 
 
-def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION, submodel_templates: Set = set()) -> AasTestResult:
+def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
     try:
         data = json.load(file)
     except json.decoder.JSONDecodeError as e:
         return AasTestResult(f"Invalid JSON: {e}", '', Level.ERROR)
-    return check_json_data(data, version, submodel_templates)
+    return check_json_data(data, version)
 
 
 def check_xml_data(data: ElementTree, version: str = _DEFAULT_VERSION, submodel_templates: Set[str] = set()) -> AasTestResult:
