@@ -135,10 +135,9 @@ def _check_content_type(zipfile: zipfile.ZipFile) -> AasTestResult:
             expected_tag = f'{NS_CONTENT_TYPES}Types'
             if content_types.getroot().tag != expected_tag:
                 result.append(
-                    AasTestResult(f"root must have tag {expected_tag}, got {content_types.getroot().tag}", content_types_xml, Level.ERROR))
+                    AasTestResult(f"root must have tag {expected_tag}, got {content_types.getroot().tag}", Level.ERROR))
     except KeyError:
-        result.append(AasTestResult(
-            f"{content_types_xml} not found", Level.ERROR))
+        result.append(AasTestResult(f"{content_types_xml} not found", Level.ERROR))
 
     return result
 
@@ -190,8 +189,7 @@ def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, dir:
             continue
         visited_targets.add(target)
         if target not in zipfile.namelist():
-            result.append(AasTestResult(
-                f'Relationship has non-existing target {target}', Level.ERROR))
+            result.append(AasTestResult(f'Relationship has non-existing target {target}', Level.ERROR))
             continue
         r = _scan_relationships(zipfile, sub_rel, sub_dir + '/', file, visited_targets)
         if r:

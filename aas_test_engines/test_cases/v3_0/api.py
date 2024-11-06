@@ -32,7 +32,7 @@ def _map_error(parent: AasTestResult, error: SchemaValidationResult):
     for i in error.keyword_results:
         if i.ok():
             continue
-        kw_result = AasTestResult(i.error_message, '', Level.ERROR)
+        kw_result = AasTestResult(i.error_message, Level.ERROR)
         for j in i.sub_schema_results:
             _map_error(kw_result, j)
         parent.append(kw_result)
