@@ -78,7 +78,7 @@ def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestRes
     try:
         data = json.load(file)
     except json.decoder.JSONDecodeError as e:
-        return AasTestResult(f"Invalid JSON: {e}", '', Level.ERROR)
+        return AasTestResult(f"Invalid JSON: {e}", Level.ERROR)
     return check_json_data(data, version)
 
 
@@ -91,7 +91,7 @@ def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResu
     try:
         data = ElementTree.fromstring(file.read())
     except ElementTree.ParseError as e:
-        return AasTestResult(f"Invalid xml: {e}", '', Level.ERROR)
+        return AasTestResult(f"Invalid xml: {e}", Level.ERROR)
     return check_xml_data(data, version)
 
 
@@ -128,7 +128,7 @@ class Relationship:
 
 def _check_content_type(zipfile: zipfile.ZipFile) -> AasTestResult:
     content_types_xml = '[Content_Types].xml'
-    result = AasTestResult(f'Checking {content_types_xml}', content_types_xml)
+    result = AasTestResult(f'Checking {content_types_xml}')
     try:
         with zipfile.open(content_types_xml, 'r') as f:
             content_types = ElementTree.parse(f)
@@ -138,7 +138,7 @@ def _check_content_type(zipfile: zipfile.ZipFile) -> AasTestResult:
                     AasTestResult(f"root must have tag {expected_tag}, got {content_types.getroot().tag}", content_types_xml, Level.ERROR))
     except KeyError:
         result.append(AasTestResult(
-            f"{content_types_xml} not found", content_types_xml, Level.ERROR))
+            f"{content_types_xml} not found", Level.ERROR))
 
     return result
 
@@ -152,23 +152,22 @@ def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, dir:
         return None
     expected_tag = f"{NS_RELATIONSHIPS}Relationships"
     if relationships.tag != expected_tag:
-        return AasTestResult(f'Invalid root tag {relationships.tag}, expected {expected_tag}', relationships.tag, Level.ERROR)
+        return AasTestResult(f'Invalid root tag {relationships.tag}, expected {expected_tag}', Level.ERROR)
 
     if dir:
-        result = AasTestResult(f"Checking relationships of {dir}{file}", relationships.tag)
+        result = AasTestResult(f"Checking relationships of {dir}{file}")
     else:
-        result = AasTestResult(f"Checking root relationship", relationships.tag)
+        result = AasTestResult(f"Checking root relationship")
     for idx, rel in enumerate(relationships):
         if rel.tag != f"{NS_RELATIONSHIPS}Relationship":
             result.append(AasTestResult(
-                f'Invalid tag {rel.tag}', str(idx), Level.ERROR))
+                f'Invalid tag {rel.tag}', Level.ERROR))
             continue
         try:
             type = rel.attrib['Type']
             target = rel.attrib['Target']
         except KeyError as e:
-            result.append(AasTestResult(
-                f'Attribute {e} is missing', str(idx), Level.ERROR))
+            result.append(AasTestResult(f'Attribute {e} is missing', Level.ERROR))
             continue
 
         if type in DEPRECATED_TYPES:
@@ -184,15 +183,15 @@ def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, dir:
 
         sub_dir, file = splitpath(target)
         sub_rel = Relationship(type, target)
-        result.append(AasTestResult(f'Relationship {sub_rel.target} is of type {sub_rel.type}', str(idx), Level.INFO))
+        result.append(AasTestResult(f'Relationship {sub_rel.target} is of type {sub_rel.type}', Level.INFO))
         parent_rel.sub_rels.append(sub_rel)
         if target in visited_targets:
-            result.append(AasTestResult(f'Already checked {target}', str(idx), Level.INFO))
+            result.append(AasTestResult(f'Already checked {target}', Level.INFO))
             continue
         visited_targets.add(target)
         if target not in zipfile.namelist():
             result.append(AasTestResult(
-                f'Relationship has non-existing target {target}', str(idx), Level.ERROR))
+                f'Relationship has non-existing target {target}', Level.ERROR))
             continue
         r = _scan_relationships(zipfile, sub_rel, sub_dir + '/', file, visited_targets)
         if r:
@@ -202,18 +201,18 @@ def _scan_relationships(zipfile: zipfile.ZipFile, parent_rel: Relationship, dir:
 
 
 def _check_relationships(zipfile: zipfile.ZipFile, root_rel: Relationship) -> AasTestResult:
-    result = AasTestResult('Checking relationships', '')
+    result = AasTestResult('Checking relationships')
     visited_targets = set()
     r = _scan_relationships(zipfile, root_rel, '', '', visited_targets)
     if r:
         result.append(r)
     else:
-        result.append(AasTestResult(f"Root relationship does not exist", '', Level.ERROR))
+        result.append(AasTestResult(f"Root relationship does not exist", Level.ERROR))
     return result
 
 
 def _check_files(zipfile: zipfile.ZipFile, root_rel: Relationship, version: str) -> AasTestResult:
-    result = AasTestResult('Checking files', '')
+    result = AasTestResult('Checking files')
     origin_rels = root_rel.sub_rels_by_type(TYPE_AASX_ORIGIN)
     if len(origin_rels) != 1:
         result.append(AasTestResult(f"Expected exactly one aas origin, but found {len(origin_rels)}", level=Level.WARNING))
@@ -222,7 +221,7 @@ def _check_files(zipfile: zipfile.ZipFile, root_rel: Relationship, version: str)
         if not spec_rels:
             result.append(AasTestResult("No aas spec found", level=Level.WARNING))
         for aasx_spec in spec_rels:
-            sub_result = AasTestResult(f'Checking {aasx_spec.target}', aasx_spec.target)
+            sub_result = AasTestResult(f'Checking {aasx_spec.target}')
             try:
                 with zipfile.open(aasx_spec.target) as f:
                     if aasx_spec.target.endswith('.xml'):
@@ -230,7 +229,7 @@ def _check_files(zipfile: zipfile.ZipFile, root_rel: Relationship, version: str)
                     elif aasx_spec.target.endswith('.json'):
                         r = check_json_file(f, version)
                     else:
-                        r = AasTestResult('Unknown filetype', aasx_spec.target, Level.WARNING)
+                        r = AasTestResult('Unknown filetype', Level.WARNING)
                     sub_result.append(r)
             except KeyError:
                 return AasTestResult("File does not exist")
@@ -240,7 +239,7 @@ def _check_files(zipfile: zipfile.ZipFile, root_rel: Relationship, version: str)
 
 def check_aasx_data(zipfile: zipfile.ZipFile, version: str = _DEFAULT_VERSION) -> AasTestResult:
 
-    result = AasTestResult('Checking AASX package', '')
+    result = AasTestResult('Checking AASX package')
 
     result.append(_check_content_type(zipfile))
     if not result.ok():
