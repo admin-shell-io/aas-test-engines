@@ -256,6 +256,8 @@ def _parse_and_check(cls, adapter: Adapter) -> Tuple[object, AasTestResult]:
         result_constraints = AasTestResult("Check constraints")
         check_constraints(env, result_constraints)
         result_root.append(result_constraints)
+    else:
+        result_root.append(AasTestResult("Skipped checking of constraints", Level.WARNING))
     return result_root, env
 
 

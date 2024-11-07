@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 from aas_test_engines import api
+import sys
 
 conf = api.ExecConf(
-    server='http://aasx-server:5001/api/v3.0',
+    server=sys.argv[1] if len(sys.argv) == 2 else 'http://aasx-server:5001/api/v3.0',
 )
 
 result_aas_repo, mat = api.execute_tests(conf, "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002")

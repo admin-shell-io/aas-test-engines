@@ -3,7 +3,7 @@ from .parse import StringFormattedValue, abstract, CheckConstraintException, req
 from dataclasses import dataclass
 from typing import List, Optional, Set
 from enum import Enum
-from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc, is_bcp_47_for_english
+from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc, is_bcp_47_for_english, is_any_uri
 
 # TODO: AASd-021
 # TODO: AASd-022
@@ -23,15 +23,15 @@ class LangStringSet:
 
     def check_language(self):
         if not is_bcp_lang_string(self.language):
-            raise CheckConstraintException("Property 'language' does not contain a language")
+            raise CheckConstraintException("Constraint violated: Property 'language' does not contain a language according to BCP46")
         if len(self.language) < 1:
-            raise CheckConstraintException("property 'language' must not be empty")
+            raise CheckConstraintException("Constraint violated: Property 'language' must not be empty")
 
     def check_text(self):
         if len(self.text) < 1:
-            raise CheckConstraintException("Property 'text' must not be empty")
+            raise CheckConstraintException("Constraint violated: Property 'text' must not be empty")
         if len(self.text) > self._max_len_text:
-            raise CheckConstraintException(f"Property 'text' is too long ({len(self.text)} > {self._max_len_text}")
+            raise CheckConstraintException(f"Constraint violated: Property 'text' is too long ({len(self.text)} > {self._max_len_text}")
 
 
 class MultiLanguageNameType(LangStringSet, max_len_text=128):
@@ -76,6 +76,11 @@ class NameTypeString(StringFormattedValue):
 class PathString(StringFormattedValue):
     min_length = 1
     max_length = 2000
+
+    def __init__(self, raw_value):
+        super().__init__(raw_value)
+        if not is_any_uri(raw_value):
+            raise ValueError("Not a valid path")
 
 
 class RevisionString(StringFormattedValue):
@@ -440,7 +445,7 @@ class DataSpecificationIec61360(DataSpecificationContent):
         least in English.
         """
         if not any(is_bcp_47_for_english(i.language) for i in self.preferred_name):
-            raise CheckConstraintException("Constraint AASc-3a-002: English language is missing")
+            raise CheckConstraintException("Constraint AASc-3a-002 violated: English language is missing")
 
     def check_aasc_3a_009(self):
         """
@@ -465,7 +470,7 @@ class DataSpecificationIec61360(DataSpecificationContent):
         DataSpecificationIec61360/valueList shall be empty, and vice versa
         """
         if self.value is not None and self.value_list is not None:
-            raise CheckConstraintException("AASc-3a-010 violated: value and value_list cannot be set simultaneously")
+            raise CheckConstraintException("Constraint AASc-3a-010 violated: value and value_list cannot be set simultaneously")
 
 
 # 5.3.2.6 Has Semantics
@@ -485,7 +490,7 @@ class HasSemantics:
         semantic ID (HasSemantics/semanticId)
         """
         if self.supplemental_semantic_ids is not None and self.semantic_id is None:
-            raise CheckConstraintException("AASd-118 violated: supplementalSemanticId is given but semanticId is missing")
+            raise CheckConstraintException("Constraint AASd-118 violated: supplementalSemanticId is given but semanticId is missing")
 
 # 5.3.2.4 Extensions
 
@@ -551,7 +556,7 @@ class AdministrativeInformation(HasDataSpecification):
         requires a version. If there is no version, there is no revision. Revision is optional.
         """
         if self.revision is not None and self.version is None:
-            raise CheckConstraintException("AASd-005 violated: version is given but no revision")
+            raise CheckConstraintException("Constraint AASd-005 violated: version is given but no revision")
 
 # 5.3.2.7 Identifiable
 
@@ -692,7 +697,7 @@ class DataElement(SubmodelElement):
         """
         allowed_values = ["CONSTANT", "PARAMETER", "VARIABLE"]
         if self.category is not None and self.category.raw_value not in allowed_values:
-            raise CheckConstraintException(f"Constraint AASd-090: category {self.category.raw_value} is not one of {allowed_values}")
+            raise CheckConstraintException(f"Constraint AASd-090 violated: category {self.category.raw_value} is not one of {allowed_values}")
 
 
 # 5.3.7.15 Relationship Element
@@ -745,11 +750,11 @@ class BasicEventElement(EventElement):
 
     def check_observed(self):
         if self.observed.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("Property 'observed' must be a model reference")
+            raise CheckConstraintException("Constraint violated: Property 'observed' must be a model reference")
 
     def check_message_broker(self):
         if self.message_broker and self.message_broker.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("Property 'observed' must be a model reference")
+            raise CheckConstraintException("Constraint violated: Property 'observed' must be a model reference")
 
 # 5.3.7.4 Blob
 
@@ -937,7 +942,7 @@ class SubmodelElementList(SubmodelElement):
 
     def check_type_value_list_element(self):
         if self.type_value_list_element not in AasSubmodelElements:
-            raise CheckConstraintException("type_value_list_element must be a AasSubmodelElement")
+            raise CheckConstraintException("Constraint violated: type_value_list_element must be a AasSubmodelElement")
 
     def check_aasd_107(self):
         """
@@ -1028,13 +1033,13 @@ class AssetAdministrationShell(Identifiable, HasDataSpecification):
 
     def check_derived_from(self):
         if self.derived_from and self.derived_from.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("derivedFrom must be a model reference")
+            raise CheckConstraintException("Constraint violated: derivedFrom must be a model reference")
 
     def check_submodels(self):
         if self.submodels:
             for i in self.submodels:
                 if i.type != ReferenceType.ModelReference:
-                    raise CheckConstraintException("submodels must contain only model references")
+                    raise CheckConstraintException("Constraint violated: submodels must contain only model references")
 
 # 5.3.5 Submodel
 
