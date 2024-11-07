@@ -589,6 +589,11 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         request = generate_one_valid(op, self.sample_cache, {'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
         self.valid_id_short: str = _lookup(data, ['result', 0, 'idShort'])
+        global_asset_id = _lookup(data, ['result', 0, 'assetInformation', 'globalAssetId'], None)
+        if global_asset_id:
+            self.asset_id = {'name': 'globalAssetId', 'value': 'globalAssetId'}
+        else:
+            self.asset_id = _lookup(data, ['result', 0, 'specificAssetIds', 0])
         self.cursor = _lookup(data, ['paging_metadata', 'cursor'], None)
 
     def test_no_parameters(self):
@@ -626,6 +631,13 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         data = _invoke_and_decode(request, self.conf, True)
         data = _lookup(data, ['result'])
         _assert(len(data) == 1, 'Exactly one entry')
+
+    def test_filter_by_asset_id(self):
+        """
+        Filter by assetId
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {'assetIds': self.asset_id})
+        _invoke_and_decode(request, self.conf, True)
 
 
 @operation("GetAllAssetAdministrationShells")
