@@ -5,6 +5,9 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      aasx-server:
+        image: adminshellio/aasx-server-blazor-for-demo:main
     steps:
     - uses: actions/checkout@v4
       with:
