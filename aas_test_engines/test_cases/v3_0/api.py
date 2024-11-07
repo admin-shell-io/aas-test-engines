@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Tuple
+from typing import Dict, List, Union, Optional, Tuple, TypeVar,  Iterator
 from aas_test_engines.exception import AasTestToolsException
 from aas_test_engines.result import AasTestResult, Level, start, abort, write, ResultException
 
@@ -23,6 +23,12 @@ import base64
 from .model import AssetAdministrationShell, Environment
 from .parse import parse_and_check_json
 
+T = TypeVar("T")
+
+
+def _first_iterator_item(it: Iterator[T]) -> T:
+    return next(iter(it))
+
 
 def b64urlsafe(value: str) -> str:
     return base64.urlsafe_b64encode(value.encode()).decode()
@@ -42,7 +48,7 @@ def _assert(predicate: bool, message, level: Level = Level.ERROR):
     if predicate:
         write(f'{message}: OK')
     else:
-        abort(AasTestResult('{message}: Fail', level))
+        abort(AasTestResult(f'{message}: Fail', level))
 
 
 def _stringify_path(path: List[Union[str, int]]) -> str:
@@ -543,15 +549,13 @@ class ApiTestSuite:
     def setup(self):
         pass
 
-    def execute_syntactic_test(self, request: Request):
-        _invoke_and_decode(request, self.conf, False)
-
     def execute_syntactic_tests(self):
-        graph = generate_all(self.operation, self.sample_cache, self.valid_values)
+        valid_values = {k: [v] for k, v in self.valid_values.items()}
+        graph = generate_all(self.operation, self.sample_cache, valid_values)
         for i in graph.generate_paths():
             request: Request = graph.execute(i.path)
             if not i.is_valid:
-                self.execute_syntactic_test(request)
+                _invoke_and_decode(request, self.conf, False)
 
     def execute_semantic_tests(self):
         fns = [getattr(self, i) for i in dir(self) if i.startswith('test_')]
@@ -780,62 +784,131 @@ class AasThumbnailBySuperPathSuite(AssetInfoTestSuiteBase):
         })
         _invoke(request, self.conf, True)
 
-# /shells/<AAS>/submodels/<SM>
+###########################
+#     Submodel Interface
+##########################
 
 
-class SubmodelBySuperpathSuiteBase(ApiTestSuite):
+class SubmodelByAasRepoSuite(ApiTestSuite):
     def setup(self):
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
         request = generate_one_valid(op, self.sample_cache, {'limit': 1})
         data = _invoke_and_decode(request, self.conf, True)
-        self.valid_id: str = _lookup(data, ['result', 0, 'id'])
+        valid_id: str = _lookup(data, ['result', 0, 'id'])
         self.valid_submodel_id: str = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
+        self.valid_values = {
+            'aasIdentifier': b64urlsafe(valid_id),
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+        }
 
 
-@operation("GetSubmodelById_AasRepository")
-@operation("GetSubmodelById-Metadata_AasRepository")
-class SubmodelBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+class SubmodelBySubmodelRepoSuite(ApiTestSuite):
+    def setup(self):
+        op = self.open_api.operations["GetAllSubmodels"]
+        request = generate_one_valid(op, self.sample_cache, {'limit': 1})
+        data = _invoke_and_decode(request, self.conf, True)
+        self.valid_submodel_id: str = _lookup(data, ['result', 0, 'id'])
+        self.valid_values = {
+            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+        }
+
+
+class SubmodelSuite(ApiTestSuite):
+    def setup(self):
+        self.valid_submodel_id = None
+        self.valid_values = {}
+
+# /submodels
+
+
+@operation("GetAllSubmodels")
+@operation("GetAllSubmodels-Path")
+@operation("GetAllSubmodels-Reference")
+@operation("GetAllSubmodels-Metadata")
+@operation("GetAllSubmodels-ValueOnly")
+class GetAllSubmodelsTests(ApiTestSuite):
+    def test_simple(self):
+        """
+        Fetch all submodels
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
+        _invoke_and_decode(request, self.conf, True)
+
+
+# /shells/<AAS>/submodels/<SM>
+# /submodels/<SM>
+# /submodel
+
+
+class GetSubmodelTests(ApiTestSuite):
     def test_simple(self):
         """
         Fetch submodel by id
         """
-        request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
-        })
+        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
         data = _invoke_and_decode(request, self.conf, True)
         data = _lookup(data, ['id'])
-        _assert(data == self.valid_submodel_id, 'Returns the correct one')
+        if self.valid_submodel_id:
+            _assert(data == self.valid_submodel_id, 'Returns the correct one')
+
+
+@operation("GetSubmodelById_AasRepository")
+@operation("GetSubmodelById-Metadata_AasRepository")
+class GetSubmodelById_AasRepository(SubmodelByAasRepoSuite, GetSubmodelTests):
+    pass
+
+
+@operation("GetSubmodelById")
+@operation("GetSubmodelById-Metadata")
+class GetSubmodelById(SubmodelBySubmodelRepoSuite, GetSubmodelTests):
+    pass
+
+
+@operation("GetSubmodel")
+@operation("GetSubmodel-Metadata")
+class GetSubmodel(SubmodelSuite, GetSubmodelTests):
+    pass
+
+
+class GetSubmodelRefsTests(ApiTestSuite):
+    def test_simple(self):
+        """
+        Fetch submodel by id
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
+        _invoke_and_decode(request, self.conf, True)
 
 
 @operation("GetSubmodelById-ValueOnly_AasRepository")
 @operation("GetSubmodelById-Reference_AasRepository")
 @operation("GetSubmodelById-Path_AasRepository")
-class SubmodelRefBySuperpathSuite(SubmodelBySuperpathSuiteBase):
-    def test_simple(self):
-        """
-        Fetch submodel by id
-        """
-        request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
-        })
-        _invoke_and_decode(request, self.conf, True)
+class GetSubmodelById_Reference_AasRepository(SubmodelByAasRepoSuite, GetSubmodelRefsTests):
+    pass
 
+
+@operation("GetSubmodelById-ValueOnly")
+@operation("GetSubmodelById-Reference")
+@operation("GetSubmodelById-Path")
+class GetSubmodelById_Reference(SubmodelBySubmodelRepoSuite, GetSubmodelRefsTests):
+    pass
+
+
+@operation("GetSubmodel-ValueOnly")
+@operation("GetSubmodel-Reference")
+@operation("GetSubmodel-Path")
+class GetSubmodel_Reference(SubmodelSuite, GetSubmodelRefsTests):
+    pass
+
+# /shells/<AAS>/submodels/<SM>/submodel-elements
 # /shells/<AAS>/submodels/<SM>/submodel-elements
 
 
-@operation("GetAllSubmodelElements_AasRepository")
-@operation("GetAllSubmodelElements-Path_AasRepository")
-class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+class GetSubmodelElementTests(ApiTestSuite):
     def test_simple(self):
         """
         Fetch all submodel elements
         """
-        request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
-        })
+        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
         _invoke_and_decode(request, self.conf, True)
 
     def test_level_core(self):
@@ -843,8 +916,7 @@ class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
         Fetch all submodel elements with level=core
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            **self.valid_values,
             'level': 'core'
         })
         _invoke_and_decode(request, self.conf, True)
@@ -854,8 +926,7 @@ class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
         Fetch all submodel elements with level=deep
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            **self.valid_values,
             'level': 'deep'
         })
         _invoke_and_decode(request, self.conf, True)
@@ -865,8 +936,7 @@ class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
         Fetch all submodel elements with extent=withBlobValue
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            **self.valid_values,
             'extent': 'withBlobValue'
         })
         _invoke_and_decode(request, self.conf, True)
@@ -876,24 +946,33 @@ class GetAllSubmodelElementsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
         Fetch all submodel elements with extent=withoutBlobValue
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            **self.valid_values,
             'extent': 'withoutBlobValue'
         })
         _invoke_and_decode(request, self.conf, True)
 
 
-@operation("GetAllSubmodelElements-ValueOnly_AasRepository")
-@operation("GetAllSubmodelElements-Reference_AasRepository")
-class GetAllSubmodelElementsValueOnlyBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+@operation("GetAllSubmodelElements_AasRepository")
+class GetAllSubmodelElements_AasRepository(SubmodelByAasRepoSuite, GetSubmodelElementTests):
+    pass
+
+
+@operation("GetAllSubmodelElements_SubmodelRepository")
+class GetAllSubmodelElements_SubmodelRepository(SubmodelBySubmodelRepoSuite, GetSubmodelElementTests):
+    pass
+
+
+@operation("GetAllSubmodelElements")
+class GetAllSubmodelElements(SubmodelSuite, GetSubmodelElementTests):
+    pass
+
+
+class GetAllSubmodelElementsValueOnlyTests(ApiTestSuite):
     def test_simple(self):
         """
         Fetch all submodel elements
         """
-        request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
-        })
+        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
         _invoke_and_decode(request, self.conf, True)
 
     def test_level_core(self):
@@ -901,8 +980,7 @@ class GetAllSubmodelElementsValueOnlyBySuperpathSuite(SubmodelBySuperpathSuiteBa
         Fetch all submodel elements with level=core
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            **self.valid_values,
             'level': 'core'
         })
         _invoke_and_decode(request, self.conf, True)
@@ -912,43 +990,60 @@ class GetAllSubmodelElementsValueOnlyBySuperpathSuite(SubmodelBySuperpathSuiteBa
         Fetch all submodel elements with level=deep
         """
         request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
+            **self.valid_values,
             'level': 'deep'
         })
         _invoke_and_decode(request, self.conf, True)
 
 
-@operation("GetAllSubmodelElements-Metadata_AasRepository")
-class GetAllSubmodelElementRefsBySuperpathSuite(SubmodelBySuperpathSuiteBase):
+@operation("GetAllSubmodelElements-ValueOnly_AasRepository")
+@operation("GetAllSubmodelElements-Reference_AasRepository")
+@operation("GetAllSubmodelElements-Path_AasRepository")
+class GetAllSubmodelElements_ValueOnly_AasRepository(SubmodelByAasRepoSuite, GetAllSubmodelElementsValueOnlyTests):
+    pass
+
+
+@operation("GetAllSubmodelElements-ValueOnly_SubmodelRepo")
+@operation("GetAllSubmodelElements-Reference_SubmodelRepo")
+@operation("GetAllSubmodelElements-Path_SubmodelRepo")
+class GetAllSubmodelElements_ValueOnly_SubmodelRepository(SubmodelBySubmodelRepoSuite, GetAllSubmodelElementsValueOnlyTests):
+    pass
+
+
+@operation("GetAllSubmodelElements-ValueOnly")
+@operation("GetAllSubmodelElements-Reference")
+@operation("GetAllSubmodelElements-Path")
+class GetAllSubmodelElements_ValueOnly(SubmodelSuite, GetAllSubmodelElementsValueOnlyTests):
+    pass
+
+
+class GetAllSubmodelElementRefsTests(ApiTestSuite):
     def test_simple(self):
         """
         Fetch all submodel elements
         """
-        request = generate_one_valid(self.operation, self.sample_cache, {
-            'aasIdentifier': b64urlsafe(self.valid_id),
-            'submodelIdentifier': b64urlsafe(self.valid_submodel_id),
-        })
+        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
         _invoke_and_decode(request, self.conf, True)
+
+
+@operation("GetAllSubmodelElements-Metadata_AasRepository")
+class GetAllSubmodelElements_Metadata_AasRepository(SubmodelByAasRepoSuite, GetAllSubmodelElementRefsTests):
+    pass
+
+
+@operation("GetAllSubmodelElements-Metadata_SubmodelRepository")
+class GetAllSubmodelElements_Metadata_SubmodelRepository(SubmodelBySubmodelRepoSuite, GetAllSubmodelElementRefsTests):
+    pass
+
+
+@operation("GetAllSubmodelElements-Metadata")
+class GetAllSubmodelElements_Metadata(SubmodelSuite, GetAllSubmodelElementRefsTests):
+    pass
 
 
 # /shells/<AAS>/submodels/<SM>/submodel-elements/<ID>
 
-
-def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_prefix: str):
-    for i in data:
-        id_short = path_prefix + _lookup(i, ['idShort'])
-        model_type = _lookup(i, ['modelType'])
-        try:
-            paths[model_type].append(id_short)
-        except KeyError:
-            paths[model_type] = [id_short]
-        if model_type == 'SubmodelElementCollection':
-            value = _lookup(i, ['value'])
-            _collect_submodel_elements(value, paths, id_short + ".")
-
-
-class SubmodelElementBySuperpathSuiteBase(ApiTestSuite):
+class SubmodelElementTestsBase(ApiTestSuite):
     all_submodel_elements = [
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -966,6 +1061,22 @@ class SubmodelElementBySuperpathSuiteBase(ApiTestSuite):
         'File',
     ]
 
+
+def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_prefix: str):
+    for i in data:
+        id_short = path_prefix + _lookup(i, ['idShort'])
+        model_type = _lookup(i, ['modelType'])
+        try:
+            paths[model_type].append(id_short)
+        except KeyError:
+            paths[model_type] = [id_short]
+        if model_type == 'SubmodelElementCollection':
+            value = _lookup(i, ['value'])
+            _collect_submodel_elements(value, paths, id_short + ".")
+
+
+class SubmodelElementByAasRepoSuite(SubmodelElementTestsBase):
+
     def setup(self):
         self.paths = {}
         op = self.open_api.operations["GetAllAssetAdministrationShells"]
@@ -973,21 +1084,43 @@ class SubmodelElementBySuperpathSuiteBase(ApiTestSuite):
         data = _invoke_and_decode(request, self.conf, True)
         valid_id = _lookup(data, ['result', 0, 'id'])
         valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
-        overwrites = {
-            'aasIdentifier': [b64urlsafe(valid_id)],
-            'submodelIdentifier': [b64urlsafe(valid_submodel_id)],
+        self.valid_values = {
+            'aasIdentifier': b64urlsafe(valid_id),
+            'submodelIdentifier': b64urlsafe(valid_submodel_id),
         }
         op = self.open_api.operations["GetAllSubmodelElements_AasRepository"]
-        request = generate_one_valid(op, self.sample_cache, overwrites)
+        request = generate_one_valid(op, self.sample_cache, self.valid_values)
         data = _invoke_and_decode(request, self.conf, True)
         elements = _lookup(data, ['result'])
         _collect_submodel_elements(elements, self.paths, '')
-        overwrites['idShortPath'] = [i[0] for i in self.paths.values()]
-        self.valid_values = overwrites
+        self.valid_values['idShortPath'] = _first_iterator_item(self.paths.values())[0]
 
 
-@operation("GetSubmodelElementByPath_AasRepository")
-class SubmodelElementBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+class SubmodelElementBySubmodelRepoSuite(SubmodelElementTestsBase):
+
+    def setup(self):
+        self.paths = {}
+        op = self.open_api.operations["GetAllSubmodels"]
+        request = generate_one_valid(op, self.sample_cache, {'limit': 1})
+        data = _invoke_and_decode(request, self.conf, True)
+        valid_submodel_id = _lookup(data, ['result', 0, 'id'])
+        self.valid_values = {
+            'submodelIdentifier': b64urlsafe(valid_submodel_id),
+        }
+        op = self.open_api.operations["GetAllSubmodelElements_SubmodelRepository"]
+        request = generate_one_valid(op, self.sample_cache, self.valid_values)
+        data = _invoke_and_decode(request, self.conf, True)
+        elements = _lookup(data, ['result'])
+        _collect_submodel_elements(elements, self.paths, '')
+        self.valid_values['idShortPath'] = _first_iterator_item(self.paths.values())[0]
+
+
+class SubmodelElementBySubmodelSuite(SubmodelElementTestsBase):
+    def setup(self):
+        self.valid_values = {}
+
+
+class SubmodelElementBySuperpathSuite(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -1045,8 +1178,22 @@ class SubmodelElementBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
                 self.check_type(model_type, level=None, extent='withoutBlobValue')
 
 
-@operation("GetSubmodelElementByPath-ValueOnly_AasRepository")
-class SubmodelElementValueOnlyBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+@operation("GetSubmodelElementByPath_AasRepository")
+class GetSubmodelElementByPath_AasRepository(SubmodelElementByAasRepoSuite, GetSubmodelElementTests):
+    pass
+
+
+@operation("GetSubmodelElementByPath_SubmodelRepo")
+class GetSubmodelElementByPath_SubmodelRepository(SubmodelElementBySubmodelRepoSuite, GetSubmodelElementTests):
+    pass
+
+
+@operation("GetSubmodelElementByPath")
+class GetSubmodelElementByPath(SubmodelElementBySubmodelSuite, GetSubmodelElementTests):
+    pass
+
+
+class GetSubmodelElementValueOnlyTests(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -1102,8 +1249,17 @@ class SubmodelElementValueOnlyBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
                 self.check_type(model_type, level=None, extent='withoutBlobValue')
 
 
-@operation("GetSubmodelElementByPath-Path_AasRepository")
-class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+@operation("GetSubmodelElementByPath-ValueOnly_AasRepository")
+class GetSubmodelElementByPath_ValueOnly_AasRepository(SubmodelElementByAasRepoSuite, GetSubmodelElementValueOnlyTests):
+    pass
+
+
+@operation("GetSubmodelElementByPath-ValueOnly_SubmodelRepo")
+class GetSubmodelElementByPath_ValueOnly_SubmodelRepository(SubmodelElementBySubmodelRepoSuite, GetSubmodelElementValueOnlyTests):
+    pass
+
+
+class GetSubmodelElementPathTests(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -1138,8 +1294,17 @@ class SubmodelElementPathBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
                 self.check_type(model_type, level='core')
 
 
-@operation("GetSubmodelElementByPath-Reference_AasRepository")
-class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+@operation("GetSubmodelElementByPath-Path_AasRepository")
+class GetSubmodelElementByPath_Path_AasRepository(GetSubmodelElementPathTests, SubmodelElementByAasRepoSuite):
+    pass
+
+
+@operation("GetSubmodelElementByPath-Path_SubmodelRepo")
+class GetSubmodelElementByPath_Path_SubmodelRepo(GetSubmodelElementPathTests, SubmodelElementBySubmodelRepoSuite):
+    pass
+
+
+class GetSubmodelElementReferenceTests(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -1172,8 +1337,17 @@ class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
                 self.check_type(model_type)
 
 
-@operation("GetSubmodelElementByPath-Metadata_AasRepository")
-class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBase):
+@operation("GetSubmodelElementByPath-Reference_AasRepository")
+class GetSubmodelElementByPath_Path_AasRepository(GetSubmodelElementReferenceTests, SubmodelElementByAasRepoSuite):
+    pass
+
+
+@operation("GetSubmodelElementByPath-Reference_SubmodelRepo")
+class GetSubmodelElementByPath_Path_SubmodelRepository(GetSubmodelElementReferenceTests, SubmodelElementBySubmodelRepoSuite):
+    pass
+
+
+class GetSubmodelElementMetadataTests(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -1204,37 +1378,41 @@ class SubmodelElementReferenceBySuperpathSuite(SubmodelElementBySuperpathSuiteBa
                 self.check_type(model_type)
 
 
-@operation("GetFileByPath_AasRepository")
-class GetFileByPathSuperpathSuite(ApiTestSuite):
-    def setup(self):
-        op = self.open_api.operations["GetAllAssetAdministrationShells"]
-        request = generate_one_valid(op, self.sample_cache, {'limit': 1})
-        data = _invoke_and_decode(request, self.conf, True)
-        valid_id = _lookup(data, ['result', 0, 'id'])
-        valid_submodel_id = _lookup(data, ['result', 0, 'submodels', 0, 'keys', 0, 'value'])
-        self.valid_values = {
-            'aasIdentifier': b64urlsafe(valid_id),
-            'submodelIdentifier': b64urlsafe(valid_submodel_id),
-        }
-        op = self.open_api.operations["GetAllSubmodelElements_AasRepository"]
-        request = generate_one_valid(op, self.sample_cache, self.valid_values)
-        data = _invoke_and_decode(request, self.conf, True)
-        paths = {}
-        _collect_submodel_elements(_lookup(data, ['result']), paths, '')
-        try:
-            self.valid_values['idShortPath'] = paths['File']
-        except KeyError:
-            abort("No submodel element of type 'File' found, skipping test.")
+@operation("GetSubmodelElementByPath-Metadata_AasRepository")
+class GetSubmodelElementByPath_Metadata_AasRepository(GetSubmodelElementMetadataTests, SubmodelElementByAasRepoSuite):
+    pass
+
+
+@operation("GetSubmodelElementByPath-Metadata_SubmodelRepo")
+class GetSubmodelElementByPath_Metadata_SubmodelRepository(GetSubmodelElementMetadataTests, SubmodelElementBySubmodelRepoSuite):
+    pass
+
+
+class GetFileByPathTests(SubmodelElementTestsBase):
 
     def test_no_params(self):
         """
         Invoke without params
         """
+        try:
+            self.valid_values['idShortPath'] = self.paths['File']
+        except KeyError:
+            abort("No submodel element of type 'File' found, skipping test.")
         request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
         _invoke(request, self.conf, True)
 
 
+@operation("GetFileByPath_AasRepository")
+class GetSubmodelElementByPath_Metadata_AasRepository(GetFileByPathTests, SubmodelElementByAasRepoSuite):
+    pass
+
+
+@operation("GetFileByPath_SubmodelRepo")
+class GetSubmodelElementByPath_Metadata_SubmodelRepository(GetFileByPathTests, SubmodelElementBySubmodelRepoSuite):
+    pass
+
 # /serialization
+
 
 @operation("GenerateSerializationByIds")
 class GenerateSerializationSuite(ApiTestSuite):
@@ -1367,23 +1545,12 @@ class GetDescriptionTestSuite(ApiTestSuite):
 @operation('GetOperationAsyncResult_AAS')
 @operation('GetOperationAsyncResult-ValueOnly_AAS')
 # /submodel
-@operation('GetSubmodel')
 @operation('PutSubmodel')
 @operation('PatchSubmodel')
-@operation('GetSubmodel-Metadata')
 @operation('PatchSubmodel-Metadata')
-@operation('GetSubmodel-ValueOnly')
 @operation('PatchSubmodel-ValueOnly')
-@operation('GetSubmodel-Reference')
-@operation('GetSubmodel-Path')
 # /submodel/submodel-elements
-@operation('GetAllSubmodelElements')
 @operation('PostSubmodelElement')
-@operation('GetAllSubmodelElements-Metadata')
-@operation('GetAllSubmodelElements-ValueOnly')
-@operation('GetAllSubmodelElements-Reference')
-@operation('GetAllSubmodelElements-Path')
-@operation('GetSubmodelElementByPath')
 @operation('PutSubmodelElementByPath')
 @operation('PostSubmodelElementByPath')
 @operation('DeleteSubmodelElementByPath')
@@ -1405,42 +1572,21 @@ class GetDescriptionTestSuite(ApiTestSuite):
 @operation('GetOperationAsyncResult')
 @operation('GetOperationAsyncResult-ValueOnly')
 # /submodels
-@operation('GetAllSubmodels')
 @operation('PostSubmodel')
-@operation('GetAllSubmodels-Metadata')
-@operation('GetAllSubmodels-ValueOnly')
-@operation('GetAllSubmodels-Reference')
-@operation('GetAllSubmodels-Path')
 # /submodels/<SM>
-@operation('GetSubmodelById')
 @operation('PutSubmodelById')
 @operation('DeleteSubmodelById')
 @operation('PatchSubmodelById')
-@operation('GetSubmodelById-Metadata')
 @operation('PatchSubmodelById-Metadata')
-@operation('GetSubmodelById-ValueOnly')
 @operation('PatchSubmodelById-ValueOnly')
-@operation('GetSubmodelById-Reference')
-@operation('GetSubmodelById-Path')
 # /submodels/<SM>/submodel-elements
-@operation('GetAllSubmodelElements_SubmodelRepository')
 @operation('PostSubmodelElement_SubmodelRepository')
-@operation('GetAllSubmodelElements-Metadata_SubmodelRepository')
-@operation('GetAllSubmodelElements-ValueOnly_SubmodelRepo')
-@operation('GetAllSubmodelElements-Reference_SubmodelRepo')
-@operation('GetAllSubmodelElements-Path_SubmodelRepo')
-@operation('GetSubmodelElementByPath_SubmodelRepo')
 @operation('PutSubmodelElementByPath_SubmodelRepo')
 @operation('PostSubmodelElementByPath_SubmodelRepo')
 @operation('DeleteSubmodelElementByPath_SubmodelRepo')
 @operation('PatchSubmodelElementByPath_SubmodelRepo')
-@operation('GetSubmodelElementByPath-Metadata_SubmodelRepo')
 @operation('PatchSubmodelElementByPath-Metadata_SubmodelRepo')
-@operation('GetSubmodelElementByPath-ValueOnly_SubmodelRepo')
 @operation('PatchSubmodelElementByPath-ValueOnly_SubmodelRepo')
-@operation('GetSubmodelElementByPath-Reference_SubmodelRepo')
-@operation('GetSubmodelElementByPath-Path_SubmodelRepo')
-@operation('GetFileByPath_SubmodelRepo')
 @operation('PutFileByPath_SubmodelRepo')
 @operation('DeleteFileByPath_SubmodelRepo')
 @operation('InvokeOperation_SubmodelRepo')
