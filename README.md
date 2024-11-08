@@ -40,47 +40,18 @@ aas_test_engines check_file test.aasx --output json > output.json
 
 ## Supported Versions and Suites
 
-By default, the Test Engines test against the latest version 3.0 (file and api).
-For v3.0 api testing, the following suites are defined:
+By default, the Test Engines test against the latest version 3.0, precisely: metamodel => 3.0.1 and API => 3.0.3.
+In case of API, the IDTA specifications define service specifications and profiles. Below tables describes the supported API profiles by the current test-engine. For more information about these profiles, please visit [IDTA Specifications for API](https://industrialdigitaltwin.org/wp-content/uploads/2024/10/IDTA-01002-3-0-3_SpecificationAssetAdministrationShell_Part2_API.pdf).
 
- - `Asset Administration Shell API`
- - `Submodel API`
- - `Serialization API`
- - `AASX File Server API`
- - `Asset Administration Shell Registry API`
- - `Submodel Registry API`
- - `Asset Administration Shell Repository API`
- - `Submodel Repository API`
- - `Concept Description Repository API`
- - `Asset Administration Shell Basic Discovery API`
- - `Description API`
- - `Asset Administration Shell Service Specification`
- - `Submodel Service Specification`
- - `AASX File Server Service Specification`
- - `Asset Administration Shell Registry Service Specification`
- - `Submodel Registry Service Specification`
- - `Discovery Service Specification`
- - `Asset Administration Shell Repository Service Specification`
- - `Submodel Repository Service Specification`
- - `ConceptDescription Repository Service Specification`
- - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002`
- - `https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002`
- - `https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-003`
- - `https://admin-shell.io/aas/API/3/0/AasxFileServerServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-002`
- - `https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/SubmodelRegistryServiceSpecification/SSP-002`
- - `https://admin-shell.io/aas/API/3/0/DiscoveryServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002`
- - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-001`
- - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002`
- - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-003`
- - `https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-004`
- - `https://admin-shell.io/aas/API/3/0/ConceptDescriptionRepositoryServiceSpecification/SSP-001`
+Full support: ✅
+Partial support: ✔️
+
+| Name | Profile Identifier | Description | Support in test-engine |
+| :--- | :---               | :---        | :---                   |
+| AAS Repository Read Profile | https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002 | Only read operations for the AAS Repository Service | ✅ |
+| Submodel Repository Read Profile | https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002 | Only read operations for the Submodel Repository Service | ✅ |
+| AAS Registry Read Profile | https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-002 | Only reads operations for AAS Registry Service | ✔️ |
+
  
 ## Python Module Interface
 
