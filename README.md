@@ -11,6 +11,7 @@ The tools in this repository offer measures to validate compliance of AAS implem
 
 You can install the AAS Test Engines via pip:
 
+<!-- no-check -->
 ```sh
 python -m pip install --upgrade aas_test_engines
 ```
@@ -19,6 +20,7 @@ python -m pip install --upgrade aas_test_engines
 
 You may want to invoke the test tools using the simplified command line interface:
 
+<!-- no-check -->
 ```sh
 # Check file
 aas_test_engines check_file test.aasx
@@ -103,7 +105,7 @@ with open('aas.xml') as f:
 # Or check data directly
 data = ElementTree.fromstring(
     '<environment xmlns="https://admin-shell.io/aas/3/0" />')
-result = file.check_xml_data(aas)
+result = file.check_xml_data(data)
 # result.ok() == True
 
 result.dump()
@@ -130,7 +132,8 @@ Check a running server instance:
 ```python
 from aas_test_engines import api
 
-result = api.execute_tests("http://localhost", "https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002")
+conf = api.ExecConf(server="http://localhost")
+result, mat = api.execute_tests(conf, "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002")
 result.dump()
 ```
 
@@ -141,7 +144,8 @@ from aas_test_engines import api
 print(api.supported_versions())
 print(api.latest_version())
 
-result = api.execute_tests("http://localhost", 'Asset Administration Shell API', version="3.0")
+conf = api.ExecConf(server="http://localhost")
+result, mat = api.execute_tests(conf, "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002", "3.0")
 result.dump()
 ```
 
@@ -150,6 +154,7 @@ result.dump()
 If you develop an AAS application like an AAS editor you may want to use test data to verify correctness of your application.
 The test engines allow to generate a set of AAS files which are compliant with the standard and you can therefore use to assess your application as follows:
 
+<!-- no-check -->
 ```python
 from aas_test_engines import file
 
