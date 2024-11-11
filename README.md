@@ -53,6 +53,8 @@ The following templates are supported:
 | Contact Information | https://admin-shell.io/zvei/nameplate/1/0/ContactInformations | ✅ |
 | Digital Nameplate for Industrial Equipment | https://admin-shell.io/zvei/nameplate/2/0/Nameplate | ✅ |
 
+For a detailed list of what is checked (and what is not), see [here](doc/file.md).
+
 In case of API, the IDTA specifications define service specifications and profiles. Below tables describes the supported API profiles by the current test-engine. For more information about these profiles, please visit [IDTA Specifications for API](https://industrialdigitaltwin.org/wp-content/uploads/2024/10/IDTA-01002-3-0-3_SpecificationAssetAdministrationShell_Part2_API.pdf).
 
 | Name | Profile Identifier | Description | Support in test-engine |
@@ -61,6 +63,7 @@ In case of API, the IDTA specifications define service specifications and profil
 | Submodel Repository Read Profile | https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002 | Only read operations for the Submodel Repository Service | ✅ |
 | AAS Registry Read Profile | https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-002 | Only reads operations for AAS Registry Service | (✔️) |
 
+For a detailed list of what is checked (and what is not), see [here](doc/api.md).
 
 ## Test Setups
 <a name="test-setups"></a>
