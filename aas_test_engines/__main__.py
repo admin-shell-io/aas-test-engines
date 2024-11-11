@@ -33,24 +33,16 @@ def run_file_test(argv):
                         type=InputFormats,
                         default=InputFormats.aasx,
                         choices=list(InputFormats))
-    parser.add_argument('--submodel_template',
-                        type=str,
-                        default=None,
-                        help="Additionally check for compliance to a submodel template")
     parser.add_argument('--output',
                         type=OutputFormats,
                         default=OutputFormats.TEXT,
                         choices=list(OutputFormats))
     args = parser.parse_args(argv)
-    if args.submodel_template is None:
-        submodel_templates = set()
-    else:
-        submodel_templates = set([args.submodel_template])
 
     if args.format == InputFormats.aasx:
         result = file.check_aasx_file(args.file)
     elif args.format == InputFormats.json:
-        result = file.check_json_file(args.file, submodel_templates=submodel_templates)
+        result = file.check_json_file(args.file)
     elif args.format == InputFormats.xml:
         result = file.check_xml_file(args.file)
     else:
@@ -63,7 +55,7 @@ def run_file_test(argv):
         print(json.dumps(result.to_dict()))
     else:
         raise Exception(f"Invalid output {args.output}")
-    exit(0 if result.ok() else 1)
+    sys.exit(0 if result.ok() else 1)
 
 
 def run_api_test(argv):
@@ -101,12 +93,12 @@ def run_api_test(argv):
         sys.stderr.write(f"Unknown suite '{args.suite}', must be one of:\n")
         for i in available_suites:
             sys.stderr.writelines(f" - {i}\n")
-        exit(1)
+        sys.exit(1)
     elif len(suites) > 1:
         sys.stderr.write(f"Substring '{args.suite}' is not unique, covers:\n")
         for i in suites:
             sys.stderr.write(f" - {i}\n")
-        exit(1)
+        sys.exit(1)
     else:
         suite = suites[0]
 
@@ -125,7 +117,7 @@ def run_api_test(argv):
         print(json.dumps(result.to_dict()))
     else:
         raise Exception(f"Invalid output {args.output}")
-    exit(0 if result.ok() else 1)
+    sys.exit(0 if result.ok() else 1)
 
 
 def generate_files(argv):
@@ -136,7 +128,7 @@ def generate_files(argv):
     args = parser.parse_args(argv)
     if os.path.exists(args.directory):
         print(f"Directory '{args.directory}' already exists, please remove it")
-        exit(1)
+        sys.exit(1)
     os.mkdir(args.directory)
     for idx, (is_valid, sample) in enumerate(file.generate()):
         tag = 'valid' if is_valid else 'invalid'
@@ -159,13 +151,13 @@ def main():
         print("  check_file      Check a file for compliance.")
         print("  check_server    Check a server instance for compliance.")
         print("  generate_files  Generate files for testing")
-        exit(1)
+        sys.exit(1)
 
     command = sys.argv[1]
 
     if command not in commands:
         print(f"Unknown command '{command}', must be one of {', '.join(commands)}")
-        exit(1)
+        sys.exit(1)
 
     remaining_args = sys.argv[2:]
     commands[command](remaining_args)

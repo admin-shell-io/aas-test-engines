@@ -174,47 +174,32 @@ class GenerateTest(TestCase):
         generator = file.generate()
         self.check(generator, 10)
 
-    def test_generate_contact_info(self):
-        generator = file.generate(submodel_template='ContactInformation')
-        self.check(generator)
-
-    def test_generate_digital_nameplate(self):
-        generator = file.generate(submodel_template='DigitalNameplate')
-        self.check(generator)
-
-    def test_invalid_name(self):
-        with self.assertRaises(exception.AasTestToolsException):
-            generator = file.generate(submodel_template="xyz")
-            self.check(generator)
-
 
 class CheckSubmodelTemplate(TestCase):
 
     def test_contact_info(self):
-        templates = set(['ContactInformation'])
         with open(os.path.join(script_dir, 'fixtures', 'submodel_templates', 'contact_information.json')) as f:
             data = json.load(f)
-        result = file.check_json_data(data, submodel_templates=templates)
+        result = file.check_json_data(data)
         result.dump()
         self.assertTrue(result.ok())
         data['submodels'][0]['submodelElements'][0]['value'][0]['value'] = 'invalid'
-        result = file.check_json_data(data, submodel_templates=templates)
+        result = file.check_json_data(data)
         result.dump()
         self.assertFalse(result.ok())
 
     def test_digital_nameplate(self):
-        templates = set(['DigitalNameplate'])
         with open(os.path.join(script_dir, 'fixtures', 'submodel_templates', 'digital_nameplate.json')) as f:
             data = json.load(f)
-        result = file.check_json_data(data, submodel_templates=templates)
+        result = file.check_json_data(data)
         result.dump()
         self.assertTrue(result.ok())
         # either family or type must be present
         elements = data['submodels'][0]['submodelElements']
         indices = [idx for idx, value in enumerate(elements) if value['idShort'] in ['ManufacturerProductFamily', 'ManufacturerProductType']]
         for idx in indices:
-            elements[idx]['idShort'] = 'invalid'
-        result = file.check_json_data(data, submodel_templates=templates)
+            del elements[idx]['semanticId']
+        result = file.check_json_data(data)
         result.dump()
         self.assertFalse(result.ok())
 
@@ -222,8 +207,5 @@ class CheckSubmodelTemplate(TestCase):
         data = {}
         # is compliant to meta-model...
         result = file.check_json_data(data)
-        self.assertTrue(result.ok())
-        # ...but does not contain any submodels
-        result = file.check_json_data(data, submodel_templates=set(['ContactInformation']))
         result.dump()
-        self.assertFalse(result.ok())
+        self.assertTrue(result.ok())

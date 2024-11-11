@@ -7,12 +7,9 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 
 def is_blacklisted(path):
     blacklist = [
-        'UnexpectedAdditionalProperty',
         'Double/lowest.',
         'Double/max.',
         'Float/largest_normal.',
-        'ConstraintViolation/reference',
-        'ConstraintViolation/submodelElementList',
     ]
     for i in blacklist:
         if i in path:

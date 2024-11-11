@@ -58,10 +58,6 @@ def un_group(data: any) -> any:
     return data
 
 
-def b64urlsafe(value: str) -> str:
-    return base64.urlsafe_b64encode(value.encode()).decode()
-
-
 def normpath(path: str) -> str:
     """
     Normalizes a given path.

@@ -7,26 +7,26 @@ from unittest import TestCase
 class ResultTest(TestCase):
 
     def setUp(self) -> None:
-        self.result = AasTestResult('test', '', Level.INFO)
-        self.result.append(AasTestResult('test1', '', Level.INFO))
-        sub_result = AasTestResult('test2', '')
+        self.result = AasTestResult('test', Level.INFO)
+        self.result.append(AasTestResult('test1', Level.INFO))
+        sub_result = AasTestResult('test2')
         self.result.append(sub_result)
-        self.result.append(AasTestResult('test3', '', Level.ERROR))
-        sub_result.append(AasTestResult('sub', '', Level.WARNING))
+        self.result.append(AasTestResult('test3', Level.ERROR))
+        sub_result.append(AasTestResult('sub', Level.WARNING))
 
     def test_ok(self):
-        self.assertTrue(AasTestResult('', '', Level.INFO).ok())
-        self.assertTrue(AasTestResult('', '', Level.WARNING).ok())
-        self.assertFalse(AasTestResult('', '', Level.ERROR).ok())
+        self.assertTrue(AasTestResult('', Level.INFO).ok())
+        self.assertTrue(AasTestResult('', Level.WARNING).ok())
+        self.assertFalse(AasTestResult('', Level.ERROR).ok())
 
     def test_append(self):
-        result = AasTestResult('test', '', Level.INFO)
+        result = AasTestResult('test', Level.INFO)
         self.assertEqual(result.level, Level.INFO)
-        result.append(AasTestResult('test1', '', Level.INFO))
+        result.append(AasTestResult('test1', Level.INFO))
         self.assertEqual(result.level, Level.INFO)
-        result.append(AasTestResult('test2', '', Level.WARNING))
+        result.append(AasTestResult('test2', Level.WARNING))
         self.assertEqual(result.level, Level.WARNING)
-        result.append(AasTestResult('test2', '', Level.ERROR))
+        result.append(AasTestResult('test2',  Level.ERROR))
         self.assertEqual(result.level, Level.ERROR)
         self.assertEqual(len(result.sub_results), 3)
 
@@ -100,7 +100,7 @@ class ContextManagerTest(TestCase):
             with start('bar'):
                 write('bar_x')
             write('foo_end')
-            
+
         self.assertEqual(r.message, "foo")
         self.assertEqual(len(r.sub_results), 3)
         self.assertEqual(r.sub_results[0].message, "foo_start")
@@ -117,9 +117,9 @@ class ContextManagerTest(TestCase):
             write('foo_start')
             with start('bar'):
                 abort('bar_x')
-                write('bar_y') # won't be reached
-            write('foo_end') # must be written
-            
+                write('bar_y')  # won't be reached
+            write('foo_end')  # must be written
+
         r.dump()
         self.assertEqual(r.message, "foo")
         self.assertEqual(len(r.sub_results), 3)

@@ -18,7 +18,16 @@
                     "modelType": "Property",
                     "valueType": "xs:string",
                     "value": "https://www.domain-abc.com/Model-Nr-1234/Serial-Nr-5678",
-                    "idShort": "URIOfTheProduct"
+                    "idShort": "URIOfTheProduct",
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "0173-1#02-AAY811#001"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    }
                 },
                 {
                     "modelType": "MultiLanguageProperty",
@@ -28,7 +37,16 @@
                             "language": "de",
                             "text": "Muster AG"
                         }
-                    ]
+                    ],
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "0173-1#02-AAO677#002"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    }
                 },
                 {
                     "modelType": "MultiLanguageProperty",
@@ -38,7 +56,16 @@
                             "language": "en",
                             "text": "ABC-123"
                         }
-                    ]
+                    ],
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "0173-1#02-AAW338#001"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    }
                 },
                 {
                     "modelType": "SubmodelElementCollection",
@@ -50,7 +77,16 @@
                             "valueType": "xs:string",
                             "value": "0173-1#07-AAS931#001"
                         }
-                    ]
+                    ],
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    }
                 },
                 {
                     "modelType": "MultiLanguageProperty",
@@ -70,7 +106,16 @@
                             "language": "en",
                             "text": "Type ABC"
                         }
-                    ]
+                    ],
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "0173-1#02-AAU732#001"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    }
                 },
                 {
                     "modelType": "MultiLanguageProperty",
@@ -80,7 +125,16 @@
                             "language": "en",
                             "text": "FM-ABC-1234"
                         }
-                    ]
+                    ],
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "0173-1#02-AAO057#002"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    }
                 },
                 {
                     "modelType": "MultiLanguageProperty",
@@ -112,7 +166,16 @@
                     "modelType": "Property",
                     "idShort": "YearOfConstruction",
                     "value": "2022",
-                    "valueType": "xs:string"
+                    "valueType": "xs:string",
+                    "semanticId": {
+                        "keys": [
+                            {
+                                "type": "GlobalReference",
+                                "value": "0173-1#02-AAP906#001"
+                            }
+                        ],
+                        "type": "ExternalReference"
+                    }
                 },
                 {
                     "modelType": "Property",

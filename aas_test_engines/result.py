@@ -1,4 +1,4 @@
-from typing import List, TypeVar
+from typing import List, TypeVar, Union
 from enum import Enum
 import os
 import html
@@ -30,9 +30,9 @@ class Level(Enum):
 
 class AasTestResult:
 
-    def __init__(self, message: str, path_fragment: str = '', level=Level.INFO):
+    def __init__(self, message: str, level=Level.INFO):
+        assert isinstance(level, Level)
         self.message = message
-        self.path_fragment = path_fragment
         self.level = level
         self.sub_results: List[AasTestResult] = []
 
@@ -52,7 +52,7 @@ class AasTestResult:
         ENDC = '\033[0m'
         yield "   " * indent + self.level.color() + self.message + ENDC
         for sub_result in self.sub_results:
-            yield from sub_result.to_lines(indent + 1, path + "/" + self.path_fragment)
+            yield from sub_result.to_lines(indent + 1)
 
     def _to_html(self) -> str:
         cls = {
@@ -91,7 +91,6 @@ class AasTestResult:
     def to_dict(self):
         return {
             'm': self.message,
-            'f': self.path_fragment,
             'l': self.level.value,
             's': [i.to_dict() for i in self.sub_results]
         }
@@ -99,7 +98,7 @@ class AasTestResult:
     @classmethod
     def from_json(self, data: dict) -> "AasTestResult":
         v = AasTestResult(
-            data['m'], data['f'], Level(data['l'])
+            data['m'], Level(data['l'])
         )
         for i in data['s']:
             v.append(AasTestResult.from_json(i))
@@ -138,17 +137,25 @@ class ResultException(Exception):
         self.result = result
 
 
-def write(message: str, level=Level.INFO):
+def _as_result(message: Union[str, AasTestResult], level: Level):
+    if isinstance(message, AasTestResult):
+        return message
+    assert isinstance(message, str)
+    return AasTestResult(message, level=level)
+
+
+def write(message: Union[str, AasTestResult]):
     if not managers:
         raise RuntimeError("No open context")
-    result = AasTestResult(message, level=level)
-    managers[-1].result.append(result)
+    message = _as_result(message, Level.INFO)
+    managers[-1].result.append(message)
 
 
-def start(message: str, level=Level.INFO) -> ContextManager:
-    result = AasTestResult(message, level=level)
+def start(message: Union[str, AasTestResult]) -> ContextManager:
+    result = _as_result(message, Level.INFO)
     return ContextManager(result)
 
 
-def abort(message: str, level=Level.ERROR):
-    raise ResultException(AasTestResult(message, level=level))
+def abort(message: Union[str, AasTestResult]):
+    result = _as_result(message, Level.ERROR)
+    raise ResultException(result)

@@ -24,9 +24,6 @@ You may want to invoke the test tools using the simplified command line interfac
 aas_test_engines check_file test.aasx
 aas_test_engines check_file test.json --format json
 
-# Check file including submodel template
-aas_test_engines check_file test.aasx --submodel_template ContactInformation
-
 # Check server
 aas_test_engines check_server https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002
 
@@ -110,16 +107,6 @@ result = file.check_xml_data(aas)
 # result.ok() == True
 
 result.dump()
-```
-
-Checking for submodel templates:
-
-```python
-from aas_test_engines import file
-with open('aas.xml') as f:
-    result = file.check_xml_file(f, submodel_templates=set(['ContactInformation']))
-# result.ok() == True
-
 ```
 
 Checking older versions:

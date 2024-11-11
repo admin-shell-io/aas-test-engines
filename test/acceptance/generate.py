@@ -10,7 +10,8 @@ from timeit import default_timer
 
 print("Running generation acceptance tests...")
 
-mat = ConfusionMatrix()
+mat_aas_core = ConfusionMatrix()
+mat_test_engines = ConfusionMatrix()
 causes = defaultdict(lambda: 0)
 DEBUG = False
 blacklist = [
@@ -24,6 +25,8 @@ blacklist = [
 
 start = default_timer()
 for idx, (is_valid, sample) in enumerate(file.generate()):
+    mat_test_engines.add(is_valid, file.check_json_data(sample).ok())
+
     try:
         env = aas_jsonization.environment_from_jsonable(sample)
     except aas_jsonization.DeserializationException as e:
@@ -39,17 +42,17 @@ for idx, (is_valid, sample) in enumerate(file.generate()):
                 causes[error.cause] += 1
             if error.cause not in blacklist:
                 accepted = False
-    mat.add(is_valid, accepted)
+    mat_aas_core.add(is_valid, accepted)
     if DEBUG:
         if is_valid and not accepted:
-            with open(f'valid_rejected/{mat.valid_rejected}.json', "w") as f:
+            with open(f'valid_rejected/{mat_aas_core.valid_rejected}.json', "w") as f:
                 json.dump(sample, f, indent=4)
         if not is_valid and accepted:
-            with open(f'invalid_accepted/{mat.invalid_accepted}.json', "w") as f:
+            with open(f'invalid_accepted/{mat_aas_core.invalid_accepted}.json', "w") as f:
                 json.dump(sample, f, indent=4)
 
     if (idx+1) % 100 == 0:
-        mat.print()
+        mat_aas_core.print()
 
 end = default_timer()
 
@@ -58,14 +61,17 @@ print(f"Elapsed time: {end - start:.1f}s")
 for cause in sorted(causes.keys(), key=lambda x: causes[x]):
     print(f"{causes[cause]}: {cause}")
 
-mat.print()
+print("AAS core:")
+mat_aas_core.print()
+print("Test Engines:")
+mat_test_engines.print()
 
 # TODO: need to fix 7 issues in aas-core-python first
-if mat.valid_rejected > 20:
+if mat_aas_core.valid_rejected > 20:
     print("Valid instances have been rejected!")
     exit(1)
 
-if mat.invalid_accepted > 20:
+if mat_aas_core.invalid_accepted > 20:
     print("Invalid instances have been accepted!")
     exit(1)
 
