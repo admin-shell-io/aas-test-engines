@@ -137,7 +137,7 @@ def _parse(cls, element: SubmodelElement, root_result, path: AdapterPath):
         f"There is no parsing implemented for:\n"
         f"  origin:    {origin}\n"
         f"  args:      {getattr(cls, '__args__', None)}\n"
-        f"  cls:       {cls}\m"
+        f"  cls:       {cls}\n"
     )
 
 

@@ -1457,7 +1457,8 @@ class GenerateSerializationSuite(ApiTestSuite):
         """
         request = generate_one_valid(self.operation, self.sample_cache, {'includeConceptDescriptions': True})
         data = _invoke_and_decode(request, self.conf, True)
-        _assert('conceptDescriptions' in data, 'contains conceptDescriptions', Level.WARNING)
+        if data:
+            _assert('conceptDescriptions' in data, 'contains conceptDescriptions', Level.WARNING)
 
 
 # /description

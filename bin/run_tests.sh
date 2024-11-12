@@ -14,3 +14,4 @@ coverage run \
 
 PYTHONPATH=. ./test/acceptance/file.py
 PYTHONPATH=. ./test/acceptance/generate.py
+PYTHONPATH=. ./test/acceptance/server.py
