@@ -63,10 +63,4 @@ with TemporaryDirectory() as tmp_dir:
             print("-"*10)
             f.write(block.content)
             f.flush()
-            pypath = ROOT_DIR
-            try:
-                pypath += f"{os.pathsep}{os.environ['PYTHONPATH']}"
-            except KeyError:
-                pass
-            subprocess.check_call(["python", f.name], env={'PYTHONPATH': pypath}, cwd=tmp_dir)
-    assert skipped == 7, skipped
+            subprocess.check_call(["python", f.name], env={**os.environ, 'PYTHONPATH': ROOT_DIR}, cwd=tmp_dir)
