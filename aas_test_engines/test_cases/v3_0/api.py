@@ -485,7 +485,7 @@ def _get_json(response: requests.models.Response) -> dict:
         abort(AasTestResult(f"Cannot decode as JSON: {e}", Level.CRITICAL))
 
 
-def _invoke(request: Request, conf: ExecConf, positive_test) -> requests.models.Response:
+def _execute(request: Request, conf: ExecConf, positive_test) -> requests.models.Response:
     prepared_request = request.build(conf.server).prepare()
     response = requests.Session().send(prepared_request, verify=conf.verify)
     write(f"Response: ({response.status_code}): {_shorten(response.content)}")
@@ -500,9 +500,15 @@ def _invoke(request: Request, conf: ExecConf, positive_test) -> requests.models.
     return response
 
 
+def _invoke(request: Request, conf: ExecConf, positive_test: bool) -> requests.models.Response:
+    with start(f"Invoke: {request.operation.method.upper()} {request.make_path()}"):
+        response = _execute(request, conf, positive_test)
+        return response
+
+
 def _invoke_and_decode(request: Request, conf: ExecConf, positive_test: bool) -> dict:
     with start(f"Invoke: {request.operation.method.upper()} {request.make_path()}"):
-        response = _invoke(request, conf, positive_test)
+        response = _execute(request, conf, positive_test)
         expected_responses = []
         expected_responses += [i for i in request.operation.responses if i.code == response.status_code]
         expected_responses += [i for i in request.operation.responses if i.code is None]
@@ -1073,6 +1079,8 @@ class SubmodelElementTestsBase(ApiTestSuite):
         'File',
     ]
 
+    paths: Dict[str, List[str]] = {}
+
 
 def _collect_submodel_elements(data: list, paths: Dict[str, List[str]], path_prefix: str):
     for i in data:
@@ -1130,6 +1138,12 @@ class SubmodelElementBySubmodelRepoSuite(SubmodelElementTestsBase):
 class SubmodelElementBySubmodelSuite(SubmodelElementTestsBase):
     def setup(self):
         self.valid_values = {}
+        op = self.open_api.operations["GetAllSubmodelElements"]
+        request = generate_one_valid(op, self.sample_cache, self.valid_values)
+        data = _invoke_and_decode(request, self.conf, True)
+        elements = _lookup(data, ['result'])
+        _collect_submodel_elements(elements, self.paths, '')
+        self.valid_values['idShortPath'] = _first_iterator_item(self.paths.values())[0]
 
 
 class SubmodelElementBySuperpathSuite(SubmodelElementTestsBase):
@@ -1271,6 +1285,11 @@ class GetSubmodelElementByPath_ValueOnly_SubmodelRepository(SubmodelElementBySub
     pass
 
 
+@operation("GetSubmodelElementByPath-ValueOnly")
+class GetSubmodelElementByPath(SubmodelElementBySubmodelSuite, GetSubmodelElementValueOnlyTests):
+    pass
+
+
 class GetSubmodelElementPathTests(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
@@ -1313,6 +1332,11 @@ class GetSubmodelElementByPath_Path_AasRepository(GetSubmodelElementPathTests, S
 
 @operation("GetSubmodelElementByPath-Path_SubmodelRepo")
 class GetSubmodelElementByPath_Path_SubmodelRepo(GetSubmodelElementPathTests, SubmodelElementBySubmodelRepoSuite):
+    pass
+
+
+@operation("GetSubmodelElementByPath-Path")
+class GetSubmodelElementByPath(GetSubmodelElementPathTests, SubmodelElementBySubmodelSuite):
     pass
 
 
@@ -1359,6 +1383,11 @@ class GetSubmodelElementByPath_Path_SubmodelRepository(GetSubmodelElementReferen
     pass
 
 
+@operation("GetSubmodelElementByPath-Reference")
+class GetSubmodelElementByPath_Path_SubmodelRepository(GetSubmodelElementReferenceTests, SubmodelElementBySubmodelSuite):
+    pass
+
+
 class GetSubmodelElementMetadataTests(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
@@ -1400,28 +1429,40 @@ class GetSubmodelElementByPath_Metadata_SubmodelRepository(GetSubmodelElementMet
     pass
 
 
+@operation("GetSubmodelElementByPath-Metadata")
+class GetSubmodelElementByPath_Metadata(GetSubmodelElementMetadataTests, SubmodelElementBySubmodelSuite):
+    pass
+
+
 class GetFileByPathTests(SubmodelElementTestsBase):
 
     def test_no_params(self):
         """
         Invoke without params
         """
+        valid_values = self.valid_values.copy()
         try:
-            self.valid_values['idShortPath'] = self.paths['File']
+            valid_values['idShortPath'] = self.paths['File'][0]
         except KeyError:
             abort("No submodel element of type 'File' found, skipping test.")
-        request = generate_one_valid(self.operation, self.sample_cache, self.valid_values)
+        request = generate_one_valid(self.operation, self.sample_cache, valid_values)
         _invoke(request, self.conf, True)
 
 
 @operation("GetFileByPath_AasRepository")
-class GetSubmodelElementByPath_Metadata_AasRepository(GetFileByPathTests, SubmodelElementByAasRepoSuite):
+class GetFileByPath_AasRepository(GetFileByPathTests, SubmodelElementByAasRepoSuite):
     pass
 
 
 @operation("GetFileByPath_SubmodelRepo")
-class GetSubmodelElementByPath_Metadata_SubmodelRepository(GetFileByPathTests, SubmodelElementBySubmodelRepoSuite):
+class GetFileByPath_SubmodelRepo(GetFileByPathTests, SubmodelElementBySubmodelRepoSuite):
     pass
+
+
+@operation("GetFileByPath")
+class GetFileByPath(GetFileByPathTests, SubmodelElementBySubmodelSuite):
+    pass
+
 
 # /serialization
 
@@ -1568,13 +1609,8 @@ class GetDescriptionTestSuite(ApiTestSuite):
 @operation('PostSubmodelElementByPath')
 @operation('DeleteSubmodelElementByPath')
 @operation('PatchSubmodelElementByPath')
-@operation('GetSubmodelElementByPath-Metadata')
 @operation('PatchSubmodelElementByPath-Metadata')
-@operation('GetSubmodelElementByPath-ValueOnly')
 @operation('PatchSubmodelElementByPath-ValueOnly')
-@operation('GetSubmodelElementByPath-Reference')
-@operation('GetSubmodelElementByPath-Path')
-@operation('GetFileByPath')
 @operation('PutFileByPath')
 @operation('DeleteFileByPath')
 @operation('InvokeOperation')
