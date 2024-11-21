@@ -46,7 +46,7 @@ class Phone:
         "semantic_id": "0173-1#02-AAO137#003"
     })
     available_time: Optional[LangString] = field(metadata={
-        "semantic_id": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/AvailableTime/",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/AvailableTime/",
     })
 
 
@@ -98,7 +98,7 @@ class IPCommunication:
         "semantic_id": " https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/IPCommunication/TypeOfCommunication",
     })
     available_time: Optional[str] = field(metadata={
-        "semantic_id": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/AvailableTime/",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/AvailableTime/",
     })
 
 
@@ -111,10 +111,10 @@ class ContactInformation:
         "semantic_id": "0173-1#02-AAO134#002",
     })
     language: Optional[List[str]] = field(metadata={
-        "semantic_id": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Language",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Language",
     })
     time_zone: Optional[str] = field(metadata={
-        "semantic_id": " https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/TimeZone",
+        "semantic_id": " https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/TimeZone",
     })
     # TODO: Add hint: "mandatory property according to EU MachineDirective 2006/42/EC."
     city_town: Optional[str] = field(metadata={
@@ -127,7 +127,7 @@ class ContactInformation:
         "semantic_id": "0173-1#02-AAO127#003",
     })
     phone: Optional[Phone] = field(metadata={
-        "semantic_id": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Phone",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Phone",
     })
     fax: Optional[Fax] = field(metadata={
         "semantic_id": "0173-1#02-AAQ834#005",
@@ -136,7 +136,7 @@ class ContactInformation:
         "semantic_id": "0173-1#02-AAQ836#005",
     })
     ipc_communication: Optional[List[IPCommunication]] = field(metadata={
-        "semantic_id": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/IPCommunication",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/IPCommunication",
     })
     street: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAO128#002",
@@ -180,7 +180,7 @@ class ContactInformation:
 @template("https://admin-shell.io/zvei/nameplate/1/0/ContactInformations")
 class ContactInformations:
     contact_information: List[ContactInformation] = field(metadata={
-        "semantic_id": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation",
     })
 
 
@@ -197,7 +197,7 @@ class DigitalNameplate:
         'semantic_id': '0173-1#02-AAW338#001',
     })
     contact_information: ContactInformation = field(metadata={
-        "semantic_id": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation",
     })
     manufacturer_product_root: Optional[LangString] = field(metadata={
         "semantic_id": " 0173-1#02-AAU732#001",

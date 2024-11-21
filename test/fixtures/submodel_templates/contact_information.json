@@ -21,7 +21,7 @@
                         "keys": [
                             {
                                 "type": "GlobalReference",
-                                "value": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation"
+                                "value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation"
                             }
                         ],
                         "type": "ExternalReference"
@@ -61,7 +61,7 @@
                                 "keys": [
                                     {
                                         "type": "GlobalReference",
-                                        "value": "https://adminshell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Language"
+                                        "value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Language"
                                     }
                                 ],
                                 "type": "ExternalReference"
