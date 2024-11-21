@@ -19,6 +19,7 @@ from dataclasses import dataclass
 import requests
 
 import base64
+import json
 
 from .model import AssetAdministrationShell, Environment
 from .parse import parse_and_check_json
@@ -597,7 +598,7 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         self.valid_id_short: str = _lookup(data, ['result', 0, 'idShort'])
         global_asset_id = _lookup(data, ['result', 0, 'assetInformation', 'globalAssetId'], None)
         if global_asset_id:
-            self.asset_id = {'name': 'globalAssetId', 'value': 'globalAssetId'}
+            self.asset_id = {'name': 'globalAssetId', 'value': global_asset_id}
         else:
             self.asset_id = _lookup(data, ['result', 0, 'specificAssetIds', 0])
         self.cursor = _lookup(data, ['paging_metadata', 'cursor'], None)
@@ -642,8 +643,10 @@ class GetAllAasTestSuiteBase(ApiTestSuite):
         """
         Filter by assetId
         """
-        request = generate_one_valid(self.operation, self.sample_cache, {'assetIds': self.asset_id})
-        _invoke_and_decode(request, self.conf, True)
+        encoded_asset_id = base64.b64encode(json.dumps(self.asset_id).encode()).decode()
+        request = generate_one_valid(self.operation, self.sample_cache, {'assetIds': encoded_asset_id})
+        data = _invoke_and_decode(request, self.conf, True)
+        _assert(len(data["result"]) != 0, "Returns non-empty list")
 
 
 @operation("GetAllAssetAdministrationShells")
@@ -667,7 +670,12 @@ class GetAllAasRefsTestSuite(GetAllAasTestSuiteBase):
         request = generate_one_valid(self.operation, self.sample_cache, {'idShort': self.valid_id_short})
         _invoke_and_decode(request, self.conf, True)
 
+#####################################
+# AssetAdministrationShell Interface
+#####################################
+
 # /shells/<AAS>
+# /aas
 
 
 @operation("GetAssetAdministrationShellById")
@@ -727,6 +735,9 @@ class GetAllSubmodelsTestSuite(ApiTestSuite):
         request = generate_one_valid(self.operation, self.sample_cache, {'aasIdentifier': b64urlsafe(self.valid_id)})
         _invoke_and_decode(request, self.conf, True)
 
+    # TODO: fetch by semantic id
+    # TODO: fetch by idShort
+    # TODO: two pagination tests
 
 # /shells/<AAS>/submodel-refs
 
@@ -760,6 +771,7 @@ class GetAllSubmodelRefsTestSuite(ApiTestSuite):
         data = _lookup(data, ['result'])
         _assert(len(data) == 1, 'Exactly one entry')
 
+    # TODO: set limit=1 and fetch only one
 
 # /shells/<AAS>/asset-information
 
@@ -921,7 +933,7 @@ class GetSubmodel_Reference(SubmodelSuite, GetSubmodelRefsTests):
 # /shells/<AAS>/submodels/<SM>/submodel-elements
 
 
-class GetSubmodelElementTests(ApiTestSuite):
+class GetSubmodelElementsTests(ApiTestSuite):
     def test_simple(self):
         """
         Fetch all submodel elements
@@ -969,19 +981,20 @@ class GetSubmodelElementTests(ApiTestSuite):
         })
         _invoke_and_decode(request, self.conf, True)
 
+    # TODO: two pagination tests are missing
 
 @operation("GetAllSubmodelElements_AasRepository")
-class GetAllSubmodelElements_AasRepository(SubmodelByAasRepoSuite, GetSubmodelElementTests):
+class GetAllSubmodelElements_AasRepository(SubmodelByAasRepoSuite, GetSubmodelElementsTests):
     pass
 
 
 @operation("GetAllSubmodelElements_SubmodelRepository")
-class GetAllSubmodelElements_SubmodelRepository(SubmodelBySubmodelRepoSuite, GetSubmodelElementTests):
+class GetAllSubmodelElements_SubmodelRepository(SubmodelBySubmodelRepoSuite, GetSubmodelElementsTests):
     pass
 
 
 @operation("GetAllSubmodelElements")
-class GetAllSubmodelElements(SubmodelSuite, GetSubmodelElementTests):
+class GetAllSubmodelElements(SubmodelSuite, GetSubmodelElementsTests):
     pass
 
 
@@ -1146,7 +1159,7 @@ class SubmodelElementBySubmodelSuite(SubmodelElementTestsBase):
         self.valid_values['idShortPath'] = _first_iterator_item(self.paths.values())[0]
 
 
-class SubmodelElementBySuperpathSuite(SubmodelElementTestsBase):
+class GetSubmodelElementTests(SubmodelElementTestsBase):
     supported_submodel_elements = {
         'SubmodelElementCollection',
         'SubmodelElementList',
@@ -1501,6 +1514,7 @@ class GenerateSerializationSuite(ApiTestSuite):
         if data:
             _assert('conceptDescriptions' in data, 'contains conceptDescriptions', Level.WARNING)
 
+    # TODO: invoke without params
 
 # /description
 

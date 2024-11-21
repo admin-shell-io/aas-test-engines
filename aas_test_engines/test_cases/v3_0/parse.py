@@ -80,7 +80,7 @@ class StringFormattedValue:
 
         if self.pattern:
             if re.fullmatch(self.pattern, raw_value) is None:
-                raise ValueError("String does not match pattern")
+                raise ValueError(f"String '{raw_value}' does not match pattern")
 
     def __eq__(self, other: "StringFormattedValue") -> bool:
         return self.raw_value == other.raw_value
