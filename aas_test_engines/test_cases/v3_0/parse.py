@@ -67,20 +67,20 @@ class StringFormattedValue:
         self.raw_value = raw_value
         if self.min_length is not None:
             if len(raw_value) < self.min_length:
-                raise ValueError("String is too short")
+                raise ValueError(f"String is shorter than {self.min_length} characters")
         if self.max_length is not None:
             if len(raw_value) > self.max_length:
-                raise ValueError("String is too long")
+                raise ValueError(f"String is longer than {self.max_length} characters")
 
         # Constraint AASd-130: An attribute with data type "string" shall be restricted to the characters as defined in
         # XML Schema 1.0, i.e. the string shall consist of these characters only: ^[\x09\x0A\x0D\x20-\uD7FF\uE000-
         # \uFFFD\u00010000-\u0010FFFF]*$.
         if re.fullmatch(r"[\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]*", raw_value) is None:
-            raise ValueError("String is not XML serializable")
+            raise ValueError("Constraint AASd-130 violated: String is not XML serializable")
 
         if self.pattern:
             if re.fullmatch(self.pattern, raw_value) is None:
-                raise ValueError("String does not match pattern")
+                raise ValueError(f"String does not match pattern {self.pattern}")
 
     def __eq__(self, other: "StringFormattedValue") -> bool:
         return self.raw_value == other.raw_value
