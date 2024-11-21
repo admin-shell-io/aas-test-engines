@@ -117,7 +117,7 @@ class ContactInformation:
         "semantic_id": " https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/TimeZone",
     })
     # TODO: Add hint: "mandatory property according to EU MachineDirective 2006/42/EC."
-    city_town: Optional[str] = field(metadata={
+    city_town: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAO132#002",
     })
     company: Optional[LangString] = field(metadata={
