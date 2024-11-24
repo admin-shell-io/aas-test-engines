@@ -54,7 +54,7 @@ class AasTestResult:
         for sub_result in self.sub_results:
             yield from sub_result.to_lines(indent + 1)
 
-    def _to_html(self) -> str:
+    def _to_html(self, level: int) -> str:
         cls = {
             Level.INFO: 'info',
             Level.WARNING: 'warning',
@@ -65,11 +65,11 @@ class AasTestResult:
         msg = html.escape(self.message)
         if self.sub_results:
             c = "" if self.ok() else "caret-down"
-            s += f'<div class="{cls}">{msg}<span class="caret {c}"/></div>\n'
+            s += f'<div class="{cls}">{msg}<span class="caret level-{level} {c}"/></div>\n'
             c = "" if self.ok() else "visible"
             s += f'<div class="sub-results {c}">\n'
             for sub_result in self.sub_results:
-                s += sub_result._to_html()
+                s += sub_result._to_html(level + 1)
             s += "</div>\n"
         else:
             s += f'<div class="{cls}">{msg}</div>\n'
@@ -86,7 +86,7 @@ class AasTestResult:
         """
         with open(os.path.join(script_dir, 'data', 'template.html'), 'r') as f:
             content = f.read()
-        return content.replace("<!-- CONTENT -->", self._to_html())
+        return content.replace("<!-- CONTENT -->", self._to_html(0))
 
     def to_dict(self):
         return {

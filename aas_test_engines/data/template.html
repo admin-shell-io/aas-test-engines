@@ -65,12 +65,31 @@
             color: red;
             font-weight: bolder;
         }
+
+        .help {
+            position: absolute;
+            right:0;
+            top:0
+        }
     </style>
 </head>
 
 <body>
 
     <h2>Test Result</h2>
+
+    <div class="help">
+        <table>
+            <tr>
+                <td>&rarr;</td>
+                <td>Expand one level</td>
+            </tr>
+            <tr>
+                <td>&larr;</td>
+                <td>Collapse one level</td>
+            </tr>
+        </table>
+    </div>
 
     <div id="content">
         <!-- CONTENT -->
@@ -82,14 +101,40 @@
             element.classList.toggle("caret-down");
         }
 
-        var carets = document.getElementsByClassName("caret");
-        var i;
+        function expand(element) {
+            element.parentElement.parentElement.querySelector(".sub-results").classList.add("visible");
+            element.classList.add("caret-down");
+        }
 
-        for (i = 0; i < carets.length; i++) {
-            carets[i].addEventListener("click", function (event) {
+        function collapse(element) {
+            element.parentElement.parentElement.querySelector(".sub-results").classList.remove("visible");
+            element.classList.remove("caret-down");
+        }
+
+        for (const caret of document.getElementsByClassName("caret")) {
+            caret.addEventListener("click", function (event) {
                 toggle(event.target);
             });
         }
+
+        let level = 0
+        document.addEventListener("keyup", (event => {
+            if (event.code == "ArrowRight") {
+                const carets = document.getElementsByClassName(`level-${level}`);
+                if(carets.length == 0) return;
+                for (const caret of document.getElementsByClassName(`level-${level}`)) {
+                    expand(caret)
+                }
+                level++;
+            } else if (event.code == "ArrowLeft") {
+                if(level==0) return;
+                level--;
+                const carets = document.getElementsByClassName(`level-${level}`);
+                for (const caret of carets) {
+                    collapse(caret)
+                }
+            }
+        }));
 
     </script>
 
