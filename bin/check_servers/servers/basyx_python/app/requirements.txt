@@ -1,2 +1,0 @@
-Werkzeug
-git+https://github.com/rwth-iat/basyx-python-sdk@main

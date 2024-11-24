@@ -4,4 +4,4 @@ services:
     ports:
     - 8000:80 
     volumes:
-      - ./../../test_data:/app/storage:ro
+      - ./../../test_data:/storage:ro
