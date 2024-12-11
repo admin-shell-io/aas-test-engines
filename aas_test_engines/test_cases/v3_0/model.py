@@ -3,7 +3,7 @@ from .parse import StringFormattedValue, abstract, CheckConstraintException, req
 from dataclasses import dataclass
 from typing import List, Optional, Set
 from enum import Enum
-from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc, is_bcp_47_for_english, is_any_uri
+from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc, is_bcp_47_for_english, is_any_uri, is_xs_date_time
 
 # TODO: AASd-021
 # TODO: AASd-022
@@ -100,6 +100,15 @@ class VersionString(StringFormattedValue):
 
 class ValueDataType(StringFormattedValue):
     pass
+
+
+class DateTime(StringFormattedValue):
+    min_length = 1
+
+    def __init__(self, raw_value):
+        super().__init__(raw_value)
+        if not is_xs_date_time(self.raw_value):
+            raise ValueError("Not an xs:dateTime")
 
 
 class DateTimeUtc(StringFormattedValue):
@@ -744,7 +753,7 @@ class BasicEventElement(EventElement):
     state: StateOfEvent
     message_topic: Optional[MessageTopicString]
     message_broker: Optional[Reference]
-    last_update: Optional[DateTimeUtc]
+    last_update: Optional[DateTime]
     min_interval: Optional[Duration]
     max_interval: Optional[Duration]
 
