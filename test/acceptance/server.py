@@ -74,27 +74,29 @@ class Params:
     invalid_accepted: int
     remove_path_prefix: str = ''
 
-# PYTHONPATH=. python -m aas_test_engines check_server http://localhost:8000/api/v3.0/shells/d3d3LmV4YW1wbGUuY29tL2lkcy9zbS84MTMyXzQxMDJfODA0Ml83NTYx/submodels/d3d3LmV4YW1wbGUuY29tL2lkcy9zbS84MTMyXzQxMDJfODA0Ml8xODYx  SubmodelServiceSpecification/SSP-002   --no-verify --output html --remove-path-prefix /submodel  > output.html
-
-
 params = [
     Params(
         '/api/v3.0',
         "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002",
-        3, 0,
+        2, 0,
     ),
     Params(
         '/api/v3.0',
         "https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002",
-        3, 0,
+        2, 0,
     ),
     Params(
         '/api/v3.0/shells/aHR0cDovL2N1c3RvbWVyLmNvbS9hYXMvOTE3NV83MDEzXzcwOTFfOTE2OA==/submodels/aHR0cDovL2k0MC5jdXN0b21lci5jb20vdHlwZS8xLzEvRjEzRTg1NzZGNjQ4ODM0Mg==',
         "https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002",
-        2, 2,
+        1, 2,
         "/submodel",
     ),
-    # Params('/api/v3.0', "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002"),
+    Params(
+        '/api/v3.0/shells/aHR0cDovL2N1c3RvbWVyLmNvbS9hYXMvOTE3NV83MDEzXzcwOTFfOTE2OA==/',
+        "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002",
+        0, 2,
+        '/aas'
+    ),
 ]
 
 for param in params:
@@ -106,6 +108,8 @@ for param in params:
     )
     result, mat = api.execute_tests(conf, param.suite)
     mat.print()
+    with open("output.html", "w") as f:
+        f.write(result.to_html())
     # TODO
     # assert result.ok()
     assert mat.valid_rejected == param.valid_rejected

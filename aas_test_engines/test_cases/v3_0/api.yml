@@ -2203,6 +2203,16 @@ paths:
           enum:
           - deep
           - core
+      - name: extent
+        in: query
+        description: Determines to which extent the resource is being serialized
+        required: false
+        schema:
+          type: string
+          default: deep
+          enum:
+          - deep
+          - core
       responses:
         "200":
           description: Requested submodel element in its ValueOnly representation

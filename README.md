@@ -60,6 +60,7 @@ In case of API, the IDTA specifications define service specifications and profil
 | Name | Profile Identifier | Description | Support in test-engine |
 | :--- | :---               | :---        | :---                   |
 | AAS Repository Read Profile | https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002 | Only read operations for the AAS Repository Service | ✅ |
+| AAS Read Profile | https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002 | Only read operations for the AAS Service | ✅ |
 | Submodel Repository Read Profile | https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002 | Only read operations for the Submodel Repository Service | ✅ |
 | Submodel Read Profile | https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002 | Only read operations for the Submodel Repository Service | ✅ |
 | AAS Registry Read Profile | https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRegistryServiceSpecification/SSP-002 | Only read operations for AAS Registry Service | (✔️) |
