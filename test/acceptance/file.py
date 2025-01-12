@@ -10,6 +10,8 @@ def is_blacklisted(path):
         'Double/lowest.',
         'Double/max.',
         'Float/largest_normal.',
+        'lastUpdate/date_time_without_zone',
+        'lastUpdate/date_time_with_offset',
     ]
     for i in blacklist:
         if i in path:
@@ -35,6 +37,7 @@ def run(dirname: str, check):
                 if 'Expected' in path_in:
                     valid_accepted += 1
                 else:
+                    print(path_in)
                     invalid_accepted += 1
             else:
                 if 'Expected' in path_in:

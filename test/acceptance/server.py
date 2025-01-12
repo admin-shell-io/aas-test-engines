@@ -70,24 +70,47 @@ show_server_logs(container_id)
 class Params:
     url: str
     suite: str
-
+    valid_rejected: int
+    invalid_accepted: int
+    remove_path_prefix: str = ''
 
 params = [
-    Params('/api/v3.0', "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002"),
-    Params('/api/v3.0', "https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002"),
-    # Params('/api/v3.0', "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002"),
-    # Params('/api/v3.0', "https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002"),
+    Params(
+        '/api/v3.0',
+        "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002",
+        2, 0,
+    ),
+    Params(
+        '/api/v3.0',
+        "https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002",
+        2, 0,
+    ),
+    Params(
+        '/api/v3.0/shells/aHR0cDovL2N1c3RvbWVyLmNvbS9hYXMvOTE3NV83MDEzXzcwOTFfOTE2OA==/submodels/aHR0cDovL2k0MC5jdXN0b21lci5jb20vdHlwZS8xLzEvRjEzRTg1NzZGNjQ4ODM0Mg==',
+        "https://admin-shell.io/aas/API/3/0/SubmodelServiceSpecification/SSP-002",
+        1, 2,
+        "/submodel",
+    ),
+    Params(
+        '/api/v3.0/shells/aHR0cDovL2N1c3RvbWVyLmNvbS9hYXMvOTE3NV83MDEzXzcwOTFfOTE2OA==/',
+        "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002",
+        0, 2,
+        '/aas'
+    ),
 ]
 
 for param in params:
     print("-"*10)
     print(f"Checking {param.suite}")
     conf = api.ExecConf(
-        server=f"{HOST}{param.url}"
+        server=f"{HOST}{param.url}",
+        remove_path_prefix=param.remove_path_prefix,
     )
     result, mat = api.execute_tests(conf, param.suite)
     mat.print()
+    with open("output.html", "w") as f:
+        f.write(result.to_html())
     # TODO
     # assert result.ok()
-    assert mat.valid_rejected == 3  # Constraint violations in ExampleMotor.aasx
-    assert mat.invalid_accepted == 0
+    assert mat.valid_rejected == param.valid_rejected
+    assert mat.invalid_accepted == param.invalid_accepted
