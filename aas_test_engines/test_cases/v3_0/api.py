@@ -508,39 +508,39 @@ def _invoke(request: Request, conf: ExecConf, positive_test: bool) -> requests.m
 
 
 def _invoke_and_decode(request: Request, conf: ExecConf, positive_test: bool) -> dict:
-    with start(f"Invoke: {request.operation.method.upper()} {request.make_path()}"):
-        response = _execute(request, conf, positive_test)
-        expected_responses = []
-        expected_responses += [i for i in request.operation.responses if i.code == response.status_code]
-        expected_responses += [i for i in request.operation.responses if i.code is None]
-        if not expected_responses:
-            abort(f"Invalid status code {response.status_code}")
-        data = _get_json(response)
-        ref = expected_responses[0].schema.get('$ref')
-        if ref == '#/components/schemas/AssetAdministrationShell':
-            result, aas = parse_and_check_json(AssetAdministrationShell, data)
-            write(result)
-            return data
-        if ref == '#/components/schemas/Environment':
-            result, aas = parse_and_check_json(Environment, data)
-            write(result)
-            return data
-        if ref == '#/components/schemas/GetAssetAdministrationShellsResult':
-            entries = data.get('result', None)
-            if entries:
-                result, aas = parse_and_check_json(List[AssetAdministrationShell], entries)
-                write(result)
-            # Fallthrough to check against schema for paging_metadata
-
-        validator = parse_schema({**expected_responses[0].schema, '$schema': 'https://json-schema.org/draft/2020-12/schema'}, ParseConfig(raise_on_unknown_format=False))
-        validation_result = validator.validate(data)
-        if validation_result.ok:
-            write("Response conforms to schema")
-        else:
-            result = AasTestResult(f"Invalid response for schema", level=Level.ERROR)
-            _map_error(result, validation_result)
-            raise ResultException(result)
+    write(f"Invoke: {request.operation.method.upper()} {request.make_path()}")
+    response = _execute(request, conf, positive_test)
+    expected_responses = []
+    expected_responses += [i for i in request.operation.responses if i.code == response.status_code]
+    expected_responses += [i for i in request.operation.responses if i.code is None]
+    if not expected_responses:
+        abort(f"Invalid status code {response.status_code}")
+    data = _get_json(response)
+    ref = expected_responses[0].schema.get('$ref')
+    if ref == '#/components/schemas/AssetAdministrationShell':
+        result, aas = parse_and_check_json(AssetAdministrationShell, data)
+        write(result)
         return data
+    if ref == '#/components/schemas/Environment':
+        result, aas = parse_and_check_json(Environment, data)
+        write(result)
+        return data
+    if ref == '#/components/schemas/GetAssetAdministrationShellsResult':
+        entries = data.get('result', None)
+        if entries:
+            result, aas = parse_and_check_json(List[AssetAdministrationShell], entries)
+            write(result)
+        # Fallthrough to check against schema for paging_metadata
+
+    validator = parse_schema({**expected_responses[0].schema, '$schema': 'https://json-schema.org/draft/2020-12/schema'}, ParseConfig(raise_on_unknown_format=False))
+    validation_result = validator.validate(data)
+    if validation_result.ok:
+        write("Response conforms to schema")
+    else:
+        result = AasTestResult(f"Invalid response for schema", level=Level.ERROR)
+        _map_error(result, validation_result)
+        raise ResultException(result)
+    return data
 
 
 class ApiTestSuite:
@@ -1940,7 +1940,7 @@ def execute_tests(conf: ExecConf, suite: str) -> Tuple[AasTestResult, ConfusionM
         for operation in _spec.open_api.operations.values():
             if operation.operation_id not in operation_ids:
                 continue
-            with start(f"Checking {operation.method.upper()} {operation.path} ({operation.operation_id})"):
+            with start(f"Checking {operation.method.upper()} {operation.path} ({operation.operation_id})", True):
                 if conf.dry:
                     continue
 

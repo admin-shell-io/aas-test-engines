@@ -110,8 +110,9 @@ managers: List["ContextManager"] = []
 
 class ContextManager:
 
-    def __init__(self, result: AasTestResult):
+    def __init__(self, result: AasTestResult, catch_all_exceptions: bool):
         self.result = result
+        self.catch_all_exceptions = catch_all_exceptions
 
     def __enter__(self) -> AasTestResult:
         managers.append(self)
@@ -125,6 +126,11 @@ class ContextManager:
                 managers[-1].result.append(self.result)
         elif isinstance(exc_val, ResultException):
             self.result.append(exc_val.result)
+            if managers:
+                managers[-1].result.append(self.result)
+            return True
+        elif self.catch_all_exceptions:
+            self.result.append(AasTestResult(f"Internal error: {exc_val}", Level.CRITICAL))
             if managers:
                 managers[-1].result.append(self.result)
             return True
@@ -151,9 +157,9 @@ def write(message: Union[str, AasTestResult]):
     managers[-1].result.append(message)
 
 
-def start(message: Union[str, AasTestResult]) -> ContextManager:
+def start(message: Union[str, AasTestResult], catch_all_exceptions: bool = False) -> ContextManager:
     result = _as_result(message, Level.INFO)
-    return ContextManager(result)
+    return ContextManager(result, catch_all_exceptions)
 
 
 def abort(message: Union[str, AasTestResult]):
