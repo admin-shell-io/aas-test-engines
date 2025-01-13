@@ -1052,6 +1052,50 @@ class GetSubmodelElementsTests(ApiTestSuite):
         })
         _invoke_and_decode(request, self.conf, True)
 
+    def test_core_without_blob_value(self):
+        """
+        Fetch all submodel elements with level=core and extend=withBlobValue
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            **self.valid_values,
+            'level': 'core',
+            'extent': 'withoutBlobValue'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_deep_without_blob_value(self):
+        """
+        Fetch all submodel elements with level=deep and extend=withoutBlobValue
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            **self.valid_values,
+            'level': 'deep',
+            'extent': 'withoutBlobValue'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_core_with_blob_value(self):
+        """
+        Fetch all submodel elements with level=core and extend=withBlobValue
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            **self.valid_values,
+            'level': 'core',
+            'extent': 'withBlobValue'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
+    def test_deep_with_blob_value(self):
+        """
+        Fetch all submodel elements with level=deep and extend=withBlobValue
+        """
+        request = generate_one_valid(self.operation, self.sample_cache, {
+            **self.valid_values,
+            'level': 'deep',
+            'extent': 'withBlobValue'
+        })
+        _invoke_and_decode(request, self.conf, True)
+
     # TODO: two pagination tests are missing
 
 
@@ -1327,6 +1371,26 @@ class GetSubmodelElementTests(SubmodelElementTestsBase):
             with start(f"Checking {model_type}"):
                 self.check_type(model_type, level=None, extent='withoutBlobValue')
 
+    def test_core_without_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='core', extent='withoutBlobValue')
+
+    def test_deep_without_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='deep', extent='withoutBlobValue')
+
+    def test_core_with_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='core', extent='withBlobValue')
+
+    def test_deep_with_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='deep', extent='withBlobValue')
+
 
 @operation("GetSubmodelElementByPath_AasRepository")
 class GetSubmodelElementByPath_AasRepository(SubmodelElementByAasRepoSuite, GetSubmodelElementTests):
@@ -1402,6 +1466,26 @@ class GetSubmodelElementValueOnlyTests(SubmodelElementTestsBase):
         for model_type in self.all_submodel_elements:
             with start(f"Checking {model_type}"):
                 self.check_type(model_type, level=None, extent='withoutBlobValue')
+
+    def test_core_without_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='core', extent='withoutBlobValue')
+
+    def test_deep_without_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='deep', extent='withoutBlobValue')
+
+    def test_core_with_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='core', extent='withBlobValue')
+
+    def test_deep_with_blob_value(self):
+        for model_type in self.all_submodel_elements:
+            with start(f"Checking {model_type}"):
+                self.check_type(model_type, level='deep', extent='withBlobValue')
 
 
 @operation("GetSubmodelElementByPath-ValueOnly_AasRepository")
@@ -1602,9 +1686,11 @@ class GetFileByPathTests(SubmodelElementTestsBase):
 class GetFileByPath_AasRepository(GetFileByPathTests, SubmodelElementByAasRepoSuite):
     pass
 
+
 @operation("GetFileByPath_AAS")
 class GetFileByPath_AasRepository(GetFileByPathTests, SubmodelElementByAasSuite):
     pass
+
 
 @operation("GetFileByPath_SubmodelRepo")
 class GetFileByPath_SubmodelRepo(GetFileByPathTests, SubmodelElementBySubmodelRepoSuite):
