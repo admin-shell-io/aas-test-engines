@@ -2,8 +2,9 @@ from typing import Optional, Tuple, Dict, List
 from dataclasses import dataclass, field
 from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
+import datetime
 
-from .model import Submodel, Environment
+from .model import Environment
 from .parse_submodel import parse_submodel, LangString
 from .parse import check_constraints, CheckConstraintException
 from .adapter import AdapterPath
@@ -220,16 +221,16 @@ class DigitalNameplate:
     year_of_construction: str = field(metadata={
         "semantic_id": "0173-1#02-AAP906#001",
     })
-    date_of_manufacture: Optional[str] = field(metadata={
+    date_of_manufacture: Optional[datetime.date] = field(metadata={
         "semantic_id": "0173-1#02-AAR972#002",
     })
-    hardware_version: Optional[str] = field(metadata={
+    hardware_version: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAN270#002",
     })
-    firmware_version: Optional[str] = field(metadata={
+    firmware_version: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAM985#002",
     })
-    software_version: Optional[str] = field(metadata={
+    software_version: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAM737#002",
     })
     country_of_origin: Optional[str] = field(metadata={

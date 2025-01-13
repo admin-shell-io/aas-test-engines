@@ -2,13 +2,18 @@ from .model import Submodel, SubmodelElement, Property, DataTypeDefXsd, MultiLan
 from .adapter import AdapterPath
 
 from aas_test_engines.result import AasTestResult, Level
-from typing import List, Dict, Optional, Tuple, Union
+from typing import List, Dict, Tuple, Union
 from collections import defaultdict
 from dataclasses import is_dataclass, fields
 from enum import Enum
+import datetime
 
 INVALID = object()
 LangString = Dict[str, str]
+
+
+def to_camel_case(s: str) -> str:
+    return "".join(s.title().split('_'))
 
 
 def _unwrap(cls) -> Tuple[int, int, type]:
@@ -45,21 +50,34 @@ def _parse_string(root_result: AasTestResult, element: SubmodelElement, path: Ad
     if not isinstance(element, Property):
         root_result.append(AasTestResult(f"Cannot convert to string: must be a Property @ {path}", level=Level.ERROR))
         return
-    if element.value_type != DataTypeDefXsd.string:
-        root_result.append(AasTestResult(f"Cannot convert to string: valueType must be xs:string @ {path}", level=Level.ERROR))
-        return
     if not element.value:
         root_result.append(AasTestResult(f"Cannot convert to string: no value @ {path}", level=Level.ERROR))
+        return
+    if element.value_type != DataTypeDefXsd.string:
+        root_result.append(AasTestResult(f"Cannot convert '{element.value}' to string: valueType must be xs:string @ {path}", level=Level.ERROR))
         return
     return element.value.raw_value
 
 
-def _parse_lang_string(root_result: AasTestResult, element: SubmodelElement, path: AdapterPath) -> LangString:
-    if not isinstance(element, MultiLanguageProperty):
-        root_result.append(AasTestResult(f"Cannot convert to lang string: not a MultiLanguageProperty @ {path}"))
+def _parse_date(root_result: AasTestResult, element: SubmodelElement, path: AdapterPath) -> str:
+    if not isinstance(element, Property):
+        root_result.append(AasTestResult(f"Cannot convert to date: must be a Property @ {path}", level=Level.ERROR))
         return
     if not element.value:
-        root_result.append(AasTestResult(f"Cannot convert to lang string: no value @ {path}"))
+        root_result.append(AasTestResult(f"Cannot convert to date: no value @ {path}", level=Level.ERROR))
+        return
+    if element.value_type != DataTypeDefXsd.date:
+        root_result.append(AasTestResult(f"Cannot convert '{element.value}' to date: valueType must be xs:date @ {path}", level=Level.ERROR))
+        return
+    return datetime.date.fromisoformat(element.value.raw_value)
+
+
+def _parse_lang_string(root_result: AasTestResult, element: SubmodelElement, path: AdapterPath) -> LangString:
+    if not isinstance(element, MultiLanguageProperty):
+        root_result.append(AasTestResult(f"Cannot convert to lang string: not a MultiLanguageProperty @ {path}", Level.ERROR))
+        return
+    if not element.value:
+        root_result.append(AasTestResult(f"Cannot convert to lang string: no value @ {path}", Level.ERROR))
         return
     result: LangString = {}
     for i in element.value:
@@ -93,19 +111,20 @@ def _parse_elements(root_result: AasTestResult, cls, elements: List[SubmodelElem
 
         min_card, max_card, field_type = _unwrap(field.type)
         sub_elements = elements_by_semantic_id[semantic_id]
+        name = to_camel_case(field.name)
         if len(sub_elements) > max_card:
-            root_result.append(AasTestResult(f"Field {field.name}: found {len(sub_elements)} elements with semanticId {semantic_id}, but at most {max_card} allowed", level=Level.ERROR))
+            root_result.append(AasTestResult(f"Field {name}: found {len(sub_elements)} elements with semanticId {semantic_id}, but at most {max_card} allowed", level=Level.ERROR))
             field_val = INVALID
         elif len(sub_elements) < min_card:
-            root_result.append(AasTestResult(f"Field {field.name}: found {len(sub_elements)} elements with semanticId {semantic_id}, but at least {min_card} required", level=Level.ERROR))
+            root_result.append(AasTestResult(f"Field {name}: found {len(sub_elements)} elements with semanticId {semantic_id}, but at least {min_card} required", level=Level.ERROR))
             field_val = INVALID
         else:
             if len(sub_elements) == 0:
                 field_val = None
             elif max_card == 1:
-                field_val = _parse(field_type, sub_elements[0], root_result, path + field.name)
-            else: # i.e. list
-                field_val = [_parse(field_type, el, root_result, path + field.name + idx) for idx, el in enumerate(sub_elements)]
+                field_val = _parse(field_type, sub_elements[0], root_result, path + name)
+            else:  # i.e. list
+                field_val = [_parse(field_type, el, root_result, path + name + idx) for idx, el in enumerate(sub_elements)]
         args[field.name] = field_val
     return cls(**args)
 
@@ -131,6 +150,8 @@ def _parse(cls, element: SubmodelElement, root_result, path: AdapterPath):
             return _parse_element_collection(root_result, cls, element, path)
         elif cls is str:
             return _parse_string(root_result, element, path)
+        elif cls is datetime.date:
+            return _parse_date(root_result, element, path)
         elif isinstance(cls, Enum.__class__):
             return _parse_enum(root_result, cls, element, path)
     raise NotImplementedError(
