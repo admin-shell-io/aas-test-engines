@@ -204,7 +204,7 @@ class DigitalNameplate:
         "semantic_id": "0173-1#02-AAU732#001",
     })
     manufacturer_product_family: Optional[LangString] = field(metadata={
-        "semantic_id": "0173-1#02-AAU732#001",
+        "semantic_id": "0173-1#02-AAU731#001",
     })
     manufacturer_product_type: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAO057#002",

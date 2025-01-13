@@ -104,9 +104,10 @@ def _parse_elements(root_result: AasTestResult, cls, elements: List[SubmodelElem
         try:
             semantic_id = field.metadata['semantic_id']
         except KeyError:
-            raise Exception(f"Field {field.name} is missing metadata 'semantic_id'")
+            raise Exception(f"Internal error: field {field.name} is missing metadata 'semantic_id'")
         if semantic_id in all_semantic_ids:
-            raise Exception(f"Duplicate metadata semantic_id {semantic_id}")
+            raise Exception(f"Internal error: duplicate metadata semantic_id {semantic_id}")
+
         all_semantic_ids.add(semantic_id)
 
         min_card, max_card, field_type = _unwrap(field.type)
