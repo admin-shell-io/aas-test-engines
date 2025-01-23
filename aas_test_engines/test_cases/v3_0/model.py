@@ -251,7 +251,7 @@ class Reference:
         if not self.keys:
             return
         if self.keys[0].type not in GloballyIdentifiables:
-            raise CheckConstraintException("Constraint AASd-121 violated: first key must one of GloballyIdentifiables")
+            raise CheckConstraintException("Constraint AASd-121 violated: first key must be one of GloballyIdentifiables")
 
     def check_aasd_122(self):
         """
@@ -261,7 +261,7 @@ class Reference:
         if self.type != ReferenceType.ExternalReference or self.keys is None:
             return
         if self.keys[0].type not in GenericGloballyIdentifiables:
-            raise CheckConstraintException("Constraint AASd-122 violated: first key must one of GenericGloballyIdentifiables")
+            raise CheckConstraintException("Constraint AASd-122 violated: first key must be one of GenericGloballyIdentifiables")
 
     def check_aasd_123(self):
         """
@@ -271,7 +271,7 @@ class Reference:
         if self.type != ReferenceType.ModelReference or self.keys is None:
             return
         if self.keys[0].type not in AasIdentifiables:
-            raise CheckConstraintException("Constraint AASd-123 violated: first key must one of AasIdentifiables")
+            raise CheckConstraintException("Constraint AASd-123 violated: first key must be one of AasIdentifiables")
 
     def check_aasd_124(self):
         """
