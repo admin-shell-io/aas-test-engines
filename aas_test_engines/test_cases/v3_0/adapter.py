@@ -12,7 +12,7 @@ class AdapterPath:
         return result
 
     def __str__(self):
-        return "/" + "/".join([str(i) for i in self.elements])
+        return "/".join([str(i) for i in self.elements])
 
 
 class AdapterException(Exception):
