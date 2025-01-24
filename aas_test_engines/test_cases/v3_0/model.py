@@ -950,7 +950,7 @@ class SubmodelElementList(SubmodelElement):
     value: Optional[List[SubmodelElement]]
 
     def check_type_value_list_element(self):
-        if self.type_value_list_element not in AasSubmodelElements:
+        if self.type_value_list_element and self.type_value_list_element not in AasSubmodelElements:
             raise CheckConstraintException("Constraint violated: type_value_list_element must be a AasSubmodelElement")
 
     def check_aasd_107(self):
@@ -999,6 +999,8 @@ class SubmodelElementList(SubmodelElement):
         SubmodelElementList/typeValueListElement.
         """
         if not self.value:
+            return
+        if not self.type_value_list_element:
             return
         for idx, el in enumerate(self.value):
             if not self.type_value_list_element.matches(el):
