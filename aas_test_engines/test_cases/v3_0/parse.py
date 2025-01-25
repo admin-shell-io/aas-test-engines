@@ -168,6 +168,12 @@ def parse_concrete_object(cls, adapter: Adapter, result: AasTestResult):
     args = {}
     all_fields = set()
     for field in fields(cls):
+        try:
+            exclude_as = field.metadata['exclude_as']
+            args[field.name] = exclude_as
+            continue
+        except KeyError:
+            pass
         field_name = to_lower_camel_case(field.name)
         all_fields.add(field_name)
         required, field_type = unwrap_optional(field.type)
@@ -211,7 +217,11 @@ def parse(cls, obj_value: Adapter, result: AasTestResult):
             if isabstract(cls):
                 return parse_abstract_object(cls, obj_value, result)
             else:
-                return parse_concrete_object(cls, obj_value, result)
+                obj = parse_concrete_object(cls, obj_value, result)
+                post_parse = getattr(obj, "post_parse", None)
+                if post_parse:
+                    post_parse()
+                return obj
         elif cls is bool:
             return parse_bool(obj_value, result)
         elif cls is str:

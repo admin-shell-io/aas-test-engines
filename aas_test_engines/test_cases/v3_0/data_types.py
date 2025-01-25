@@ -357,7 +357,7 @@ class DataTypeDefXsd(Enum):
     unsignedShort = "xs:unsignedShort"
 
 
-_validators = {
+validators = {
     DataTypeDefXsd.string: lambda _: True,
     DataTypeDefXsd.boolean: lambda x: x in {"true", "false", "1", "0"},
     DataTypeDefXsd.decimal: is_decimal,
@@ -395,9 +395,3 @@ _validators = {
     DataTypeDefXsd.base64Binary: is_base64_binary,
     DataTypeDefXsd.hexBinary: is_hex_binary,
 }
-
-
-def validate(value: str, value_type: DataTypeDefXsd):
-    validator = _validators[value_type]
-    if not validator(value):
-        raise CheckConstraintException("Invalid")

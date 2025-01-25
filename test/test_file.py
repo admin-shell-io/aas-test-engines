@@ -32,6 +32,38 @@ class CheckJsonTest(TestCase):
         result = file.check_json_file(io.StringIO("no json"))
         self.assertFalse(result.ok())
 
+    def test_id_short_path(self):
+        result = file.check_json_data({
+            "submodels": [
+                {
+                    "id": "https://example.com/some-submodel",
+                    "idShort": "someSubmodel",
+                    "modelType": "Submodel",
+                    "submodelElements": [
+                        {
+                            "modelType": "SubmodelElementCollection",
+                            "idShort": "SMC",
+                            "value": [
+                                {
+                                    "modelType": "SubmodelElementList",
+                                    "idShort": "SML",
+                                    "valueTypeListElement": "xs:int",
+                                    "value": [{
+                                        "modelType": "Property",
+                                        "valueType": "xs:int",
+                                        "value": "foo"
+                                    }]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        })
+        result.dump()
+        self.assertFalse(result.ok())
+        self.assertTrue(any("https://example.com/some-submodel:SMC.SML.0" in line for line in result.to_lines()))
+
 
 class CheckXmlTest(TestCase):
 

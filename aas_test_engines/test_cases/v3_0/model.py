@@ -1,13 +1,36 @@
 from .parse import StringFormattedValue, abstract, CheckConstraintException, requires_model_type
 
-from dataclasses import dataclass
-from typing import List, Optional, Set
+from dataclasses import dataclass, field
+from typing import List, Optional, Set, Iterator, Union
 from enum import Enum
-from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validate, is_xs_date_time_utc, is_bcp_47_for_english, is_any_uri, is_xs_date_time
+from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validators, is_xs_date_time_utc, is_bcp_47_for_english, is_any_uri, is_xs_date_time
 
 # TODO: AASd-021
 # TODO: AASd-022
 # TODO: AASd-077
+
+
+class IdShortPath():
+
+    def __init__(self, root: str = ""):
+        self.root = root
+        self.id_shorts: List[Union[str, int]] = []
+
+    def __add__(self, other):
+        result = IdShortPath(self.root)
+        result.id_shorts = self.id_shorts + [other]
+        return result
+
+    def __str__(self):
+        path = '.'.join(str(i) for i in self.id_shorts)
+        return f"{self.root}:{path}"
+
+
+def validate(value: str, value_type: DataTypeDefXsd, path: IdShortPath):
+    validator = validators[value_type]
+    if not validator(value):
+        raise CheckConstraintException(f"Value '{value}' is not a '{value_type.value}' @ {path}")
+
 
 # 5.3.11.2 Primitive Data Types
 
@@ -515,7 +538,7 @@ class Extension(HasSemantics):
 
     def check_value_type(self):
         if self.value and self.value_type:
-            validate(self.value.raw_value, self.value_type)
+            validate(self.value.raw_value, self.value_type, self.id_short_path)
 
 
 @dataclass
@@ -613,7 +636,7 @@ class Qualifier(HasSemantics):
 
     def check_value_type(self):
         if self.value:
-            validate(self.value.raw_value, self.value_type)
+            validate(self.value.raw_value, self.value_type, self.id_short_path)
 
 
 @dataclass
@@ -683,6 +706,14 @@ class AssetInformation:
 @dataclass
 @abstract
 class SubmodelElement(Referable, HasSemantics, Qualifiable, HasDataSpecification):
+    id_short_path: IdShortPath = field(metadata={'exclude_as': None})
+
+    def elements(self) -> Iterator["SubmodelElement"]:
+        yield self
+
+    def _set_path(self, path: IdShortPath):
+        self.id_short_path = path
+
     def check_aasc_3a_050(self):
         """
         Constraint AASc-3a-050: If the DataSpecificationContent DataSpecificationIec61360 is used for an element,
@@ -900,7 +931,7 @@ class Property(DataElement):
 
     def check_value_type(self):
         if self.value:
-            validate(self.value.raw_value, self.value_type)
+            validate(self.value.raw_value, self.value_type, self.id_short_path)
 
 # 5.3.7.13 Range
 
@@ -913,11 +944,11 @@ class Range(DataElement):
 
     def check_value_type_min(self):
         if self.min:
-            validate(self.min.raw_value, self.value_type)
+            validate(self.min.raw_value, self.value_type, self.id_short_path)
 
     def check_value_type_max(self):
         if self.max:
-            validate(self.max.raw_value, self.value_type)
+            validate(self.max.raw_value, self.value_type, self.id_short_path)
 
 # 5.3.7.14 Reference Element
 
@@ -932,6 +963,18 @@ class ReferenceElement(DataElement):
 @dataclass
 class SubmodelElementCollection(SubmodelElement):
     value: Optional[List[SubmodelElement]]
+
+    def elements(self) -> Iterator["SubmodelElement"]:
+        yield self
+        if self.value:
+            for el in self.value:
+                yield from el.elements()
+
+    def _set_path(self, path):
+        self.id_short_path = path
+        if self.value:
+            for el in self.value:
+                el._set_path(path + el.id_short.raw_value)
 
     def check_aasd_117(self):
         ensure_have_id_shorts(self.value)
@@ -948,6 +991,18 @@ class SubmodelElementList(SubmodelElement):
     type_value_list_element: Optional[KeyType]
     value_type_list_element: Optional[DataTypeDefXsd]
     value: Optional[List[SubmodelElement]]
+
+    def _set_path(self, path):
+        self.id_short_path = path
+        if self.value:
+            for idx, el in enumerate(self.value):
+                el._set_path(path + idx)
+
+    def elements(self) -> Iterator["SubmodelElement"]:
+        yield self
+        if self.value:
+            for el in self.value:
+                yield from el.elements()
 
     def check_type_value_list_element(self):
         if self.type_value_list_element and self.type_value_list_element not in AasSubmodelElements:
@@ -1058,6 +1113,12 @@ class AssetAdministrationShell(Identifiable, HasDataSpecification):
 @dataclass
 class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecification):
     submodel_elements: Optional[List[SubmodelElement]]
+
+    def post_parse(self):
+        if self.submodel_elements is None:
+            return
+        for element in self.submodel_elements:
+            element._set_path(IdShortPath(self.id) + element.id_short.raw_value)
 
     def check_aasd_117(self):
         ensure_have_id_shorts(self.submodel_elements)
