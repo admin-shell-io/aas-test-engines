@@ -1129,10 +1129,19 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
     submodel_elements: Optional[List[SubmodelElement]]
 
     def post_parse(self):
+        self.update_id_shorts()
+
+    def update_id_shorts(self):
         if self.submodel_elements is None:
             return
         for element in self.submodel_elements:
             element._set_path(IdShortPath(self.id) + element.id_short)
+
+    def elements(self) -> Iterator[SubmodelElement]:
+        if self.submodel_elements is None:
+            return
+        for element in self.submodel_elements:
+            yield from element.elements()
 
     def check_aasd_117(self):
         ensure_have_id_shorts(self.submodel_elements)
