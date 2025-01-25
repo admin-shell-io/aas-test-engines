@@ -219,7 +219,7 @@ def parse(cls, obj_value: Adapter, result: AasTestResult):
             else:
                 obj = parse_concrete_object(cls, obj_value, result)
                 post_parse = getattr(obj, "post_parse", None)
-                if post_parse:
+                if post_parse and result.ok():
                     post_parse()
                 return obj
         elif cls is bool:

@@ -14,22 +14,33 @@ class IdShortPath():
 
     def __init__(self, root: str = ""):
         self.root = root
-        self.id_shorts: List[Union[str, int]] = []
+        self.id_shorts: List[Union["NameTypeString", int, None]] = []
 
-    def __add__(self, other):
+    def __add__(self, token: Union["NameTypeString", int, None]):
         result = IdShortPath(self.root)
-        result.id_shorts = self.id_shorts + [other]
+        result.id_shorts = self.id_shorts + [token]
         return result
 
     def __str__(self):
-        path = '.'.join(str(i) for i in self.id_shorts)
+        def token_to_string(t):
+            if t is None:
+                return '?'
+            if isinstance(t, int):
+                return str(t)
+            if isinstance(t, NameTypeString):
+                return t.raw_value
+            raise Exception(f"Internal error: invalid token '{t}'")
+        path = '.'.join(token_to_string(i) for i in self.id_shorts)
         return f"{self.root}:{path}"
 
 
-def validate(value: str, value_type: DataTypeDefXsd, path: IdShortPath):
+def validate(value: str, value_type: DataTypeDefXsd, path: Optional[IdShortPath] = None):
     validator = validators[value_type]
     if not validator(value):
-        raise CheckConstraintException(f"Value '{value}' is not a '{value_type.value}' @ {path}")
+        msg = f"Value '{value}' is not a '{value_type.value}'"
+        if path:
+            msg += f" @ {path}"
+        raise CheckConstraintException(msg)
 
 
 # 5.3.11.2 Primitive Data Types
@@ -538,7 +549,7 @@ class Extension(HasSemantics):
 
     def check_value_type(self):
         if self.value and self.value_type:
-            validate(self.value.raw_value, self.value_type, self.id_short_path)
+            validate(self.value.raw_value, self.value_type)
 
 
 @dataclass
@@ -636,7 +647,7 @@ class Qualifier(HasSemantics):
 
     def check_value_type(self):
         if self.value:
-            validate(self.value.raw_value, self.value_type, self.id_short_path)
+            validate(self.value.raw_value, self.value_type)
 
 
 @dataclass
@@ -974,7 +985,7 @@ class SubmodelElementCollection(SubmodelElement):
         self.id_short_path = path
         if self.value:
             for el in self.value:
-                el._set_path(path + el.id_short.raw_value)
+                el._set_path(path + el.id_short)
 
     def check_aasd_117(self):
         ensure_have_id_shorts(self.value)
@@ -988,7 +999,7 @@ class SubmodelElementList(SubmodelElement):
     order_relevant: Optional[bool]
     # TODO: Note: it is recommended to use an external reference.
     semantic_id_list_element: Optional[Reference]
-    type_value_list_element: Optional[KeyType]
+    type_value_list_element: KeyType
     value_type_list_element: Optional[DataTypeDefXsd]
     value: Optional[List[SubmodelElement]]
 
@@ -1005,7 +1016,7 @@ class SubmodelElementList(SubmodelElement):
                 yield from el.elements()
 
     def check_type_value_list_element(self):
-        if self.type_value_list_element and self.type_value_list_element not in AasSubmodelElements:
+        if self.type_value_list_element not in AasSubmodelElements:
             raise CheckConstraintException("Constraint violated: type_value_list_element must be a AasSubmodelElement")
 
     def check_aasd_107(self):
@@ -1118,7 +1129,7 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
         if self.submodel_elements is None:
             return
         for element in self.submodel_elements:
-            element._set_path(IdShortPath(self.id) + element.id_short.raw_value)
+            element._set_path(IdShortPath(self.id) + element.id_short)
 
     def check_aasd_117(self):
         ensure_have_id_shorts(self.submodel_elements)
