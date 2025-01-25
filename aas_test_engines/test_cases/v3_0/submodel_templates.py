@@ -2,8 +2,9 @@ from typing import Optional, Tuple, Dict, List
 from dataclasses import dataclass, field
 from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
+import datetime
 
-from .model import Submodel, Environment
+from .model import Environment
 from .parse_submodel import parse_submodel, LangString
 from .parse import check_constraints, CheckConstraintException
 from .adapter import AdapterPath
@@ -95,7 +96,7 @@ class IPCommunication:
         "semantic_id": "0173-1#02-AAQ326#002",
     })
     type_of_communication: Optional[str] = field(metadata={
-        "semantic_id": " https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/IPCommunication/TypeOfCommunication",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/IPCommunication/TypeOfCommunication",
     })
     available_time: Optional[str] = field(metadata={
         "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/AvailableTime/",
@@ -114,7 +115,7 @@ class ContactInformation:
         "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Language",
     })
     time_zone: Optional[str] = field(metadata={
-        "semantic_id": " https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/TimeZone",
+        "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/TimeZone",
     })
     # TODO: Add hint: "mandatory property according to EU MachineDirective 2006/42/EC."
     city_town: Optional[LangString] = field(metadata={
@@ -200,10 +201,10 @@ class DigitalNameplate:
         "semantic_id": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation",
     })
     manufacturer_product_root: Optional[LangString] = field(metadata={
-        "semantic_id": " 0173-1#02-AAU732#001",
+        "semantic_id": "0173-1#02-AAU732#001",
     })
     manufacturer_product_family: Optional[LangString] = field(metadata={
-        "semantic_id": "0173-1#02-AAU732#001",
+        "semantic_id": "0173-1#02-AAU731#001",
     })
     manufacturer_product_type: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAO057#002",
@@ -220,16 +221,16 @@ class DigitalNameplate:
     year_of_construction: str = field(metadata={
         "semantic_id": "0173-1#02-AAP906#001",
     })
-    date_of_manufacture: Optional[str] = field(metadata={
+    date_of_manufacture: Optional[datetime.date] = field(metadata={
         "semantic_id": "0173-1#02-AAR972#002",
     })
-    hardware_version: Optional[str] = field(metadata={
+    hardware_version: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAN270#002",
     })
-    firmware_version: Optional[str] = field(metadata={
+    firmware_version: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAM985#002",
     })
-    software_version: Optional[str] = field(metadata={
+    software_version: Optional[LangString] = field(metadata={
         "semantic_id": "0173-1#02-AAM737#002",
     })
     country_of_origin: Optional[str] = field(metadata={
