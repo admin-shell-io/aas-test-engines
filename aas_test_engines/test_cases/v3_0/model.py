@@ -170,7 +170,7 @@ class ValueType(StringFormattedValue):
 # 5.3.12.2 Constraints for Referables and Identifiables
 
 
-def ensure_have_id_shorts(elements: Optional[List["Referable"]]):
+def ensure_have_id_shorts(elements: Optional[List["Referable"]], id_short_path: Optional[IdShortPath] = None):
     """
     Constraint AASd-117: idShort of non-identifiable Referables not being a direct child of a
     SubmodelElementList shall be specified.
@@ -179,7 +179,10 @@ def ensure_have_id_shorts(elements: Optional[List["Referable"]]):
         return
     for idx, val in enumerate(elements):
         if val.id_short is None:
-            raise CheckConstraintException(f"Constraint AASd-117 violated: element {idx} has no idShort")
+            msg = f"Constraint AASd-117 violated: element {idx} has no idShort"
+            if id_short_path:
+                msg += f" @ {id_short_path}"
+            raise CheckConstraintException(msg)
 
 
 # 5.3.10.2 Reference
@@ -748,7 +751,7 @@ class DataElement(SubmodelElement):
         """
         allowed_values = ["CONSTANT", "PARAMETER", "VARIABLE"]
         if self.category is not None and self.category.raw_value not in allowed_values:
-            raise CheckConstraintException(f"Constraint AASd-090 violated: category {self.category.raw_value} is not one of {allowed_values}")
+            raise CheckConstraintException(f"Constraint AASd-090 violated: category {self.category.raw_value} is not one of {allowed_values} @ {self.id_short_path}")
 
 
 # 5.3.7.15 Relationship Element
@@ -766,7 +769,7 @@ class AnnotatedRelationshipElement(RelationshipElement):
     annotations: Optional[List[DataElement]]
 
     def check_aasd_117(self):
-        ensure_have_id_shorts(self.annotations)
+        ensure_have_id_shorts(self.annotations, self.id_short_path)
 
 
 # 5.3.7.8 Event Element
@@ -801,11 +804,11 @@ class BasicEventElement(EventElement):
 
     def check_observed(self):
         if self.observed.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("Constraint violated: Property 'observed' must be a model reference")
+            raise CheckConstraintException(f"Constraint violated: Property 'observed' must be a model reference @ {self.id_short_path}")
 
     def check_message_broker(self):
         if self.message_broker and self.message_broker.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("Constraint violated: Property 'observed' must be a model reference")
+            raise CheckConstraintException(f"Constraint violated: Property 'observed' must be a model reference @ {self.id_short_path}")
 
 # 5.3.7.4 Blob
 
@@ -844,13 +847,13 @@ class Entity(SubmodelElement):
         """
         if self.entity_type == EntityType.SelfManagedEntity:
             if self.global_asset_id is None and self.specific_asset_ids is None:
-                raise CheckConstraintException("Constraint AASd-014 violated: entity is self-manged but neither globalAssetId nor specificAssetId are set")
+                raise CheckConstraintException(f"Constraint AASd-014 violated: entity is self-manged but neither globalAssetId nor specificAssetId are set @ {self.id_short_path}")
         else:
             if self.global_asset_id or self.specific_asset_ids:
-                raise CheckConstraintException("Constraint AASd-014 violated: entity is co-manged but either globalAssetId or specificAssetId are set")
+                raise CheckConstraintException(f"Constraint AASd-014 violated: entity is co-manged but either globalAssetId or specificAssetId are set @ {self.id_short_path}")
 
     def check_aad_117(self):
-        ensure_have_id_shorts(self.statements)
+        ensure_have_id_shorts(self.statements, self.id_short_path)
 
 # 5.3.7.9 File
 
@@ -892,7 +895,7 @@ class OperationVariable:
         SubmodelElementList shall be specified.
         """
         if self.value.id_short is None:
-            raise CheckConstraintException("Constraint AASd-117 is violated: idShort missing")
+            raise CheckConstraintException(f"Constraint AASd-117 is violated: idShort missing @ {self.id_short_path}")
 
 
 @dataclass
@@ -908,7 +911,7 @@ class Operation(SubmodelElement):
             if i.value.id_short is None:
                 continue
             if i.value.id_short.raw_value in all_id_shorts:
-                raise CheckConstraintException("Constraint AASd-134 violated: duplicate id short")
+                raise CheckConstraintException(f"Constraint AASd-134 violated: duplicate id short @ {self.id_short_path}")
             all_id_shorts.add(i.value.id_short.raw_value)
 
     def check_aasd_134(self):
@@ -988,7 +991,7 @@ class SubmodelElementCollection(SubmodelElement):
                 el._set_path(path + el.id_short)
 
     def check_aasd_117(self):
-        ensure_have_id_shorts(self.value)
+        ensure_have_id_shorts(self.value, self.id_short_path)
 
 # 5.3.7.17 Submodel Element List
 
@@ -1017,7 +1020,7 @@ class SubmodelElementList(SubmodelElement):
 
     def check_type_value_list_element(self):
         if self.type_value_list_element not in AasSubmodelElements:
-            raise CheckConstraintException("Constraint violated: type_value_list_element must be a AasSubmodelElement")
+            raise CheckConstraintException(f"Constraint violated: type_value_list_element must be a AasSubmodelElement @ {self.id_short_path}")
 
     def check_aasd_107(self):
         """
@@ -1030,7 +1033,7 @@ class SubmodelElementList(SubmodelElement):
             if el.semantic_id is None:
                 continue
             if el.semantic_id != self.semantic_id_list_element:
-                raise CheckConstraintException(f"Constraint AASd-107 violated: Element {idx} has invalid semantic id {el.semantic_id}, should be {self.semantic_id_list_element}")
+                raise CheckConstraintException(f"Constraint AASd-107 violated: Element {idx} has invalid semantic id {el.semantic_id}, should be {self.semantic_id_list_element} @ {self.id_short_path}")
 
     def check_aasd_114(self):
         """
@@ -1045,7 +1048,7 @@ class SubmodelElementList(SubmodelElement):
                 continue
             if semantic_id:
                 if el.semantic_id != semantic_id:
-                    raise CheckConstraintException(f"Constraint AASd-114 violated: Element {idx} must have semanticId {semantic_id}")
+                    raise CheckConstraintException(f"Constraint AASd-114 violated: Element {idx} must have semanticId {semantic_id} @ {self.id_short_path}")
             else:
                 semantic_id = el.semantic_id
 
@@ -1070,7 +1073,7 @@ class SubmodelElementList(SubmodelElement):
             return
         for idx, el in enumerate(self.value):
             if not self.type_value_list_element.matches(el):
-                raise CheckConstraintException(f"Constraint AASd-108 violated: Element {idx} must be {self.type_value_list_element.value}")
+                raise CheckConstraintException(f"Constraint AASd-108 violated: Element {idx} must be {self.type_value_list_element.value} @ {self.id_short_path}")
 
     def check_aasd_109(self):
         """
@@ -1084,9 +1087,9 @@ class SubmodelElementList(SubmodelElement):
         for idx, el in enumerate(self.value):
             if isinstance(el, (Property, Range)):
                 if self.value_type_list_element is None:
-                    raise CheckConstraintException(f"Constraint AASd-109 violated: valueTypeListElement must be set since there are Properties/Ranges")
+                    raise CheckConstraintException(f"Constraint AASd-109 violated: valueTypeListElement must be set since there are Properties/Ranges @ {self.id_short_path}")
                 if el.value_type != self.value_type_list_element:
-                    raise CheckConstraintException(f"Constraint AASd-109 violated: value type of element {idx} does not match valueTypeListElement")
+                    raise CheckConstraintException(f"Constraint AASd-109 violated: value type of element {idx} does not match valueTypeListElement @ {self.id_short_path}")
 
     def check_aasd_120(self):
         """
@@ -1097,7 +1100,7 @@ class SubmodelElementList(SubmodelElement):
             return
         for idx, el in enumerate(self.value):
             if el.id_short is not None:
-                raise CheckConstraintException(f"Constraint AASd-120 violated: element {idx} must not have an idShort")
+                raise CheckConstraintException(f"Constraint AASd-120 violated: element {idx} must not have an idShort @ {self.id_short_path}")
 
 # 5.3.3 Asset Administration Shell
 
@@ -1110,13 +1113,13 @@ class AssetAdministrationShell(Identifiable, HasDataSpecification):
 
     def check_derived_from(self):
         if self.derived_from and self.derived_from.type != ReferenceType.ModelReference:
-            raise CheckConstraintException("Constraint violated: derivedFrom must be a model reference")
+            raise CheckConstraintException(f"Constraint violated: derivedFrom must be a model reference @ {self.id_short_path}")
 
     def check_submodels(self):
         if self.submodels:
             for i in self.submodels:
                 if i.type != ReferenceType.ModelReference:
-                    raise CheckConstraintException("Constraint violated: submodels must contain only model references")
+                    raise CheckConstraintException(f"Constraint violated: submodels must contain only model references @ {self.id_short_path}")
 
 # 5.3.5 Submodel
 
