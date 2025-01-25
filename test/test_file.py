@@ -48,6 +48,7 @@ class CheckJsonTest(TestCase):
                                     "modelType": "SubmodelElementList",
                                     "idShort": "SML",
                                     "valueTypeListElement": "xs:int",
+                                    "typeValueListElement": "Property",
                                     "value": [{
                                         "modelType": "Property",
                                         "valueType": "xs:int",

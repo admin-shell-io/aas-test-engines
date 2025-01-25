@@ -108,8 +108,8 @@ for param in params:
     )
     result, mat = api.execute_tests(conf, param.suite)
     mat.print()
-    with open("output.html", "w") as f:
-        f.write(result.to_html())
+    # with open("output.html", "w") as f:
+    #     f.write(result.to_html())
     # TODO
     # assert result.ok()
     assert mat.valid_rejected == param.valid_rejected
