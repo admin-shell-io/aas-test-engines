@@ -63,7 +63,7 @@ class CheckJsonTest(TestCase):
         })
         result.dump()
         self.assertFalse(result.ok())
-        self.assertTrue(any("https://example.com/some-submodel:SMC.SML.0" in line for line in result.to_lines()))
+        self.assertTrue(any("SMC.SML.0 in Submodel someSubmodel[https://example.com/some-submodel]" in line for line in result.to_lines()))
 
 
 class CheckXmlTest(TestCase):

@@ -12,7 +12,7 @@ from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd,
 
 class IdShortPath():
 
-    def __init__(self, root: str = ""):
+    def __init__(self, root: "Submodel"):
         self.root = root
         self.id_shorts: List[Union["NameTypeString", int, None]] = []
 
@@ -31,7 +31,8 @@ class IdShortPath():
                 return t.raw_value
             raise Exception(f"Internal error: invalid token '{t}'")
         path = '.'.join(token_to_string(i) for i in self.id_shorts)
-        return f"{self.root}:{path}"
+        id_short = self.root.id_short.raw_value if self.root.id_short else ""
+        return f"{path} in Submodel {id_short}[{self.root.id}]"
 
 
 def validate(value: str, value_type: DataTypeDefXsd, path: Optional[IdShortPath] = None):
@@ -1135,7 +1136,7 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
         if self.submodel_elements is None:
             return
         for element in self.submodel_elements:
-            element._set_path(IdShortPath(self.id) + element.id_short)
+            element._set_path(IdShortPath(self) + element.id_short)
 
     def elements(self) -> Iterator[SubmodelElement]:
         if self.submodel_elements is None:
