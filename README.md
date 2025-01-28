@@ -16,6 +16,15 @@ You can install the AAS Test Engines via pip:
 python -m pip install --upgrade aas_test_engines
 ```
 
+If you want to try the latest development version, you might want to install from git directly:
+
+<!-- no-check -->
+```sh
+python -m pip install --upgrade pip install git+https://github.com/admin-shell-io/aas-test-engines.git
+```
+
+
+
 ## Command Line Interface
 
 You may want to invoke the test tools using the command line interface:
