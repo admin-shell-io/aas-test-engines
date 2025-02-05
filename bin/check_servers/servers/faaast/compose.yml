@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   FA3ST:
     image: fraunhoferiosb/faaast-service:latest

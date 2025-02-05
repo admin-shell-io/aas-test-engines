@@ -1,22 +1,64 @@
 #! /usr/bin/env python3
 
+import urllib3
 import os
 import subprocess
 import time
-from dataclasses import dataclass
+from typing import List
+from dataclasses import dataclass, field
+import base64
 
 from aas_test_engines.api import execute_tests, ExecConf
 import requests
+from fences.core.util import ConfusionMatrix, Table, print_table
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.realpath(os.path.join(script_dir, "check_servers"))
 test_data_dir = os.path.join(root_dir, 'test_data')
 
-profile = 'https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002'
+SSP_PREFIX = "https://admin-shell.io/aas/API/3/0/"
+AAS_ID = base64.b64encode(b"www.example.com/ids/aas/8132_4102_8042_7561").decode()
+SUBMODEL_ID = base64.b64encode(b"www.example.com/ids/sm/8132_4102_8042_1861").decode()
+
+
+@dataclass
+class Profile:
+    short_name: str
+    spec_name: str
+    url_suffix: str
+    discard_prefix: str
+    mats: List[ConfusionMatrix] = field(default_factory=list)
+
+profiles = [
+    Profile(
+        'aas-repo',
+        f'{SSP_PREFIX}AssetAdministrationShellRepositoryServiceSpecification/SSP-002',
+        '',
+        '',
+    ),
+    Profile(
+        'submodel-repo',
+        f'{SSP_PREFIX}SubmodelRepositoryServiceSpecification/SSP-002',
+        '',
+        '',
+    ),
+    Profile(
+        'aas',
+        f'{SSP_PREFIX}AssetAdministrationShellServiceSpecification/SSP-002',
+        f'/shells/{AAS_ID}',
+        '/aas',
+    ),
+    Profile(
+        'submodel',
+        f'{SSP_PREFIX}SubmodelServiceSpecification/SSP-002',
+        f'/shells/{AAS_ID}/submodels/{SUBMODEL_ID}',
+        '/submodel',
+    )
+]
 
 # https://stackoverflow.com/questions/27981545
-import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 @dataclass
 class Server:
@@ -28,9 +70,9 @@ class Server:
 
 
 servers = [
+    Server('basyx_python', 'http://localhost:8000/api/v3.0'),
     Server('basyx_java', 'http://localhost:8000'),
     Server('faaast', 'https://localhost:8000/api/v3.0'),
-    Server('basyx_python', 'http://localhost:8000/api/v3.0'),
     Server('aasx_server', 'http://localhost:8000/api/v3.0'),
 ]
 
@@ -69,35 +111,49 @@ def docker_compose(cwd, *args):
 
 def main():
 
-    # Remove left-overs
+    # Remove left-overs (e.g, if script crashed in last run)
     for server in servers:
         server_dir = os.path.join(root_dir, 'servers', server.name)
         docker_compose(server_dir, 'kill')
 
     # Run tests
-    mats = []
-    for server in servers:
-        print(f"Checking {server.name}")
-        server_dir = os.path.join(root_dir, 'servers', server.name)
-        result_file = os.path.join(root_dir, 'results', f"{server.name}.html")
-        print(f"cwd:    {server_dir}")
-        print(f"result: {result_file}")
+    for profile in profiles:
+        print(profile.short_name)
+        for server in servers:
+            print(f"Checking {server.name}")
+            server_dir = os.path.join(root_dir, 'servers', server.name)
+            result_file = os.path.join(root_dir, 'results', f"{profile.short_name}_{server.name}.html")
+            print(f"cwd:    {server_dir}")
+            print(f"result: {result_file}")
 
-        docker_compose(server_dir, 'up', '-d')
-        wait_for_server(server.url)
-        result, mat = execute_tests(ExecConf(server=server.url, verify=False), profile)
-        with open(result_file, "w") as f:
-            f.write(result.to_html())
-        mats.append(mat)
-        # to save some time, we are not gentle here
-        docker_compose(server_dir, 'kill')
-        print()
+            docker_compose(server_dir, 'up', '-d')
+            wait_for_server(server.url)
+            conf = ExecConf(
+                server=server.url + profile.url_suffix,
+                verify=False,
+                remove_path_prefix=profile.discard_prefix
+            )
+            result, mat = execute_tests(conf, profile.spec_name)
+            with open(result_file, "w") as f:
+                f.write(result.to_html())
+            profile.mats.append(mat)
+            # to save some time, we are not gentle here
+            docker_compose(server_dir, 'kill')
+            print()
 
-    for mat, server in zip(mats, servers):
-        print(server.name)
-        mat.print()
-        print(f"Accuracy: {round(mat.accuracy()*100)}%")
-        print()
-
+    # Print results
+    table: Table = []
+    table.append(['Profile'] + [i.name for i in servers])
+    table.append(None)
+    for profile in profiles:
+        print(profile.short_name)
+        line = [profile.short_name]
+        for mat, server in zip(profile.mats, servers):
+            print(server.name)
+            mat.print()
+            line.append(f"{round(mat.accuracy()*100)}%")
+            print()
+        table.append(line)
+    print_table(table)
 
 main()
