@@ -87,6 +87,23 @@ class CheckXmlTest(TestCase):
         result = file.check_xml_file(io.StringIO("no xml"))
         self.assertFalse(result.ok())
 
+    def test_namespaces(self):
+        data = ElementTree.fromstring(
+            """<aas:environment xmlns:aas="https://admin-shell.io/aas/3/0">
+                <aas:assetAdministrationShells>
+                    <aas:assetAdministrationShell>
+                        <aas:administration/>
+                        <aas:id>something_142922d6</aas:id>
+                        <aas:assetInformation>
+                            <aas:assetKind>NotApplicable</aas:assetKind>
+                            <aas:globalAssetId>something_eea66fa1</aas:globalAssetId>
+                        </aas:assetInformation>
+                    </aas:assetAdministrationShell>
+                </aas:assetAdministrationShells>
+            </aas:environment>""")
+        result = file.check_xml_data(data)
+        result.dump()
+        self.assertTrue(result.ok())
 
 class CheckAasxTest(TestCase):
 
