@@ -53,7 +53,7 @@ profiles = [
         f'{SSP_PREFIX}SubmodelServiceSpecification/SSP-002',
         f'/shells/{AAS_ID}/submodels/{SUBMODEL_ID}',
         '/submodel',
-    )
+    ),
 ]
 
 # https://stackoverflow.com/questions/27981545
@@ -77,14 +77,15 @@ servers = [
 ]
 
 
-def wait_for_server(url: str, max_tries=10):
+def wait_for_server(url: str, max_tries=20):
     for _ in range(max_tries):
         try:
-            requests.get(url, verify=False)
+            response = requests.get(url, verify=False)
+            response.raise_for_status()
             print(f"Server is up at {url}")
             return
-        except requests.exceptions.ConnectionError:
-            pass
+        except Exception as e:
+            print(e)
         time.sleep(1)
     print(f"Cannot reach server at {url}")
 
@@ -127,7 +128,7 @@ def main():
             print(f"result: {result_file}")
 
             docker_compose(server_dir, 'up', '-d')
-            wait_for_server(server.url)
+            wait_for_server(server.url + "/shells")
             conf = ExecConf(
                 server=server.url + profile.url_suffix,
                 verify=False,

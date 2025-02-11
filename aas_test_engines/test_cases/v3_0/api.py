@@ -1932,7 +1932,7 @@ def execute_tests(conf: ExecConf, suite: str) -> Tuple[AasTestResult, ConfusionM
             return result_root, mat
 
         for operation in _spec.open_api.operations.values():
-            if operation.path.startswith(conf.remove_path_prefix):
+            if operation.path.startswith(conf.remove_path_prefix) and (len(operation.path) == len(conf.remove_path_prefix) or operation.path[len(conf.remove_path_prefix)] == '/'):
                 # TODO: this will be permanent so that you cannot call this function again
                 operation.path = operation.path[len(conf.remove_path_prefix):]
 
