@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Set, Iterator, Union
 from enum import Enum
 from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validators, is_xs_date_time_utc, is_bcp_47_for_english, is_any_uri, is_xs_date_time
+import re
 
 # TODO: AASd-021
 # TODO: AASd-022
@@ -105,7 +106,6 @@ class MessageTopicString(StringFormattedValue):
 class NameTypeString(StringFormattedValue):
     min_length = 1
     max_length = 128
-    pattern = r"[a-zA-Z][a-zA-Z0-9_]*"
 
 
 class PathString(StringFormattedValue):
@@ -570,8 +570,14 @@ class Referable(HasExtensions):
     id_short: Optional[NameTypeString]
     display_name: Optional[List[MultiLanguageNameType]]
     description: Optional[List[MultiLanguageTextType]]
-    # TODO: Constraint AASd-002: idShort of Referables shall only feature letters, digits, underscore ("_");
-    # starting mandatory with a letter, i.e. [a-zA-Z][a-zA-Z0-9_]*.
+
+    def check_constraint_aasd_002(self):
+        """
+        Constraint AASd-002: idShort of Referables shall only feature letters, digits, underscore ("_");
+        starting mandatory with a letter, i.e. [a-zA-Z][a-zA-Z0-9_]*.
+        """
+        if self.id_short and re.fullmatch(r"[a-zA-Z][a-zA-Z0-9_]*", self.id_short.raw_value) is None:
+            raise CheckConstraintException("Constraint AASd-002 violated: idShort shall match [a-zA-Z][a-zA-Z0-9_]*")
 
 
 # 5.3.2.5 Has Kind
