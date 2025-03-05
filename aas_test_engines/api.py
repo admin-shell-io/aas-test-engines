@@ -5,11 +5,11 @@ from fences.core.util import ConfusionMatrix
 from .result import AasTestResult
 from .exception import AasTestToolsException
 
-_DEFAULT_VERSION = '3.0'
+_DEFAULT_VERSION = "3.0"
 
 
 def supported_versions() -> Dict[str, List[str]]:
-    return {'3.0': v3_0._available_suites.keys()}
+    return {"3.0": v3_0.available_suites.keys()}
 
 
 def latest_version():
@@ -18,6 +18,5 @@ def latest_version():
 
 def execute_tests(conf: ExecConf, suite: str, version: str = _DEFAULT_VERSION) -> Tuple[AasTestResult, ConfusionMatrix]:
     if version != _DEFAULT_VERSION:
-        raise AasTestToolsException(
-            f"Unknown version {version}, must be one of {supported_versions()}")
+        raise AasTestToolsException(f"Unknown version {version}, must be one of {supported_versions()}")
     return v3_0.execute_tests(conf, suite)

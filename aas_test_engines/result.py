@@ -20,12 +20,12 @@ class Level(Enum):
 
     def color(self) -> str:
         if self.value == 0:
-            return '\033[92m'
+            return "\033[92m"
         if self.value == 1:
-            return '\033[93m'
+            return "\033[93m"
         if self.value == 2:
-            return '\033[91m'
-        return '\033[94m'
+            return "\033[91m"
+        return "\033[94m"
 
 
 class AasTestResult:
@@ -48,18 +48,18 @@ class AasTestResult:
         for line in self.to_lines():
             print(line)
 
-    def to_lines(self, indent=0, path=''):
-        ENDC = '\033[0m'
+    def to_lines(self, indent=0, path=""):
+        ENDC = "\033[0m"
         yield "   " * indent + self.level.color() + self.message + ENDC
         for sub_result in self.sub_results:
             yield from sub_result.to_lines(indent + 1)
 
     def _to_html(self, level: int) -> str:
         cls = {
-            Level.INFO: 'info',
-            Level.WARNING: 'warning',
-            Level.ERROR: 'error',
-            Level.CRITICAL: 'critical',
+            Level.INFO: "info",
+            Level.WARNING: "warning",
+            Level.ERROR: "error",
+            Level.CRITICAL: "critical",
         }[self.level]
         s = "<div>\n"
         msg = html.escape(self.message)
@@ -84,23 +84,21 @@ class AasTestResult:
                 file.write(content)
         Then open result.html in your browser.
         """
-        with open(os.path.join(script_dir, 'data', 'template.html'), 'r') as f:
+        with open(os.path.join(script_dir, "data", "template.html"), "r") as f:
             content = f.read()
         return content.replace("<!-- CONTENT -->", self._to_html(0))
 
     def to_dict(self):
         return {
-            'm': self.message,
-            'l': self.level.value,
-            's': [i.to_dict() for i in self.sub_results]
+            "m": self.message,
+            "l": self.level.value,
+            "s": [i.to_dict() for i in self.sub_results],
         }
 
     @classmethod
     def from_json(self, data: dict) -> "AasTestResult":
-        v = AasTestResult(
-            data['m'], Level(data['l'])
-        )
-        for i in data['s']:
+        v = AasTestResult(data["m"], Level(data["l"]))
+        for i in data["s"]:
             v.append(AasTestResult.from_json(i))
         return v
 

@@ -15,12 +15,12 @@ mat_test_engines = ConfusionMatrix()
 causes = defaultdict(lambda: 0)
 DEBUG = False
 blacklist = [
-    'Message broker must be a model reference to a referable.',
-    'Max. interval is not applicable for input direction.',
-    'Observed must be a model reference to a referable.',
-    'Derived-from must be a model reference to an asset administration shell.',
-    'All submodels must be model references to a submodel.',
-    'Constraint AASc-3a-009: If data type is a an integer, real or rational with a measure or currency, unit or unit ID shall be defined.',
+    "Message broker must be a model reference to a referable.",
+    "Max. interval is not applicable for input direction.",
+    "Observed must be a model reference to a referable.",
+    "Derived-from must be a model reference to an asset administration shell.",
+    "All submodels must be model references to a submodel.",
+    "Constraint AASc-3a-009: If data type is a an integer, real or rational with a measure or currency, unit or unit ID shall be defined.",
 ]
 
 start = default_timer()
@@ -45,13 +45,13 @@ for idx, (is_valid, sample) in enumerate(file.generate()):
     mat_aas_core.add(is_valid, accepted)
     if DEBUG:
         if is_valid and not accepted:
-            with open(f'valid_rejected/{mat_aas_core.valid_rejected}.json', "w") as f:
+            with open(f"valid_rejected/{mat_aas_core.valid_rejected}.json", "w") as f:
                 json.dump(sample, f, indent=4)
         if not is_valid and accepted:
-            with open(f'invalid_accepted/{mat_aas_core.invalid_accepted}.json', "w") as f:
+            with open(f"invalid_accepted/{mat_aas_core.invalid_accepted}.json", "w") as f:
                 json.dump(sample, f, indent=4)
 
-    if (idx+1) % 100 == 0:
+    if (idx + 1) % 100 == 0:
         mat_aas_core.print()
 
 end = default_timer()

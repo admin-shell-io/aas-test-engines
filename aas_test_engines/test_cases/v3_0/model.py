@@ -1,9 +1,22 @@
-from .parse import StringFormattedValue, abstract, CheckConstraintException, requires_model_type
+from .parse import (
+    CheckConstraintException,
+    requires_model_type,
+)
+from aas_test_engines.reflect import reflect, StringFormattedValue, abstract
 
 from dataclasses import dataclass, field
 from typing import List, Optional, Set, Iterator, Union
 from enum import Enum
-from .data_types import _is_bounded_integer, is_bcp_lang_string, DataTypeDefXsd, validators, is_xs_date_time_utc, is_bcp_47_for_english, is_any_uri, is_xs_date_time
+from aas_test_engines.data_types import (
+    _is_bounded_integer,
+    is_bcp_lang_string,
+    DataTypeDefXsd,
+    validators,
+    is_xs_date_time_utc,
+    is_bcp_47_for_english,
+    is_any_uri,
+    is_xs_date_time,
+)
 import re
 
 # TODO: AASd-021
@@ -11,7 +24,7 @@ import re
 # TODO: AASd-077
 
 
-class IdShortPath():
+class IdShortPath:
 
     def __init__(self, root: "Submodel"):
         self.root = root
@@ -25,13 +38,14 @@ class IdShortPath():
     def __str__(self):
         def token_to_string(t):
             if t is None:
-                return '?'
+                return "?"
             if isinstance(t, int):
                 return str(t)
             if isinstance(t, NameTypeString):
                 return t.raw_value
             raise Exception(f"Internal error: invalid token '{t}'")
-        path = '.'.join(token_to_string(i) for i in self.id_shorts)
+
+        path = ".".join(token_to_string(i) for i in self.id_shorts)
         id_short = self.root.id_short.raw_value if self.root.id_short else ""
         return f"{path} in Submodel {id_short}[{self.root.id}]"
 
@@ -59,7 +73,9 @@ class LangStringSet:
 
     def check_language(self):
         if not is_bcp_lang_string(self.language):
-            raise CheckConstraintException("Constraint violated: Property 'language' does not contain a language according to BCP46")
+            raise CheckConstraintException(
+                "Constraint violated: Property 'language' does not contain a language according to BCP46"
+            )
         if len(self.language) < 1:
             raise CheckConstraintException("Constraint violated: Property 'language' must not be empty")
 
@@ -67,7 +83,9 @@ class LangStringSet:
         if len(self.text) < 1:
             raise CheckConstraintException("Constraint violated: Property 'text' must not be empty")
         if len(self.text) > self._max_len_text:
-            raise CheckConstraintException(f"Constraint violated: Property 'text' is too long ({len(self.text)} > {self._max_len_text}")
+            raise CheckConstraintException(
+                f"Constraint violated: Property 'text' is too long ({len(self.text)} > {self._max_len_text}"
+            )
 
 
 class MultiLanguageNameType(LangStringSet, max_len_text=128):
@@ -188,31 +206,32 @@ def ensure_have_id_shorts(elements: Optional[List["Referable"]], id_short_path: 
 
 # 5.3.10.2 Reference
 
+
 class KeyType(Enum):
-    AnnotatedRelationshipElement = 'AnnotatedRelationshipElement'
-    AssetAdministrationShell = 'AssetAdministrationShell'
-    BasicEventElement = 'BasicEventElement'
-    Blob = 'Blob'
-    Capability = 'Capability'
-    ConceptDescription = 'ConceptDescription'
-    DataElement = 'DataElement'
-    Entity = 'Entity'
-    EventElement = 'EventElement'
-    File = 'File'
-    FragmentReference = 'FragmentReference'
-    GlobalReference = 'GlobalReference'
-    Identifiable = 'Identifiable'
-    MultiLanguageProperty = 'MultiLanguageProperty'
-    Operation = 'Operation'
-    Property = 'Property'
-    Range = 'Range'
-    Referable = 'Referable'
-    ReferenceElement = 'ReferenceElement'
-    RelationshipElement = 'RelationshipElement'
-    Submodel = 'Submodel'
-    SubmodelElement = 'SubmodelElement'
-    SubmodelElementCollection = 'SubmodelElementCollection'
-    SubmodelElementList = 'SubmodelElementList'
+    AnnotatedRelationshipElement = "AnnotatedRelationshipElement"
+    AssetAdministrationShell = "AssetAdministrationShell"
+    BasicEventElement = "BasicEventElement"
+    Blob = "Blob"
+    Capability = "Capability"
+    ConceptDescription = "ConceptDescription"
+    DataElement = "DataElement"
+    Entity = "Entity"
+    EventElement = "EventElement"
+    File = "File"
+    FragmentReference = "FragmentReference"
+    GlobalReference = "GlobalReference"
+    Identifiable = "Identifiable"
+    MultiLanguageProperty = "MultiLanguageProperty"
+    Operation = "Operation"
+    Property = "Property"
+    Range = "Range"
+    Referable = "Referable"
+    ReferenceElement = "ReferenceElement"
+    RelationshipElement = "RelationshipElement"
+    Submodel = "Submodel"
+    SubmodelElement = "SubmodelElement"
+    SubmodelElementCollection = "SubmodelElementCollection"
+    SubmodelElementList = "SubmodelElementList"
 
     def matches(self, obj) -> bool:
         return obj.__class__.__name__ == self.value
@@ -271,8 +290,8 @@ class Key:
 
 
 class ReferenceType(Enum):
-    ExternalReference = 'ExternalReference'
-    ModelReference = 'ModelReference'
+    ExternalReference = "ExternalReference"
+    ModelReference = "ModelReference"
 
 
 @dataclass
@@ -289,7 +308,9 @@ class Reference:
         if not self.keys:
             return
         if self.keys[0].type not in GloballyIdentifiables:
-            raise CheckConstraintException("Constraint AASd-121 violated: first key must be one of GloballyIdentifiables")
+            raise CheckConstraintException(
+                "Constraint AASd-121 violated: first key must be one of GloballyIdentifiables"
+            )
 
     def check_aasd_122(self):
         """
@@ -299,7 +320,9 @@ class Reference:
         if self.type != ReferenceType.ExternalReference or self.keys is None:
             return
         if self.keys[0].type not in GenericGloballyIdentifiables:
-            raise CheckConstraintException("Constraint AASd-122 violated: first key must be one of GenericGloballyIdentifiables")
+            raise CheckConstraintException(
+                "Constraint AASd-122 violated: first key must be one of GenericGloballyIdentifiables"
+            )
 
     def check_aasd_123(self):
         """
@@ -320,7 +343,9 @@ class Reference:
         if self.type != ReferenceType.ExternalReference or self.keys is None:
             return
         if self.keys[-1].type not in GenericGloballyIdentifiables and self.keys[-1].type not in GenericFragmentKeys:
-            raise CheckConstraintException("Constraint AASd-124 violated: last key must one of GenericGloballyIdentifiables or GenericFragmentKeys")
+            raise CheckConstraintException(
+                "Constraint AASd-124 violated: last key must one of GenericGloballyIdentifiables or GenericFragmentKeys"
+            )
 
     def check_aasd_125(self):
         """
@@ -344,7 +369,9 @@ class Reference:
             return
         for idx, key in enumerate(self.keys[:-1]):
             if key.type in GenericFragmentKeys:
-                raise CheckConstraintException(f"Constraint AASd-126 violated: key {idx} must not be a GenericFragmentKey")
+                raise CheckConstraintException(
+                    f"Constraint AASd-126 violated: key {idx} must not be a GenericFragmentKey"
+                )
 
     def check_aasd_127(self):
         """
@@ -357,21 +384,25 @@ class Reference:
             return
         for idx, key in enumerate(self.keys):
             if key.type == KeyType.FragmentReference and idx >= 1:
-                if self.keys[idx-1].type not in {KeyType.File, KeyType.Blob}:
-                    raise CheckConstraintException(f"Constraint AASd-127 violated: key {idx} must be preceded by File or Blob")
+                if self.keys[idx - 1].type not in {KeyType.File, KeyType.Blob}:
+                    raise CheckConstraintException(
+                        f"Constraint AASd-127 violated: key {idx} must be preceded by File or Blob"
+                    )
 
     def check_aasd_128(self):
         """
         Constraint AASd-128: For model references, i.e. References with Reference/type = ModelReference, the
         Key/value of a Key preceded by a Key with Key/type=SubmodelElementList is an integer number denoting
-        the position in the array of the submodel element list. 
+        the position in the array of the submodel element list.
         """
         if self.type != ReferenceType.ModelReference or self.keys is None:
             return
         for idx, key in enumerate(self.keys):
-            if key.type == KeyType.SubmodelElementList and idx < len(self.keys)-1:
-                if not _is_bounded_integer(self.keys[idx+1].value.raw_value, 0, float('inf')):
-                    raise CheckConstraintException(f"Constraint AASd-128 violated: key {idx} must be followed by an integer")
+            if key.type == KeyType.SubmodelElementList and idx < len(self.keys) - 1:
+                if not _is_bounded_integer(self.keys[idx + 1].value.raw_value, 0, float("inf")):
+                    raise CheckConstraintException(
+                        f"Constraint AASd-128 violated: key {idx} must be followed by an integer"
+                    )
 
     def __eq__(self, other: "Reference") -> bool:
         if self.type != other.type:
@@ -388,6 +419,7 @@ class Reference:
         if self.keys:
             result += "/".join([str(key) for key in self.keys])
         return result
+
 
 # 5.3.2.3 Has Data Specification
 
@@ -517,7 +549,9 @@ class DataSpecificationIec61360(DataSpecificationContent):
         DataSpecificationIec61360/valueList shall be empty, and vice versa
         """
         if self.value is not None and self.value_list is not None:
-            raise CheckConstraintException("Constraint AASc-3a-010 violated: value and value_list cannot be set simultaneously")
+            raise CheckConstraintException(
+                "Constraint AASc-3a-010 violated: value and value_list cannot be set simultaneously"
+            )
 
 
 # 5.3.2.6 Has Semantics
@@ -537,7 +571,10 @@ class HasSemantics:
         semantic ID (HasSemantics/semanticId)
         """
         if self.supplemental_semantic_ids is not None and self.semantic_id is None:
-            raise CheckConstraintException("Constraint AASd-118 violated: supplementalSemanticId is given but semanticId is missing")
+            raise CheckConstraintException(
+                "Constraint AASd-118 violated: supplementalSemanticId is given but semanticId is missing"
+            )
+
 
 # 5.3.2.4 Extensions
 
@@ -559,6 +596,7 @@ class Extension(HasSemantics):
 @dataclass
 class HasExtensions:
     extensions: Optional[List[Extension]]
+
 
 # 5.3.2.10 Referable
 
@@ -592,6 +630,7 @@ class ModellingKind(Enum):
 class HasKind:
     kind: Optional[ModellingKind]
 
+
 # 5.3.2.2 Administrative Information
 
 
@@ -611,6 +650,7 @@ class AdministrativeInformation(HasDataSpecification):
         if self.revision is not None and self.version is None:
             raise CheckConstraintException("Constraint AASd-005 violated: version is given but no revision")
 
+
 # 5.3.2.7 Identifiable
 
 
@@ -620,13 +660,14 @@ class Identifiable(Referable):
     administration: Optional[AdministrativeInformation]
     id: IdentifierString
 
+
 # 5.3.2.8 Qualifiable
 
 
 class QualifierKind(Enum):
-    ConceptQualifier = 'ConceptQualifier'
-    TemplateQualifier = 'TemplateQualifier'
-    ValueQualifier = 'ValueQualifier'
+    ConceptQualifier = "ConceptQualifier"
+    TemplateQualifier = "TemplateQualifier"
+    ValueQualifier = "ValueQualifier"
 
 
 @dataclass
@@ -664,6 +705,7 @@ class Qualifier(HasSemantics):
 class Qualifiable:
     qualifiers: Optional[List[Qualifier]]
 
+
 # 5.3.4 Asset Information
 
 
@@ -689,9 +731,9 @@ class Resource:
 
 
 class AssetKind(Enum):
-    INSTANCE = 'Instance'
-    NOT_APPLICABLE = 'NotApplicable'
-    TYPE = 'Type'
+    INSTANCE = "Instance"
+    NOT_APPLICABLE = "NotApplicable"
+    TYPE = "Type"
 
 
 @dataclass
@@ -708,7 +750,9 @@ class AssetInformation:
         AssetInformation.
         """
         if not self.global_asset_id and not self.specific_asset_ids:
-            raise CheckConstraintException("Constraint AASd-131 violated: neither globalAssetId nor specificAssetIds given")
+            raise CheckConstraintException(
+                "Constraint AASd-131 violated: neither globalAssetId nor specificAssetIds given"
+            )
 
     def check_aasd_116(self):
         """
@@ -718,8 +762,11 @@ class AssetInformation:
         if self.specific_asset_ids is None:
             return
         for idx, specific_asset_id in enumerate(self.specific_asset_ids):
-            if specific_asset_id.name.raw_value == 'globalAssetId':
-                raise CheckConstraintException(f"Constraint AASd-116 violated: specific asset id {idx} must not have name 'globalAssetId'")
+            if specific_asset_id.name.raw_value == "globalAssetId":
+                raise CheckConstraintException(
+                    f"Constraint AASd-116 violated: specific asset id {idx} must not have name 'globalAssetId'"
+                )
+
 
 # 5.3.6 Submodel Element
 
@@ -727,7 +774,7 @@ class AssetInformation:
 @dataclass
 @abstract
 class SubmodelElement(Referable, HasSemantics, Qualifiable, HasDataSpecification):
-    id_short_path: IdShortPath = field(metadata={'exclude_as': None})
+    id_short_path: IdShortPath = field(metadata={"exclude_as": None})
 
     def elements(self) -> Iterator["SubmodelElement"]:
         yield self
@@ -758,15 +805,19 @@ class DataElement(SubmodelElement):
         """
         allowed_values = ["CONSTANT", "PARAMETER", "VARIABLE"]
         if self.category is not None and self.category.raw_value not in allowed_values:
-            raise CheckConstraintException(f"Constraint AASd-090 violated: category {self.category.raw_value} is not one of {allowed_values} @ {self.id_short_path}")
+            raise CheckConstraintException(
+                f"Constraint AASd-090 violated: category {self.category.raw_value} is not one of {allowed_values} @ {self.id_short_path}"
+            )
 
 
 # 5.3.7.15 Relationship Element
+
 
 @dataclass
 class RelationshipElement(SubmodelElement):
     first: Reference
     second: Reference
+
 
 # 5.3.7.2 Annotated Relationship Element
 
@@ -781,21 +832,23 @@ class AnnotatedRelationshipElement(RelationshipElement):
 
 # 5.3.7.8 Event Element
 
+
 @dataclass
 class EventElement(SubmodelElement):
     pass
+
 
 # 5.3.7.3 Basic Event Element
 
 
 class StateOfEvent(Enum):
-    OFF = 'off'
-    ON = 'on'
+    OFF = "off"
+    ON = "on"
 
 
 class Direction(Enum):
-    INPUT = 'input'
-    OUTPUT = 'output'
+    INPUT = "input"
+    OUTPUT = "output"
 
 
 @dataclass
@@ -811,11 +864,16 @@ class BasicEventElement(EventElement):
 
     def check_observed(self):
         if self.observed.type != ReferenceType.ModelReference:
-            raise CheckConstraintException(f"Constraint violated: Property 'observed' must be a model reference @ {self.id_short_path}")
+            raise CheckConstraintException(
+                f"Constraint violated: Property 'observed' must be a model reference @ {self.id_short_path}"
+            )
 
     def check_message_broker(self):
         if self.message_broker and self.message_broker.type != ReferenceType.ModelReference:
-            raise CheckConstraintException(f"Constraint violated: Property 'observed' must be a model reference @ {self.id_short_path}")
+            raise CheckConstraintException(
+                f"Constraint violated: Property 'observed' must be a model reference @ {self.id_short_path}"
+            )
+
 
 # 5.3.7.4 Blob
 
@@ -824,6 +882,7 @@ class BasicEventElement(EventElement):
 class Blob(DataElement):
     value: Optional[BlobString]
     content_type: ContentType
+
 
 # 5.3.7.5 Capability
 
@@ -835,9 +894,10 @@ class Capability(SubmodelElement):
 
 # 5.3.7.7 Entity
 
+
 class EntityType(Enum):
-    CoManagedEntity = 'CoManagedEntity'
-    SelfManagedEntity = 'SelfManagedEntity'
+    CoManagedEntity = "CoManagedEntity"
+    SelfManagedEntity = "SelfManagedEntity"
 
 
 @dataclass
@@ -854,13 +914,18 @@ class Entity(SubmodelElement):
         """
         if self.entity_type == EntityType.SelfManagedEntity:
             if self.global_asset_id is None and self.specific_asset_ids is None:
-                raise CheckConstraintException(f"Constraint AASd-014 violated: entity is self-manged but neither globalAssetId nor specificAssetId are set @ {self.id_short_path}")
+                raise CheckConstraintException(
+                    f"Constraint AASd-014 violated: entity is self-manged but neither globalAssetId nor specificAssetId are set @ {self.id_short_path}"
+                )
         else:
             if self.global_asset_id or self.specific_asset_ids:
-                raise CheckConstraintException(f"Constraint AASd-014 violated: entity is co-manged but either globalAssetId or specificAssetId are set @ {self.id_short_path}")
+                raise CheckConstraintException(
+                    f"Constraint AASd-014 violated: entity is co-manged but either globalAssetId or specificAssetId are set @ {self.id_short_path}"
+                )
 
     def check_aad_117(self):
         ensure_have_id_shorts(self.statements, self.id_short_path)
+
 
 # 5.3.7.9 File
 
@@ -888,6 +953,7 @@ class MultiLanguageProperty(DataElement):
         => not checked
         """
         pass
+
 
 # 5.3.7.11 Operation
 
@@ -918,7 +984,9 @@ class Operation(SubmodelElement):
             if i.value.id_short is None:
                 continue
             if i.value.id_short.raw_value in all_id_shorts:
-                raise CheckConstraintException(f"Constraint AASd-134 violated: duplicate id short @ {self.id_short_path}")
+                raise CheckConstraintException(
+                    f"Constraint AASd-134 violated: duplicate id short @ {self.id_short_path}"
+                )
             all_id_shorts.add(i.value.id_short.raw_value)
 
     def check_aasd_134(self):
@@ -930,6 +998,7 @@ class Operation(SubmodelElement):
         self._check_list(self.input_variables, all_id_shorts)
         self._check_list(self.output_variables, all_id_shorts)
         self._check_list(self.inoutput_variables, all_id_shorts)
+
 
 # 5.3.7.12 Property
 
@@ -954,6 +1023,7 @@ class Property(DataElement):
         if self.value:
             validate(self.value.raw_value, self.value_type, self.id_short_path)
 
+
 # 5.3.7.13 Range
 
 
@@ -971,6 +1041,7 @@ class Range(DataElement):
         if self.max:
             validate(self.max.raw_value, self.value_type, self.id_short_path)
 
+
 # 5.3.7.14 Reference Element
 
 
@@ -980,6 +1051,7 @@ class ReferenceElement(DataElement):
 
 
 # 5.3.7.16 Submodel Element Collection
+
 
 @dataclass
 class SubmodelElementCollection(SubmodelElement):
@@ -999,6 +1071,7 @@ class SubmodelElementCollection(SubmodelElement):
 
     def check_aasd_117(self):
         ensure_have_id_shorts(self.value, self.id_short_path)
+
 
 # 5.3.7.17 Submodel Element List
 
@@ -1027,7 +1100,9 @@ class SubmodelElementList(SubmodelElement):
 
     def check_type_value_list_element(self):
         if self.type_value_list_element not in AasSubmodelElements:
-            raise CheckConstraintException(f"Constraint violated: type_value_list_element must be a AasSubmodelElement @ {self.id_short_path}")
+            raise CheckConstraintException(
+                f"Constraint violated: type_value_list_element must be a AasSubmodelElement @ {self.id_short_path}"
+            )
 
     def check_aasd_107(self):
         """
@@ -1040,7 +1115,9 @@ class SubmodelElementList(SubmodelElement):
             if el.semantic_id is None:
                 continue
             if el.semantic_id != self.semantic_id_list_element:
-                raise CheckConstraintException(f"Constraint AASd-107 violated: Element {idx} has invalid semantic id {el.semantic_id}, should be {self.semantic_id_list_element} @ {self.id_short_path}")
+                raise CheckConstraintException(
+                    f"Constraint AASd-107 violated: Element {idx} has invalid semantic id {el.semantic_id}, should be {self.semantic_id_list_element} @ {self.id_short_path}"
+                )
 
     def check_aasd_114(self):
         """
@@ -1055,7 +1132,9 @@ class SubmodelElementList(SubmodelElement):
                 continue
             if semantic_id:
                 if el.semantic_id != semantic_id:
-                    raise CheckConstraintException(f"Constraint AASd-114 violated: Element {idx} must have semanticId {semantic_id} @ {self.id_short_path}")
+                    raise CheckConstraintException(
+                        f"Constraint AASd-114 violated: Element {idx} must have semanticId {semantic_id} @ {self.id_short_path}"
+                    )
             else:
                 semantic_id = el.semantic_id
 
@@ -1080,7 +1159,9 @@ class SubmodelElementList(SubmodelElement):
             return
         for idx, el in enumerate(self.value):
             if not self.type_value_list_element.matches(el):
-                raise CheckConstraintException(f"Constraint AASd-108 violated: Element {idx} must be {self.type_value_list_element.value} @ {self.id_short_path}")
+                raise CheckConstraintException(
+                    f"Constraint AASd-108 violated: Element {idx} must be {self.type_value_list_element.value} @ {self.id_short_path}"
+                )
 
     def check_aasd_109(self):
         """
@@ -1094,9 +1175,13 @@ class SubmodelElementList(SubmodelElement):
         for idx, el in enumerate(self.value):
             if isinstance(el, (Property, Range)):
                 if self.value_type_list_element is None:
-                    raise CheckConstraintException(f"Constraint AASd-109 violated: valueTypeListElement must be set since there are Properties/Ranges @ {self.id_short_path}")
+                    raise CheckConstraintException(
+                        f"Constraint AASd-109 violated: valueTypeListElement must be set since there are Properties/Ranges @ {self.id_short_path}"
+                    )
                 if el.value_type != self.value_type_list_element:
-                    raise CheckConstraintException(f"Constraint AASd-109 violated: value type of element {idx} does not match valueTypeListElement @ {self.id_short_path}")
+                    raise CheckConstraintException(
+                        f"Constraint AASd-109 violated: value type of element {idx} does not match valueTypeListElement @ {self.id_short_path}"
+                    )
 
     def check_aasd_120(self):
         """
@@ -1107,7 +1192,10 @@ class SubmodelElementList(SubmodelElement):
             return
         for idx, el in enumerate(self.value):
             if el.id_short is not None:
-                raise CheckConstraintException(f"Constraint AASd-120 violated: element {idx} must not have an idShort @ {self.id_short_path}")
+                raise CheckConstraintException(
+                    f"Constraint AASd-120 violated: element {idx} must not have an idShort @ {self.id_short_path}"
+                )
+
 
 # 5.3.3 Asset Administration Shell
 
@@ -1120,13 +1208,18 @@ class AssetAdministrationShell(Identifiable, HasDataSpecification):
 
     def check_derived_from(self):
         if self.derived_from and self.derived_from.type != ReferenceType.ModelReference:
-            raise CheckConstraintException(f"Constraint violated: derivedFrom must be a model reference @ {self.id_short_path}")
+            raise CheckConstraintException(
+                f"Constraint violated: derivedFrom must be a model reference @ {self.id_short_path}"
+            )
 
     def check_submodels(self):
         if self.submodels:
             for i in self.submodels:
                 if i.type != ReferenceType.ModelReference:
-                    raise CheckConstraintException(f"Constraint violated: submodels must contain only model references @ {self.id_short_path}")
+                    raise CheckConstraintException(
+                        f"Constraint violated: submodels must contain only model references @ {self.id_short_path}"
+                    )
+
 
 # 5.3.5 Submodel
 
@@ -1163,7 +1256,9 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
             return
         if any(qualifier.kind == QualifierKind.TemplateQualifier for qualifier in self.qualifiers):
             if self.kind != ModellingKind.Template:
-                raise CheckConstraintException("Constraint AASd-129 violated: kind must be Template as at least one qualifier is a TemplateQualifier")
+                raise CheckConstraintException(
+                    "Constraint AASd-129 violated: kind must be Template as at least one qualifier is a TemplateQualifier"
+                )
 
     def check_aasd_129(self):
         """
@@ -1179,7 +1274,9 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
                 continue
             if any(qualifier.kind == QualifierKind.TemplateQualifier for qualifier in element.qualifiers):
                 if self.kind != ModellingKind.Template:
-                    raise CheckConstraintException("Constraint AASd-129 violated: kind must be Template as at least one qualifier is a TemplateQualifier")
+                    raise CheckConstraintException(
+                        "Constraint AASd-129 violated: kind must be Template as at least one qualifier is a TemplateQualifier"
+                    )
 
 
 # 5.3.8 Concept Description
@@ -1198,7 +1295,9 @@ class ConceptDescription(Identifiable, HasDataSpecification):
         for idx, ds in enumerate(self.embedded_data_specifications):
             if isinstance(ds.data_specification_content, DataSpecificationIec61360):
                 if ds.data_specification_content.data_type not in types:
-                    raise CheckConstraintException(f"Constraint {constraint} violated: embeddedDataSpecifications[{idx}].dataType is invalid")
+                    raise CheckConstraintException(
+                        f"Constraint {constraint} violated: embeddedDataSpecifications[{idx}].dataType is invalid"
+                    )
 
     def check_aasc_3a_004(self):
         """
@@ -1208,25 +1307,26 @@ class ConceptDescription(Identifiable, HasDataSpecification):
         INTEGER_COUNT, INTEGER_CURRENCY, REAL_MEASURE, REAL_COUNT, REAL_CURRENCY,
         BOOLEAN, RATIONAL, RATIONAL_MEASURE, TIME, TIMESTAMP.
         """
-        self._check_iec_61360({
-            'PROPERTY',
-            'VALUE'
-        }, {
-            'DATE',
-            'STRING',
-            'STRING_TRANSLATABLE',
-            'INTEGER_MEASURE',
-            'INTEGER_COUNT',
-            'INTEGER_CURRENCY',
-            'REAL_MEASURE',
-            'REAL_COUNT',
-            'REAL_CURRENCY',
-            'BOOLEAN',
-            'RATIONAL',
-            'RATIONAL_MEASURE',
-            'TIME',
-            'TIMESTAMP',
-        }, "AASc-3a-004")
+        self._check_iec_61360(
+            {"PROPERTY", "VALUE"},
+            {
+                "DATE",
+                "STRING",
+                "STRING_TRANSLATABLE",
+                "INTEGER_MEASURE",
+                "INTEGER_COUNT",
+                "INTEGER_CURRENCY",
+                "REAL_MEASURE",
+                "REAL_COUNT",
+                "REAL_CURRENCY",
+                "BOOLEAN",
+                "RATIONAL",
+                "RATIONAL_MEASURE",
+                "TIME",
+                "TIMESTAMP",
+            },
+            "AASc-3a-004",
+        )
 
     def check_aasc_3a_005(self):
         """
@@ -1234,13 +1334,17 @@ class ConceptDescription(Identifiable, HasDataSpecification):
         template IEC61360 (https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIec61360/3),
         DataSpecificationIec61360/dataType shall be one of STRING, IRI, IRDI.
         """
-        self._check_iec_61360({
-            'REFERENCE',
-        }, {
-            'STRING',
-            'IRI',
-            'IRDI',
-        }, "AASc-3a-005")
+        self._check_iec_61360(
+            {
+                "REFERENCE",
+            },
+            {
+                "STRING",
+                "IRI",
+                "IRDI",
+            },
+            "AASc-3a-005",
+        )
 
     def check_aasc_3a_006(self):
         """
@@ -1248,13 +1352,17 @@ class ConceptDescription(Identifiable, HasDataSpecification):
         template IEC61360 (https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIec61360/3),
         DataSpecificationIec61360/dataType shall be one of FILE, BLOB, HTML.
         """
-        self._check_iec_61360({
-            'DOCUMENT',
-        }, {
-            'FILE',
-            'BLOB',
-            'HTML',
-        }, "AASc-3a-006")
+        self._check_iec_61360(
+            {
+                "DOCUMENT",
+            },
+            {
+                "FILE",
+                "BLOB",
+                "HTML",
+            },
+            "AASc-3a-006",
+        )
 
     def check_aasc_3a_007(self):
         """
@@ -1262,14 +1370,16 @@ class ConceptDescription(Identifiable, HasDataSpecification):
         specification template IEC61360 (https://adminshell.io/DataSpecificationTemplates/DataSpecificationIec61360/3), DataSpecificationIec61360/dataType is
         mandatory and shall be defined.
         """
-        if self.category is None or self.category.raw_value != 'QUALIFIER_TYPE':
+        if self.category is None or self.category.raw_value != "QUALIFIER_TYPE":
             return
         if self.embedded_data_specifications is None:
             return
         for idx, ds in enumerate(self.embedded_data_specifications):
             if isinstance(ds.data_specification_content, DataSpecificationIec61360):
                 if ds.data_specification_content.data_type is None:
-                    raise CheckConstraintException(f"Constraint AASc-3a-007 violated: embeddedDataSpecifications[{idx}].dataType is missing")
+                    raise CheckConstraintException(
+                        f"Constraint AASc-3a-007 violated: embeddedDataSpecifications[{idx}].dataType is missing"
+                    )
 
     def check_aasc_3a_008(self):
         """
@@ -1285,9 +1395,13 @@ class ConceptDescription(Identifiable, HasDataSpecification):
                 if ds.data_specification_content.value is not None:
                     continue
                 if ds.data_specification_content.definition is None:
-                    raise CheckConstraintException(f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition is missing")
+                    raise CheckConstraintException(
+                        f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition is missing"
+                    )
                 if not any(is_bcp_47_for_english(i.language) for i in ds.data_specification_content.definition):
-                    raise CheckConstraintException(f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition.language is missing English.")
+                    raise CheckConstraintException(
+                        f"Constraint AASc-3a-008 violated: embeddedDataSpecifications[{idx}].definition.language is missing English."
+                    )
 
     def check_aasc_3a_003(self):
         """
@@ -1298,6 +1412,7 @@ class ConceptDescription(Identifiable, HasDataSpecification):
         """
         pass
 
+
 # 5.3.9 Environment
 
 
@@ -1306,3 +1421,6 @@ class Environment:
     asset_administration_shells: Optional[List[AssetAdministrationShell]]
     submodels: Optional[List[Submodel]]
     concept_descriptions: Optional[List[ConceptDescription]]
+
+
+r_environment, _ = reflect(Environment, globals(), locals())

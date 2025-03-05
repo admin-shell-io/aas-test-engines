@@ -1,4 +1,14 @@
 from .adapter import Adapter, AdapterException
+from aas_test_engines.reflect import (
+    TypeBase,
+    ListType,
+    ClassType,
+    StringFormattedValueType,
+    EnumType,
+    StringType,
+    BoolType,
+    AnyType,
+)
 
 from dataclasses import dataclass, fields, field, is_dataclass
 from typing import List, Dict, Optional, Tuple, Union, ForwardRef, Pattern, Callable
@@ -6,6 +16,7 @@ from aas_test_engines.result import AasTestResult, Level
 from enum import Enum
 import re
 from .adapter import AdapterPath, JsonAdapter, XmlAdapter
+from aas_test_engines.reflect import StringFormattedValue
 
 
 class CheckConstraintException(Exception):
@@ -20,90 +31,32 @@ def to_lower_camel_case(snake_str):
     return snake_str[0].lower() + camel_string[1:]
 
 
-def unwrap_optional(cls) -> Tuple[bool, type]:
-    try:
-        origin = cls.__origin__
-    except AttributeError:
-        return True, cls
-    if origin is not Union:
-        return True, cls
-    # We only support Optional aka. Union[x, NoneType]
-    assert len(cls.__args__) == 2 and cls.__args__[1] is type(None)
-    return False, cls.__args__[0]
-
-
-def abstract(cls):
-    # Prefix with cls to apply only to base class
-    setattr(cls, f'_{cls}_abstract', True)
-    return cls
-
-
-def isabstract(cls):
-    return hasattr(cls, f'_{cls}_abstract')
-
-
 def requires_model_type(cls):
-    setattr(cls, f'_requires_model_type', True)
+    setattr(cls, f"_requires_model_type", True)
     return cls
 
 
 def has_requires_model_type(cls):
-    return hasattr(cls, f'_requires_model_type')
+    return hasattr(cls, f"_requires_model_type")
 
 
-def collect_subclasses(cls, result: Dict[str, type]):
-    if not isabstract(cls):
-        result[cls.__name__] = cls
-    for i in cls.__subclasses__():
-        collect_subclasses(i, result)
-
-
-class StringFormattedValue:
-    min_length: Optional[int] = None
-    max_length: Optional[int] = None
-    pattern: Optional[Pattern] = None
-
-    def __init__(self, raw_value: str):
-        self.raw_value = raw_value
-        if self.min_length is not None:
-            if len(raw_value) < self.min_length:
-                raise ValueError(f"String is shorter than {self.min_length} characters")
-        if self.max_length is not None:
-            if len(raw_value) > self.max_length:
-                raise ValueError(f"String is longer than {self.max_length} characters")
-
-        # Constraint AASd-130: An attribute with data type "string" shall be restricted to the characters as defined in
-        # XML Schema 1.0, i.e. the string shall consist of these characters only: ^[\x09\x0A\x0D\x20-\uD7FF\uE000-
-        # \uFFFD\u00010000-\u0010FFFF]*$.
-        if re.fullmatch(r"[\x09\x0a\x0d\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]*", raw_value) is None:
-            raise ValueError("Constraint AASd-130 violated: String is not XML serializable")
-
-        if self.pattern:
-            if re.fullmatch(self.pattern, raw_value) is None:
-                raise ValueError(f"String '{raw_value}' does not match pattern {self.pattern}")
-
-    def __eq__(self, other: "StringFormattedValue") -> bool:
-        return self.raw_value == other.raw_value
-
-    def __str__(self) -> str:
-        return self.raw_value
-
-
-def parse_string_formatted_value(cls, value: Adapter, result: AasTestResult) -> StringFormattedValue:
+def parse_string_formatted_value(
+    cls: StringFormattedValueType, value: Adapter, result: AasTestResult
+) -> StringFormattedValue:
     try:
-        return cls(value.as_string())
+        return cls.construct(value.as_string())
     except (AdapterException, ValueError) as e:
         result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
-    return None
+    return INVALID
 
 
-def parse_list(item_cls, value: Adapter, result: AasTestResult) -> list:
+def parse_list(item_cls: ListType, value: Adapter, result: AasTestResult, allow_empty: bool) -> list:
     try:
-        items = value.as_list()
+        items = value.as_list(allow_empty)
     except AdapterException as e:
         result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
         return INVALID
-    return [parse(item_cls, i, result) for i in items]
+    return [parse(item_cls.item_type, i, result) for i in items]
 
 
 def parse_bool(value: Adapter, result: AasTestResult) -> bool:
@@ -122,117 +75,110 @@ def parse_string(value: Adapter, result: AasTestResult) -> str:
         return INVALID
 
 
-def parse_enum(cls, value: Adapter, result: AasTestResult):
+def parse_enum(cls: EnumType, value: Adapter, result: AasTestResult):
     try:
         str_val = value.as_string()
     except AdapterException as e:
         result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
         return INVALID
     try:
-        return cls(str_val)
+        return cls.construct(str_val)
     except ValueError as e:
         result.append(AasTestResult(f"{e} @ {value.path}", level=Level.ERROR))
     return INVALID
 
 
-def parse_abstract_object(cls, adapter: Adapter, result: AasTestResult):
+def parse_abstract_object(cls: ClassType, adapter: Adapter, result: AasTestResult):
     try:
         discriminator = adapter.get_model_type()
     except AdapterException as e:
         result.append(AasTestResult(f"{e} @ {adapter.path}", level=Level.ERROR))
         return INVALID
-    subclasses = {}
-    collect_subclasses(cls, subclasses)
-    try:
-        cls = subclasses[discriminator]
-    except KeyError:
-        result.append(AasTestResult(f"Invalid model type {discriminator} @ {adapter.path}", level=Level.ERROR))
-        return INVALID
-    return parse_concrete_object(cls, adapter, result)
+    subclass = None
+    for subclass in cls.subclasses:
+        if subclass.cls.__name__ == discriminator:
+            return parse_concrete_object(subclass, adapter, result)
+    result.append(
+        AasTestResult(
+            f"Invalid model type {discriminator} @ {adapter.path}",
+            level=Level.ERROR,
+        )
+    )
+    return INVALID
 
 
-def parse_concrete_object(cls, adapter: Adapter, result: AasTestResult):
+def parse_concrete_object(cls: ClassType, adapter: Adapter, result: AasTestResult):
     try:
         obj = adapter.as_object()
     except AdapterException as e:
         result.append(AasTestResult(f"{e} @ {adapter.path}", level=Level.ERROR))
         return INVALID
-    if has_requires_model_type(cls):
+    if has_requires_model_type(cls.cls):
         try:
             discriminator = adapter.get_model_type()
-            if discriminator != cls.__name__:
+            if discriminator != cls.cls.__name__:
                 result.append(AasTestResult(f"Wrong model type @ {adapter.path}", level=Level.ERROR))
         except AdapterException as e:
             result.append(AasTestResult(f"Model typ missing @ {adapter.path}", level=Level.ERROR))
 
     args = {}
     all_fields = set()
-    for field in fields(cls):
-        try:
-            exclude_as = field.metadata['exclude_as']
-            args[field.name] = exclude_as
-            continue
-        except KeyError:
-            pass
-        field_name = to_lower_camel_case(field.name)
+    for field in cls.attrs:
+        field_name = field.force_name or to_lower_camel_case(field.name)
         all_fields.add(field_name)
-        required, field_type = unwrap_optional(field.type)
         try:
             obj_value = obj[field_name]
         except KeyError:
-            if required:
-                result.append(AasTestResult(f"Missing attribute {field_name} @ {adapter.path}", level=Level.ERROR))
+            if field.required:
+                result.append(
+                    AasTestResult(
+                        f"Missing attribute {field_name} @ {adapter.path}",
+                        level=Level.ERROR,
+                    )
+                )
                 args[field.name] = INVALID
             else:
                 args[field.name] = None
             continue
-        args[field.name] = parse(field_type, obj_value, result)
+        args[field.name] = parse(field.type, obj_value, result)
 
     # Check unknown additional attributes
     for key in obj.keys():
         if key not in all_fields:
-            result.append(AasTestResult(f"Unknown additional attribute {key} @ {adapter.path}", level=Level.ERROR))
+            result.append(
+                AasTestResult(
+                    f"Unknown additional attribute {key} @ {adapter.path}",
+                    level=Level.ERROR,
+                )
+            )
 
-    return cls(**args)
+    return cls.construct(args)
 
 
-def parse(cls, obj_value: Adapter, result: AasTestResult):
-    # Unwrap a forward reference
-    if isinstance(cls, ForwardRef):
-        # TODO: this is a hack to get our only ForwardRef["Reference"] into scope
-        from .model import Reference
-        try:
-            cls = cls._evaluate(globals(), locals(), recursive_guard=frozenset())
-        except TypeError:
-            # Python < 3.9
-            cls = cls._evaluate(globals(), locals())
-
-    origin = getattr(cls, '__origin__', None)
-    if origin:
-        if origin is list:
-            item_type = cls.__args__[0]
-            return parse_list(item_type, obj_value, result)
-    else:
-        if is_dataclass(cls):
-            if isabstract(cls):
-                return parse_abstract_object(cls, obj_value, result)
-            else:
-                obj = parse_concrete_object(cls, obj_value, result)
-                post_parse = getattr(obj, "post_parse", None)
-                if post_parse and result.ok():
-                    post_parse()
-                return obj
-        elif cls is bool:
-            return parse_bool(obj_value, result)
-        elif cls is str:
-            return parse_string(obj_value, result)
-        elif isinstance(cls, Enum.__class__):
-            return parse_enum(cls, obj_value, result)
-        elif isinstance(cls, StringFormattedValue.__class__):
-            return parse_string_formatted_value(cls, obj_value, result)
+def parse(cls: TypeBase, obj_value: Adapter, result: AasTestResult):
+    if isinstance(cls, ListType):
+        return parse_list(cls, obj_value, result, cls.allow_empty)
+    elif isinstance(cls, ClassType):
+        if cls.is_abstract():
+            return parse_abstract_object(cls, obj_value, result)
+        else:
+            obj = parse_concrete_object(cls, obj_value, result)
+            post_parse = getattr(obj, "post_parse", None)
+            if post_parse and result.ok():
+                post_parse()
+            return obj
+    elif isinstance(cls, BoolType):
+        return parse_bool(obj_value, result)
+    elif isinstance(cls, StringType):
+        return parse_string(obj_value, result)
+    elif isinstance(cls, AnyType):
+        return obj_value
+    elif isinstance(cls, EnumType):
+        return parse_enum(cls, obj_value, result)
+    elif isinstance(cls, StringFormattedValueType):
+        return parse_string_formatted_value(cls, obj_value, result)
     raise NotImplementedError(
         f"There is no parsing implemented for:\n"
-        f"  origin:    {origin}\n"
         f"  args:      {getattr(cls, '__args__', None)}\n"
         f"  obj_value: {obj_value}\n"
         f"  cls:       {cls}\n"
@@ -242,7 +188,7 @@ def parse(cls, obj_value: Adapter, result: AasTestResult):
 def check_constraints(obj, result: AasTestResult, path: AdapterPath = AdapterPath()):
     if not is_dataclass(obj):
         return
-    fns = [getattr(obj, i) for i in dir(obj) if i.startswith('check_')]
+    fns = [getattr(obj, i) for i in dir(obj) if i.startswith("check_")]
     for fn in fns:
         try:
             fn()
@@ -271,9 +217,9 @@ def _parse_and_check(cls, adapter: Adapter) -> Tuple[object, AasTestResult]:
     return result_root, env
 
 
-def parse_and_check_json(cls, value: any) -> Tuple[AasTestResult, object]:
-    return _parse_and_check(cls, JsonAdapter(value, AdapterPath()))
+def parse_and_check_json(t: TypeBase, value: any) -> Tuple[AasTestResult, object]:
+    return _parse_and_check(t, JsonAdapter(value, AdapterPath()))
 
 
-def parse_and_check_xml(cls, value: any) -> Tuple[AasTestResult, object]:
-    return _parse_and_check(cls, XmlAdapter(value, AdapterPath()))
+def parse_and_check_xml(t: TypeBase, value: any) -> Tuple[AasTestResult, object]:
+    return _parse_and_check(t, XmlAdapter(value, AdapterPath()))

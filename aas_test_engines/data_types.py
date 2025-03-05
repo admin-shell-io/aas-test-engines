@@ -2,6 +2,7 @@ from decimal import Decimal, DecimalException
 from typing import Pattern, Dict, Mapping
 import re
 import base64
+from enum import Enum
 
 
 def is_decimal(s: str) -> bool:
@@ -13,7 +14,7 @@ def is_decimal(s: str) -> bool:
 
 
 def _is_bounded_double(s: str, min: float, max: float) -> bool:
-    if s in ['INF', '-INF', 'NaN']:
+    if s in ["INF", "-INF", "NaN"]:
         return True
     try:
         v = float(s)
@@ -23,11 +24,11 @@ def _is_bounded_double(s: str, min: float, max: float) -> bool:
 
 
 def is_float(s: str) -> bool:
-    return _is_bounded_double(s, -3.4028234663852886e+38, 3.4028234663852886e+38)
+    return _is_bounded_double(s, -3.4028234663852886e38, 3.4028234663852886e38)
 
 
 def is_double(s: str) -> bool:
-    return _is_bounded_double(s, -1.7976931348623158e+308, 1.7976931348623158e+308)
+    return _is_bounded_double(s, -1.7976931348623158e308, 1.7976931348623158e308)
 
 
 def _is_bounded_integer(s: int, min: int, max: int) -> bool:
@@ -42,7 +43,7 @@ def is_hex_binary(s: str) -> bool:
     try:
         bytes.fromhex(s)
         return True
-    except KeyError:
+    except (KeyError, ValueError):
         return False
 
 
@@ -277,21 +278,21 @@ def is_base64_binary(s: str) -> bool:
 
 
 def _construct_matches_bcp_47() -> Pattern[str]:
-    alphanum = '[a-zA-Z0-9]'
-    singleton = '[0-9A-WY-Za-wy-z]'
-    extension = f'{singleton}(-({alphanum}){{2,8}})+'
-    extlang = '[a-zA-Z]{3}(-[a-zA-Z]{3}){0,2}'
-    irregular = '(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)'
-    regular = '(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang)'
-    grandfathered = f'({irregular}|{regular})'
-    language = f'([a-zA-Z]{{2,3}}(-{extlang})?|[a-zA-Z]{{4}}|[a-zA-Z]{{5,8}})'
-    script = '[a-zA-Z]{4}'
-    region = '([a-zA-Z]{2}|[0-9]{3})'
-    variant = f'(({alphanum}){{5,8}}|[0-9]({alphanum}){{3}})'
-    privateuse = f'[xX](-({alphanum}){{1,8}})+'
-    langtag = f'{language}(-{script})?(-{region})?(-{variant})*(-{extension})*(-{privateuse})?'
-    language_tag = f'({langtag}|{privateuse}|{grandfathered})'
-    pattern = f'^{language_tag}$'
+    alphanum = "[a-zA-Z0-9]"
+    singleton = "[0-9A-WY-Za-wy-z]"
+    extension = f"{singleton}(-({alphanum}){{2,8}})+"
+    extlang = "[a-zA-Z]{3}(-[a-zA-Z]{3}){0,2}"
+    irregular = "(en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)"
+    regular = "(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang)"
+    grandfathered = f"({irregular}|{regular})"
+    language = f"([a-zA-Z]{{2,3}}(-{extlang})?|[a-zA-Z]{{4}}|[a-zA-Z]{{5,8}})"
+    script = "[a-zA-Z]{4}"
+    region = "([a-zA-Z]{2}|[0-9]{3})"
+    variant = f"(({alphanum}){{5,8}}|[0-9]({alphanum}){{3}})"
+    privateuse = f"[xX](-({alphanum}){{1,8}})+"
+    langtag = f"{language}(-{script})?(-{region})?(-{variant})*(-{extension})*(-{privateuse})?"
+    language_tag = f"({langtag}|{privateuse}|{grandfathered})"
+    pattern = f"^{language_tag}$"
 
     return re.compile(pattern)
 
@@ -304,7 +305,7 @@ def is_bcp_lang_string(s: str) -> bool:
 
 
 def _construct_matches_version_type() -> Pattern[str]:
-    pattern = '^(0|[1-9][0-9]*)$'
+    pattern = "^(0|[1-9][0-9]*)$"
     return re.compile(pattern)
 
 
@@ -322,44 +323,87 @@ def is_bcp_47_for_english(text: str) -> bool:
     return _REGEX_IS_BCP_47_FOR_ENGLISH.match(text) is not None
 
 
+class DataTypeDefXsd(Enum):
+    anyURI = "xs:anyURI"
+    base64Binary = "xs:base64Binary"
+    boolean = "xs:boolean"
+    byte = "xs:byte"
+    date = "xs:date"
+    dateTime = "xs:dateTime"
+    decimal = "xs:decimal"
+    double = "xs:double"
+    duration = "xs:duration"
+    float = "xs:float"
+    gDay = "xs:gDay"
+    gMonth = "xs:gMonth"
+    gMonthDay = "xs:gMonthDay"
+    gYear = "xs:gYear"
+    gYearMonth = "xs:gYearMonth"
+    hexBinary = "xs:hexBinary"
+    int = "xs:int"
+    integer = "xs:integer"
+    long = "xs:long"
+    negativeInteger = "xs:negativeInteger"
+    nonNegativeInteger = "xs:nonNegativeInteger"
+    nonPositiveInteger = "xs:nonPositiveInteger"
+    positiveInteger = "xs:positiveInteger"
+    short = "xs:short"
+    string = "xs:string"
+    time = "xs:time"
+    unsignedByte = "xs:unsignedByte"
+    unsignedInt = "xs:unsignedInt"
+    unsignedLong = "xs:unsignedLong"
+    unsignedShort = "xs:unsignedShort"
+
+
 validators = {
-    'xs:decimal': is_decimal,
-    'xs:integer': lambda s: _is_bounded_integer(s, float('-inf'), float('inf')),
-
-    'xs:float': is_float,
-    'xs:double': is_double,
-
-    'xs:byte': lambda s: _is_bounded_integer(s, -128, 127),
-    'xs:short': lambda s: _is_bounded_integer(s, -32768, 32767),
-    'xs:int': lambda s: _is_bounded_integer(s, -2147483648, 2147483647),
-    'xs:long': lambda s: _is_bounded_integer(s, -9223372036854775808, 9223372036854775807),
-
-    'xs:unsignedByte': lambda s: _is_bounded_integer(s, 0, 255),
-    'xs:unsignedShort': lambda s: _is_bounded_integer(s, 0, 65535),
-    'xs:unsignedInt': lambda s: _is_bounded_integer(s, 0, 4294967295),
-    'xs:unsignedLong': lambda s: _is_bounded_integer(s, 0, 18446744073709551615),
-
-    'xs:positiveInteger': lambda s: _is_bounded_integer(s, 1, float('inf')),
-    'xs:nonNegativeInteger': lambda s: _is_bounded_integer(s, 0, float('inf')),
-    'xs:negativeInteger': lambda s: _is_bounded_integer(s, float('-inf'), -1),
-    'xs:nonPositiveInteger': lambda s: _is_bounded_integer(s, float('-inf'), 0),
-
-    'xs:date': is_xs_date,
-    'xs:dateTime': is_xs_date_time,
-    'xs:gMonthDay': is_xs_g_month_day,
-    'xs:dateTimeUTC': is_xs_date_time_utc,
-    'xs:gYearMonth': lambda x: True,
-    'xs:gDay': lambda x: True,
-    'xs:gMonth': lambda x: True,
-    'xs:gYear': lambda x: True,
-    'xs:time': lambda x: True,
-    'xs:duration': lambda x: True,
-
-    'xs:anyURI': is_any_uri,
-    'xs:base64Binary': is_base64_binary,
-
-    'bcpLangString': is_bcp_lang_string,
-    'version': is_version_string,
-    'contentType': lambda x: True,
-    'path': lambda x: True,
+    DataTypeDefXsd.string: lambda _: True,
+    DataTypeDefXsd.boolean: lambda x: x in {"true", "false", "1", "0"},
+    DataTypeDefXsd.decimal: is_decimal,
+    DataTypeDefXsd.integer: lambda s: _is_bounded_integer(s, float("-inf"), float("inf")),
+    DataTypeDefXsd.float: is_float,
+    DataTypeDefXsd.double: is_double,
+    DataTypeDefXsd.byte: lambda s: _is_bounded_integer(s, -128, 127),
+    DataTypeDefXsd.short: lambda s: _is_bounded_integer(s, -32768, 32767),
+    DataTypeDefXsd.int: lambda s: _is_bounded_integer(s, -2147483648, 2147483647),
+    DataTypeDefXsd.long: lambda s: _is_bounded_integer(s, -9223372036854775808, 9223372036854775807),
+    DataTypeDefXsd.unsignedByte: lambda s: _is_bounded_integer(s, 0, 255),
+    DataTypeDefXsd.unsignedShort: lambda s: _is_bounded_integer(s, 0, 65535),
+    DataTypeDefXsd.unsignedInt: lambda s: _is_bounded_integer(s, 0, 4294967295),
+    DataTypeDefXsd.unsignedLong: lambda s: _is_bounded_integer(s, 0, 18446744073709551615),
+    DataTypeDefXsd.positiveInteger: lambda s: _is_bounded_integer(s, 1, float("inf")),
+    DataTypeDefXsd.nonNegativeInteger: lambda s: _is_bounded_integer(s, 0, float("inf")),
+    DataTypeDefXsd.negativeInteger: lambda s: _is_bounded_integer(s, float("-inf"), -1),
+    DataTypeDefXsd.nonPositiveInteger: lambda s: _is_bounded_integer(s, float("-inf"), 0),
+    DataTypeDefXsd.date: is_xs_date,
+    DataTypeDefXsd.dateTime: is_xs_date_time,
+    DataTypeDefXsd.gMonthDay: is_xs_g_month_day,
+    DataTypeDefXsd.gYearMonth: lambda x: re.fullmatch(
+        r"-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?",
+        x,
+    )
+    is not None,
+    DataTypeDefXsd.gDay: lambda x: re.fullmatch(
+        r"---(0[1-9]|[12][0-9]|3[01])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x
+    )
+    is not None,
+    DataTypeDefXsd.gMonth: lambda x: re.fullmatch(r"--(0[1-9]|1[0-2])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x)
+    is not None,
+    DataTypeDefXsd.gYear: lambda x: re.fullmatch(
+        r"-?([1-9][0-9]{3,}|0[0-9]{3})(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?", x
+    )
+    is not None,
+    DataTypeDefXsd.time: lambda x: re.fullmatch(
+        r"(([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?",
+        x,
+    )
+    is not None,
+    DataTypeDefXsd.duration: lambda x: re.fullmatch(
+        r"-?P((([0-9]+Y([0-9]+M)?([0-9]+D)?|([0-9]+M)([0-9]+D)?|([0-9]+D))(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S)))?)|(T(([0-9]+H)([0-9]+M)?([0-9]+(\.[0-9]+)?S)?|([0-9]+M)([0-9]+(\.[0-9]+)?S)?|([0-9]+(\.[0-9]+)?S))))",
+        x,
+    )
+    is not None,
+    DataTypeDefXsd.anyURI: is_any_uri,
+    DataTypeDefXsd.base64Binary: is_base64_binary,
+    DataTypeDefXsd.hexBinary: is_hex_binary,
 }

@@ -26,7 +26,7 @@ class Adapter:
     def as_object(self) -> Dict[str, "Adapter"]:
         raise NotImplementedError()
 
-    def as_list(self) -> List["Adapter"]:
+    def as_list(self, allow_empty: bool) -> List["Adapter"]:
         raise NotImplementedError()
 
     def as_string(self) -> str:
@@ -48,12 +48,12 @@ class JsonAdapter(Adapter):
     def as_object(self) -> Dict[str, Adapter]:
         if not isinstance(self.value, dict):
             raise AdapterException(f"Cannot convert {self.value} to object")
-        return {k: JsonAdapter(v, self.path + k) for k, v in self.value.items() if k != 'modelType'}
+        return {k: JsonAdapter(v, self.path + k) for k, v in self.value.items() if k != "modelType"}
 
-    def as_list(self) -> List[Adapter]:
+    def as_list(self, allow_empty: bool) -> List["Adapter"]:
         if not isinstance(self.value, list):
             raise AdapterException(f"Cannot convert {self.value} to list")
-        if len(self.value) == 0:
+        if len(self.value) == 0 and not allow_empty:
             raise AdapterException(f"Empty array not allowed")
         return [JsonAdapter(val, self.path + idx) for idx, val in enumerate(self.value)]
 
@@ -71,7 +71,7 @@ class JsonAdapter(Adapter):
         if not isinstance(self.value, dict):
             raise AdapterException(f"Expected an object, got {self.value}")
         try:
-            return self.value['modelType']
+            return self.value["modelType"]
         except KeyError:
             raise AdapterException(f"Missing 'modelType'")
 
@@ -79,7 +79,7 @@ class JsonAdapter(Adapter):
         return str(self.value)
 
 
-_expected_namespace = '{https://admin-shell.io/aas/3/0}'
+_expected_namespace = "{https://admin-shell.io/aas/3/0}"
 
 
 def _get_single_child(el: Element) -> Element:
@@ -101,7 +101,7 @@ def _assert_no_text(el: Element):
 
 
 def _get_model_type(el: Element, expected_namespace: str):
-    model_type = el.tag[len(expected_namespace):]
+    model_type = el.tag[len(expected_namespace) :]
     model_type = model_type[0].upper() + model_type[1:]
     return model_type
 
@@ -118,7 +118,7 @@ class XmlAdapter:
         _assert_no_text(self.value)
 
         # Special handling for data specification content
-        if self.value.tag.endswith('dataSpecificationContent'):
+        if self.value.tag.endswith("dataSpecificationContent"):
             data = _get_single_child(self.value)
         else:
             data = self.value
@@ -127,18 +127,18 @@ class XmlAdapter:
         for child in data:
             if not child.tag.startswith(_expected_namespace):
                 raise AdapterException(f"invalid namespace, got {child.tag}")
-            tag = child.tag[len(_expected_namespace):]
-            if self.get_model_type() == 'OperationVariable' and tag == 'value':
+            tag = child.tag[len(_expected_namespace) :]
+            if self.get_model_type() == "OperationVariable" and tag == "value":
                 result[tag] = XmlAdapter(_get_single_child(child), self.path + tag)
             else:
                 result[tag] = XmlAdapter(child, self.path + tag)
         return result
 
-    def as_list(self) -> List["Adapter"]:
+    def as_list(self, allow_empty: bool) -> List["Adapter"]:
         result = []
         for idx, child in enumerate(self.value):
             result.append(XmlAdapter(child, self.path + idx))
-        if not result:
+        if not result and not allow_empty:
             raise AdapterException("Empty list not allowed")
         return result
 
@@ -148,11 +148,11 @@ class XmlAdapter:
 
     def as_bool(self) -> bool:
         _assert_no_children(self.value)
-        return self.value.text == 'true'
+        return self.value.text == "true"
 
     def get_model_type(self) -> str:
         # Special handling for data specification content
-        if self.value.tag.endswith('dataSpecificationContent'):
+        if self.value.tag.endswith("dataSpecificationContent"):
             data = _get_single_child(self.value)
         else:
             data = self.value

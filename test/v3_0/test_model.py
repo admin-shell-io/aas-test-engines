@@ -1,5 +1,14 @@
 from unittest import TestCase
-from aas_test_engines.test_cases.v3_0.model import Submodel, SubmodelElementCollection, SubmodelElementList, Property, IdentifierString, NameTypeString, File, Range
+from aas_test_engines.test_cases.v3_0.model import (
+    Submodel,
+    SubmodelElementCollection,
+    SubmodelElementList,
+    Property,
+    IdentifierString,
+    NameTypeString,
+    File,
+    Range,
+)
 
 
 class TestSubmodelElement(TestCase):
@@ -17,7 +26,7 @@ class TestSubmodelElement(TestCase):
             display_name=None,
             description=None,
             administration=None,
-            id=IdentifierString('ID'),
+            id=IdentifierString("ID"),
             submodel_elements=[
                 SubmodelElementList(
                     embedded_data_specifications=None,
@@ -26,7 +35,7 @@ class TestSubmodelElement(TestCase):
                     supplemental_semantic_ids=None,
                     extensions=None,
                     category=None,
-                    id_short=NameTypeString('SML'),
+                    id_short=NameTypeString("SML"),
                     display_name=None,
                     description=None,
                     order_relevant=None,
@@ -42,12 +51,12 @@ class TestSubmodelElement(TestCase):
                             supplemental_semantic_ids=None,
                             extensions=None,
                             category=None,
-                            id_short=NameTypeString('File'),
+                            id_short=NameTypeString("File"),
                             display_name=None,
                             description=None,
                             id_short_path=None,
                             value=None,
-                            content_type=None
+                            content_type=None,
                         ),
                         SubmodelElementCollection(
                             embedded_data_specifications=None,
@@ -56,7 +65,7 @@ class TestSubmodelElement(TestCase):
                             supplemental_semantic_ids=None,
                             extensions=None,
                             category=None,
-                            id_short=NameTypeString('SMC'),
+                            id_short=NameTypeString("SMC"),
                             display_name=None,
                             description=None,
                             id_short_path=None,
@@ -68,7 +77,7 @@ class TestSubmodelElement(TestCase):
                                     supplemental_semantic_ids=None,
                                     extensions=None,
                                     category=None,
-                                    id_short=NameTypeString('Range'),
+                                    id_short=NameTypeString("Range"),
                                     display_name=None,
                                     description=None,
                                     id_short_path=None,
@@ -76,8 +85,8 @@ class TestSubmodelElement(TestCase):
                                     min=None,
                                     max=None,
                                 )
-                            ]
-                        )
+                            ],
+                        ),
                     ],
                 ),
                 Property(
@@ -87,7 +96,7 @@ class TestSubmodelElement(TestCase):
                     supplemental_semantic_ids=None,
                     extensions=None,
                     category=None,
-                    id_short=NameTypeString('Property'),
+                    id_short=NameTypeString("Property"),
                     display_name=None,
                     description=None,
                     id_short_path=None,

@@ -7,36 +7,40 @@ from enum import Enum
 
 # https://stackoverflow.com/questions/27981545
 import urllib3
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 class InputFormats(Enum):
-    xml = 'xml'
-    json = 'json'
-    aasx = 'aasx'
+    xml = "xml"
+    json = "json"
+    aasx = "aasx"
 
     def __str__(self):
         return self.value
 
 
 class OutputFormats(Enum):
-    TEXT = 'text'
-    JSON = 'json'
-    HTML = 'html'
+    TEXT = "text"
+    JSON = "json"
+    HTML = "html"
 
 
 def run_file_test(argv):
-    parser = argparse.ArgumentParser(description='Checks a file for compliance with the AAS meta-model')
-    parser.add_argument('file',
-                        type=argparse.FileType('rb'),
-                        help='the file to check')
-    parser.add_argument('--format',
-                        type=InputFormats,
-                        default=InputFormats.aasx,
-                        choices=list(InputFormats))
-    parser.add_argument('--output',
-                        type=OutputFormats,
-                        default=OutputFormats.TEXT,
-                        choices=list(OutputFormats))
+    parser = argparse.ArgumentParser(description="Checks a file for compliance with the AAS meta-model")
+    parser.add_argument("file", type=argparse.FileType("rb"), help="the file to check")
+    parser.add_argument(
+        "--format",
+        type=InputFormats,
+        default=InputFormats.aasx,
+        choices=list(InputFormats),
+    )
+    parser.add_argument(
+        "--output",
+        type=OutputFormats,
+        default=OutputFormats.TEXT,
+        choices=list(OutputFormats),
+    )
     args = parser.parse_args(argv)
 
     if args.format == InputFormats.aasx:
@@ -59,30 +63,24 @@ def run_file_test(argv):
 
 
 def run_api_test(argv):
-    parser = argparse.ArgumentParser(description='Checks a server instance for compliance with the AAS api')
-    parser.add_argument('server',
-                        type=str,
-                        help='server to run the tests against')
-    parser.add_argument('suite',
-                        type=str,
-                        help='test suite (or substring of it)')
-    parser.add_argument('--dry',
-                        action='store_true',
-                        help="dry run, do not send requests")
-    parser.add_argument('--version',
-                        type=str,
-                        default=api.latest_version())
-    parser.add_argument('--no-verify',
-                        action='store_true',
-                        help='do not check TLS certificate')
-    parser.add_argument('--remove-path-prefix',
-                        type=str,
-                        default='',
-                        help='remove prefix from all paths')
-    parser.add_argument('--output',
-                        type=OutputFormats,
-                        default=OutputFormats.TEXT,
-                        choices=list(OutputFormats))
+    parser = argparse.ArgumentParser(description="Checks a server instance for compliance with the AAS api")
+    parser.add_argument("server", type=str, help="server to run the tests against")
+    parser.add_argument("suite", type=str, help="test suite (or substring of it)")
+    parser.add_argument("--dry", action="store_true", help="dry run, do not send requests")
+    parser.add_argument("--version", type=str, default=api.latest_version())
+    parser.add_argument("--no-verify", action="store_true", help="do not check TLS certificate")
+    parser.add_argument(
+        "--remove-path-prefix",
+        type=str,
+        default="",
+        help="remove prefix from all paths",
+    )
+    parser.add_argument(
+        "--output",
+        type=OutputFormats,
+        default=OutputFormats.TEXT,
+        choices=list(OutputFormats),
+    )
     args = parser.parse_args(argv)
     try:
         available_suites = api.supported_versions()[args.version]
@@ -121,25 +119,23 @@ def run_api_test(argv):
 
 
 def generate_files(argv):
-    parser = argparse.ArgumentParser(description='Generates aas files which can be used to test your software')
-    parser.add_argument('directory',
-                        type=str,
-                        help='Directory to place files in')
+    parser = argparse.ArgumentParser(description="Generates aas files which can be used to test your software")
+    parser.add_argument("directory", type=str, help="Directory to place files in")
     args = parser.parse_args(argv)
     if os.path.exists(args.directory):
         print(f"Directory '{args.directory}' already exists, please remove it")
         sys.exit(1)
     os.mkdir(args.directory)
     for idx, (is_valid, sample) in enumerate(file.generate()):
-        tag = 'valid' if is_valid else 'invalid'
+        tag = "valid" if is_valid else "invalid"
         with open(os.path.join(args.directory, f"{idx}_{tag}.json"), "w") as f:
             json.dump(sample, f)
 
 
 commands = {
-    'check_file': run_file_test,
-    'check_server': run_api_test,
-    'generate_files': generate_files,
+    "check_file": run_file_test,
+    "check_server": run_api_test,
+    "generate_files": generate_files,
 }
 
 
@@ -163,5 +159,5 @@ def main():
     commands[command](remaining_args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
