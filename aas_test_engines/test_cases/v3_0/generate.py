@@ -10,6 +10,7 @@ from aas_test_engines.reflect import (
 )
 from aas_test_engines.result import start, write
 from .interfaces.shared import AssetId
+import base64
 
 
 class DummyEnumValue:
@@ -22,6 +23,14 @@ class DummyEnumValue:
 
     def __str__(self):
         return self.value
+
+
+_INVALID_BASE64URL = "invalid-base64url====="
+try:
+    base64.urlsafe_b64decode(_INVALID_BASE64URL)
+    assert False, f"{_INVALID_BASE64URL} must not be base64-url decodable"
+except ValueError:
+    pass
 
 
 def generate_invalid_values(arg: FunctionType.Argument) -> List[any]:

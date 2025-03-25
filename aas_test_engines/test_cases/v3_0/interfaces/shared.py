@@ -58,7 +58,8 @@ def extract_json(response: Response) -> dict:
 
 
 def invoke(client: HttpClient, request: Request) -> Response:
-    write(f"Invoke {request.make_url()}")
+    url = "".join(client.prefixes) + request.make_url()
+    write(f"Invoke {url}")
     response = client.send(request)
     write(f"Response: ({response.status_code}): {_shorten(response.content)}")
     return response

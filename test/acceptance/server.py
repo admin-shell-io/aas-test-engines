@@ -80,13 +80,13 @@ params = [
         "/api/v3.0",
         "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002",
         3,
-        17,
+        13,
     ),
     Params(
         "/api/v3.0",
         "https://admin-shell.io/aas/API/3/0/SubmodelRepositoryServiceSpecification/SSP-002",
         6,
-        13,
+        9,
     ),
     Params(
         "/api/v3.0/shells/aHR0cDovL2N1c3RvbWVyLmNvbS9hYXMvOTE3NV83MDEzXzcwOTFfOTE2OA==/submodels/aHR0cDovL2k0MC5jdXN0b21lci5jb20vdHlwZS8xLzEvRjEzRTg1NzZGNjQ4ODM0Mg==",
@@ -99,7 +99,7 @@ params = [
         "/api/v3.0/shells/aHR0cDovL2N1c3RvbWVyLmNvbS9hYXMvOTE3NV83MDEzXzcwOTFfOTE2OA==/",
         "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellServiceSpecification/SSP-002",
         1,
-        10,
+        6,
         "/aas",
     ),
 ]

@@ -234,14 +234,14 @@ class SetupForAas(ApiTestSuite):
     def setup(self):
         result = get_all_submodel_references(self.client, limit=1)
         self.valid_id = result.result[0].keys[0].value.raw_value
-        self.valid_arguments["submodel_id"] = self.valid_id
+        self.valid_arguments["submodel_id"] = Base64String(self.valid_id)
 
 
 class SetupForSubmodel(ApiTestSuite):
     def setup(self):
         result = get_all_submodels(self.client, limit=1)
         self.valid_id = result.result[0].id.raw_value
-        self.valid_arguments["submodel_id"] = self.valid_id
+        self.valid_arguments["submodel_id"] = Base64String(self.valid_id)
 
 
 class GetSubmodelByIdTests(ApiTestSuite):

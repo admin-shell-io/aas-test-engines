@@ -45,7 +45,7 @@ def get_all_shells(
             "cursor": cursor,
             "limit": limit,
             "idShort": id_short,
-            "assetId": asset_id,
+            "assetIds": asset_id,
         },
     )
     return invoke_and_decode(client, request, r_get_all_shells_response, {200})
@@ -113,7 +113,7 @@ class GetAllAasTestSuite(GetAllAasTestSuiteBase, PaginationTests):
                 "cursor": cursor,
                 "limit": limit,
                 "idShort": id_short,
-                "assetId": asset_id,
+                "assetIds": asset_id,
             },
         )
         return invoke_and_decode(self.client, request, r_error_result, range(400, 500))
@@ -140,7 +140,7 @@ class GetAllAasRefsTestSuite(GetAllAasTestSuiteBase, PaginationTests):
                 "cursor": cursor,
                 "limit": limit,
                 "idShort": id_short,
-                "assetId": asset_id,
+                "assetIds": asset_id,
             },
         )
         return invoke_and_decode(self.client, request, reflection, status)
