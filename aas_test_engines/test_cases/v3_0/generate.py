@@ -41,7 +41,7 @@ def generate_invalid_values(arg: FunctionType.Argument) -> List[any]:
         return []
     if isinstance(arg.type, StringFormattedValueType):
         if arg.type.cls.base64:
-            return ["invalid-base64"]
+            return [_INVALID_BASE64URL]
         else:
             return []
     if isinstance(arg.type, EnumType):
@@ -51,7 +51,7 @@ def generate_invalid_values(arg: FunctionType.Argument) -> List[any]:
         return ["invalid-bool"]
     if isinstance(arg.type, ClassType):
         if arg.type.cls is AssetId:
-            return ["invalid-base64"]
+            return [_INVALID_BASE64URL]
         return []
     raise NotImplementedError(
         f"There is no generation implemented for:\n" + f"arg.type: {arg.type}\n" + f"arg.name: {arg.name}"
