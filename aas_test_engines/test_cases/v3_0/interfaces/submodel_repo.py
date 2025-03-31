@@ -252,7 +252,7 @@ class GetSubmodelByIdTests(ApiTestSuite):
             path=f"/submodels/{submodel_id}",
             query_parameters={
                 "level": unpack_enum(level),
-                "extent": unpack_enum(level),
+                "extent": unpack_enum(extent),
             },
         )
         return invoke_and_decode(self.client, request, reflection, status)

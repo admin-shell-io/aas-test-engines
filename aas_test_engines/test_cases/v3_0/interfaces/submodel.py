@@ -320,6 +320,9 @@ class GetAllSubmodelElementsTestSuite(GetSubmodelElementsTests, PaginationTests)
 class GetAllSubmodelElementsMetaTestSuite(PaginationTests):
     operation = "GetAllSubmodelElements-Metadata"
 
+    def setup(self):
+        self.cursor = self.invoke_success(limit=1).paging_metadata.cursor
+
     def _invoke(self, limit, cursor, reflection, status):
         request = Request(
             "/submodel-elements/$metadata",
