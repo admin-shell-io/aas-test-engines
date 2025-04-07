@@ -8,7 +8,7 @@ from typing import List
 from dataclasses import dataclass, field
 import base64
 
-from aas_test_engines.api import execute_tests, ExecConf
+from aas_test_engines.api import execute_tests, CheckApiConfig, HttpClient
 import requests
 from fences.core.util import ConfusionMatrix, Table, print_table
 
@@ -129,12 +129,15 @@ def main():
 
             docker_compose(server_dir, 'up', '-d')
             wait_for_server(server.url + "/shells")
-            conf = ExecConf(
-                server=server.url + profile.url_suffix,
+            client = HttpClient(
+                host=server.url + profile.url_suffix,
+                remove_path_prefix=profile.discard_prefix,
                 verify=False,
-                remove_path_prefix=profile.discard_prefix
             )
-            result, mat = execute_tests(conf, profile.spec_name)
+            conf = CheckApiConfig(
+                suite=profile.spec_name,
+            )
+            result, mat = execute_tests(client, conf)
             with open(result_file, "w") as f:
                 f.write(result.to_html())
             profile.mats.append(mat)

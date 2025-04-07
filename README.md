@@ -119,7 +119,18 @@ You may prefer the HTML output for better readability by running:
 ```sh
 aas_test_engines check_server http://my-server.com/api/v3.0 https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002 --output html > result.html
 ```
- 
+
+### Handling Authorization
+In case your server applies some authorization mechanism for security, you need to pass credentials to the Test Engines.
+You can use the `--header` option to do so by providing credentials within header fields:
+
+<!-- no-check -->
+```sh
+aas_test_engines check_server http://my-server.com/api/v3.0 https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002 --header 'Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l'
+```
+
+If you need a more sophisticated authorization mechanism, you should use the Python module interface and provide your own `aas_test_engines.http.HttpClient` class.
+
 ## Python Module Interface
 <a name="python-interface"></a>
 
@@ -199,23 +210,30 @@ result.dump()
 Check a running server instance:
 
 ```python
-from aas_test_engines import api
+from aas_test_engines import api, config, http
 
-conf = api.ExecConf(server="http://localhost")
-result, mat = api.execute_tests(conf, "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002")
+client = http.HttpClient(
+    host="http://localhost",
+)
+conf = config.CheckApiConfig(
+    suite="https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002",
+)
+
+result, mat = api.execute_tests(client, conf)
 result.dump()
 ```
 
-Checking older versions:
+To check older versions pass `version` to the `ApiConfig`:
 
 ```python
-from aas_test_engines import api
+from aas_test_engines import api, config
 print(api.supported_versions())
 print(api.latest_version())
 
-conf = api.ExecConf(server="http://localhost")
-result, mat = api.execute_tests(conf, "https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002", "3.0")
-result.dump()
+conf = config.CheckApiConfig(
+    suite="https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002",
+    version='3.0'
+)
 ```
 
 ### Generating test data for software testing

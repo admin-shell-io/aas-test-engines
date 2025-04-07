@@ -5,6 +5,7 @@ from aas_test_engines.exception import AasTestToolsException
 from aas_test_engines.reflect import reflect_function
 from aas_test_engines.result import write, start, abort, Level, AasTestResult
 from aas_test_engines.http import HttpClient, Request
+from aas_test_engines.config import CheckApiConfig
 import requests
 from .interfaces import (
     aas,
@@ -16,14 +17,6 @@ from .interfaces import (
 )
 from .interfaces.shared import ApiTestSuite, Base64String
 from .generate import generate_calls
-
-
-@dataclass
-class ExecConf:
-    server: str
-    dry: bool = False
-    verify: bool = True
-    remove_path_prefix: str = ""
 
 
 SSP_PREFIX = "https://admin-shell.io/aas/API/3/0/"
@@ -224,17 +217,16 @@ def _execute(suite: ApiTestSuite) -> ConfusionMatrix:
     return mat
 
 
-def execute_tests(conf: ExecConf, suite: str) -> Tuple[AasTestResult, ConfusionMatrix]:
+def execute_tests(client: HttpClient, conf: CheckApiConfig) -> Tuple[AasTestResult, ConfusionMatrix]:
     try:
-        test_suites = available_suites[suite]
+        test_suites = available_suites[conf.suite]
     except KeyError:
         all_suites = "\n".join(sorted(available_suites.keys()))
-        raise AasTestToolsException(f"Unknown suite {suite}, must be one of:\n{all_suites}")
+        raise AasTestToolsException(f"Unknown suite {conf.suite}, must be one of:\n{all_suites}")
 
     mat = ConfusionMatrix()
-    client = HttpClient(conf.server, conf.verify, conf.remove_path_prefix)
 
-    with start(f"Checking compliance to {suite}") as result_root:
+    with start(f"Checking compliance to {conf.suite}") as result_root:
 
         # Initial connection check
         if not _check_server(conf.dry, client):
@@ -253,7 +245,7 @@ def execute_tests(conf: ExecConf, suite: str) -> Tuple[AasTestResult, ConfusionM
                 with start("Setup") as result_setup:
                     prefix = prefix_provider(client)
                     sub_client = client.descend(prefix)
-                    test_suite: ApiTestSuite = test_suite_class(sub_client, suite)
+                    test_suite: ApiTestSuite = test_suite_class(sub_client, conf.suite)
                     test_suite.setup()
 
                 if result_setup.ok():

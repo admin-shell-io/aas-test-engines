@@ -2,8 +2,9 @@ import argparse
 import sys
 import os
 import json
-from aas_test_engines import api, file
+from aas_test_engines import api, config, file, http
 from enum import Enum
+from typing import Tuple
 
 # https://stackoverflow.com/questions/27981545
 import urllib3
@@ -24,6 +25,14 @@ class OutputFormats(Enum):
     TEXT = "text"
     JSON = "json"
     HTML = "html"
+
+
+def _parse_header_value(s: str) -> Tuple[str, str]:
+    try:
+        key, value = s.split(":", 1)
+        return key.strip(), value.strip()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Invalid format for header:value: '{s}'")
 
 
 def run_file_test(argv):
@@ -66,6 +75,13 @@ def run_api_test(argv):
     parser = argparse.ArgumentParser(description="Checks a server instance for compliance with the AAS api")
     parser.add_argument("server", type=str, help="server to run the tests against")
     parser.add_argument("suite", type=str, help="test suite (or substring of it)")
+    parser.add_argument(
+        "--header",
+        nargs="+",
+        default=[],
+        type=_parse_header_value,
+        help="Additional headers in the format header:value",
+    )
     parser.add_argument("--dry", action="store_true", help="dry run, do not send requests")
     parser.add_argument("--version", type=str, default=api.latest_version())
     parser.add_argument("--no-verify", action="store_true", help="do not check TLS certificate")
@@ -100,13 +116,19 @@ def run_api_test(argv):
     else:
         suite = suites[0]
 
-    exec_conf = api.ExecConf(
-        server=args.server,
-        dry=args.dry,
+    client = http.HttpClient(
+        host=args.server,
         verify=not args.no_verify,
         remove_path_prefix=args.remove_path_prefix,
+        additional_headers=dict(args.header),
     )
-    result, mat = api.execute_tests(exec_conf, suite, args.version)
+    conf = config.CheckApiConfig(
+        suite=suite,
+        version=args.version,
+        dry=args.dry,
+    )
+
+    result, mat = api.execute_tests(client, conf)
     if args.output == OutputFormats.TEXT:
         result.dump()
     elif args.output == OutputFormats.HTML:

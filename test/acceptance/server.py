@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from aas_test_engines import api
+from aas_test_engines import api, config, http
 import os
 import shutil
 import subprocess
@@ -107,11 +107,12 @@ params = [
 for param in params:
     print("-" * 10)
     print(f"Checking {param.suite}")
-    conf = api.ExecConf(
-        server=f"{HOST}{param.url}",
+    client = http.HttpClient(
+        host=f"{HOST}{param.url}",
         remove_path_prefix=param.remove_path_prefix,
     )
-    result, mat = api.execute_tests(conf, param.suite)
+    conf = config.CheckApiConfig(param.suite)
+    result, mat = api.execute_tests(client, conf)
     mat.print()
     with open("output.html", "w") as f:
         f.write(result.to_html())

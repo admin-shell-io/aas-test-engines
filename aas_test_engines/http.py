@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
 import requests
 from requests.models import Response
 from dataclasses import dataclass, field
@@ -35,14 +35,17 @@ class Request:
 
 class HttpClient:
 
-    def __init__(self, host: str, verify: bool, remove_path_prefix: str):
+    def __init__(
+        self, host: str, verify: bool = False, remove_path_prefix: str = "", additional_headers: Dict[str, str] = {}
+    ):
         self.host = host
         self.verify = verify
         self.remove_path_prefix = remove_path_prefix
         self.prefixes: List[str] = []
+        self.additional_headers = additional_headers
 
     def descend(self, prefix: str):
-        result = HttpClient(self.host, self.verify, self.remove_path_prefix)
+        result = HttpClient(self.host, self.verify, self.remove_path_prefix, self.additional_headers)
         result.prefixes.append(prefix)
         return result
 
