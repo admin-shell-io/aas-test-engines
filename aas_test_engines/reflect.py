@@ -221,7 +221,16 @@ class SymbolTable:
         for key, value in self.symbols.items():
             print(f"{key:80}: {value}")
 
-    def resolve(self):
+    def lookup(self, type_name):
+        matches = [type for name, type in self.symbols.items() if name.endswith(f".{type_name}'>")]
+        if len(matches) == 0:
+            raise ValueError(f"{type_name} not found")
+        elif len(matches) == 1:
+            return matches[0]
+        else:
+            raise ValueError(f"{type_name} is ambiguous")
+
+    def _resolve(self):
         for name, symbol in self.symbols.items():
             if isinstance(symbol, ClassType):
                 for field in symbol.attrs:
@@ -319,7 +328,7 @@ def _reflect_unsafe(
 def reflect(cls: any, globals={}, locals={}) -> Tuple[TypeBase, SymbolTable]:
     symbol_table = SymbolTable()
     type = _reflect(cls, globals, locals, symbol_table, False)
-    symbol_table.resolve()
+    symbol_table._resolve()
     return type, symbol_table
 
 
