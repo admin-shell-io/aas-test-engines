@@ -25,6 +25,7 @@ class TestReflect(TestCase):
         type, table = reflect(Foo)
         assert isinstance(type, ClassType)
         self.assertTrue(type.is_abstract())
+        self.assertIs(table.lookup("Foo"), type)
 
     def test_simple_class(self):
 
@@ -38,6 +39,7 @@ class TestReflect(TestCase):
         self.assertEqual(type.attrs[0].name, "bar")
         self.assertEqual(len(table.symbols), 2)
         type.construct({"bar": "foo"})
+        self.assertIs(table.lookup("Foo"), type)
 
     def test_nested_class(self):
 
@@ -51,9 +53,11 @@ class TestReflect(TestCase):
 
         type, table = reflect(Foo)
         assert isinstance(type, ClassType)
+        self.assertIs(table.lookup("Foo"), type)
         assert isinstance(type.attrs[0].type, ClassType)
         self.assertEqual(len(type.attrs), 1)
         self.assertEqual(len(table.symbols), 2)
+        self.assertIs(table.lookup("Bar"), type.attrs[0].type)
 
     def test_forward_ref(self):
         @dataclass
