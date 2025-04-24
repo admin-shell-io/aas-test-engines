@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aas_test_engines"
-version = "1.0.1"
+version = "1.0.2"
 description = "Official test tooling for the Asset Administration Shell"
 readme = "README.md"
 classifiers = [
