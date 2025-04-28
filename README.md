@@ -120,8 +120,8 @@ You may prefer the HTML output for better readability by running:
 aas_test_engines check_server http://my-server.com/api/v3.0 https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002 --output html > result.html
 ```
 
-### Handling Authorization
-In case your server applies some authorization mechanism for security, you need to pass credentials to the Test Engines.
+### Handling Authentication
+In case your server applies some authentication mechanism for security, you need to pass credentials to the Test Engines.
 You can use the `--header` option to do so by providing credentials within header fields:
 
 <!-- no-check -->
@@ -129,7 +129,7 @@ You can use the `--header` option to do so by providing credentials within heade
 aas_test_engines check_server http://my-server.com/api/v3.0 https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002 --header 'Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l'
 ```
 
-If you need a more sophisticated authorization mechanism, you should use the Python module interface and provide your own `aas_test_engines.http.HttpClient` class.
+If you need a more sophisticated authentication mechanism, you should use the Python module interface and provide your own `aas_test_engines.http.HttpClient` class.
 
 ## Python Module Interface
 <a name="python-interface"></a>

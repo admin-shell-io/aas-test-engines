@@ -9,7 +9,6 @@ All constraints of Part 1 and Part 3a are checked except for the following:
 * AASd-115
 * AASd-020
 * AASd-021
-* AASd-022
 * AASd-077
 * AASc-3a-003
 * AASc-3a-050
