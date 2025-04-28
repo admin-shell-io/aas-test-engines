@@ -5,7 +5,7 @@ from .parse import (
 from aas_test_engines.reflect import reflect, StringFormattedValue, abstract
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Set, Iterator, Union
+from typing import List, Optional, Set, Iterator, Union, Iterable
 from enum import Enum
 from aas_test_engines.data_types import (
     _is_bounded_integer,
@@ -20,7 +20,6 @@ from aas_test_engines.data_types import (
 import re
 
 # TODO: AASd-021
-# TODO: AASd-022
 # TODO: AASd-077
 
 
@@ -771,6 +770,23 @@ class AssetInformation:
 # 5.3.6 Submodel Element
 
 
+def ensure_unique_id_shorts(value: Optional[Iterable[Referable]], path: IdShortPath):
+    """
+    Constraint AASd-022: idShort of non-identifiable referables within the same name space shall be unique
+    (case-sensitive).
+    """
+    if value is None:
+        return
+    seen: Set[str] = set()
+    for i in value:
+        if i.id_short is None:
+            continue
+        if i.id_short.raw_value in seen:
+            raise CheckConstraintException(f"AASd-022 violated: Duplicate idShort '{i.id_short}'")
+        else:
+            seen.add(i.id_short.raw_value)
+
+
 @dataclass
 @abstract
 class SubmodelElement(Referable, HasSemantics, Qualifiable, HasDataSpecification):
@@ -1069,6 +1085,9 @@ class SubmodelElementCollection(SubmodelElement):
             for el in self.value:
                 el._set_path(path + el.id_short)
 
+    def check_aasd_022(self):
+        ensure_unique_id_shorts(self.value, self.id_short_path)
+
     def check_aasd_117(self):
         ensure_have_id_shorts(self.value, self.id_short_path)
 
@@ -1185,8 +1204,8 @@ class SubmodelElementList(SubmodelElement):
 
     def check_aasd_120(self):
         """
-        Constraint AASd-117: idShort of non-identifiable Referables not being a direct child of a
-        SubmodelElementList shall be specified.
+        Constraint AASd-120: idShort of submodel elements being a direct child of a SubmodelElementList shall not
+        be specified.
         """
         if not self.value:
             return
@@ -1243,10 +1262,13 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
         for element in self.submodel_elements:
             yield from element.elements()
 
+    def check_aasd_022(self):
+        ensure_unique_id_shorts(self.submodel_elements, IdShortPath(self))
+
     def check_aasd_117(self):
         ensure_have_id_shorts(self.submodel_elements)
 
-    def check_aasd119(self):
+    def check_aasd_119(self):
         """
         Constraint AASd-119: If any Qualifier/kind value of a Qualifiable/qualifier is equal to TemplateQualifier and
         the qualified element inherits from "hasKind", the qualified element shall be of kind Template (HasKind/kind =
