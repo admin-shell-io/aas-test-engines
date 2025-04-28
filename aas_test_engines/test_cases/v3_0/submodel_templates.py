@@ -194,7 +194,7 @@ class ContactInformation:
             "semantic_id": "0173-1#02-AAO131#002",
         }
     )
-    state_country: Optional[LangString] = field(
+    state_county: Optional[LangString] = field(
         metadata={
             "semantic_id": "0173-1#02-AAO133#002",
         }
