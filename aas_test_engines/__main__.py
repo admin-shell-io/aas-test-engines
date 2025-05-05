@@ -86,6 +86,7 @@ def run_api_test(argv):
     parser.add_argument("--dry", action="store_true", help="dry run, do not send requests")
     parser.add_argument("--version", type=str, default=api.latest_version())
     parser.add_argument("--no-verify", action="store_true", help="do not check TLS certificate")
+    parser.add_argument("--filter", type=config.TestCaseFilter, default=None)
     parser.add_argument(
         "--remove-path-prefix",
         type=str,
@@ -127,6 +128,7 @@ def run_api_test(argv):
         suite=suite,
         version=args.version,
         dry=args.dry,
+        filter=args.filter,
     )
 
     result, mat = api.execute_tests(client, conf)

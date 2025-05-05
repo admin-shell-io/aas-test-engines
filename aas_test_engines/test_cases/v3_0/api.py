@@ -234,8 +234,10 @@ def execute_tests(client: HttpClient, conf: CheckApiConfig) -> Tuple[AasTestResu
 
         # Check individual operations
         for prefix_provider, test_suite_class in test_suites:
+            if conf.filter and not conf.filter.selects(test_suite_class.operation):
+                continue
+
             with start(
-                # f"Checking {operation.method.upper()} {operation.path} ({operation.operation_id})",
                 f"Checking {test_suite_class.operation}",
                 False,
             ):
