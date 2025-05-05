@@ -141,7 +141,7 @@ available_suites: Dict[str, List[Tuple[callable, ApiTestSuite]]] = {
         (aas_submodel_prefix, submodel.GetSubmodelElementPathTestSuite),
         (aas_submodel_prefix, submodel.GetFileByPathTestSuite),
         (aas_prefix, serialization.GenerateSerializationSuite),
-        (aas_prefix, description.GetDescriptionTestSuite),
+        (no_prefix, description.GetDescriptionTestSuite),
     ],
     f"{SSP_PREFIX}SubmodelServiceSpecification/SSP-002": [
         (submodel_prefix, submodel.GetSubmodelTestSuite),
@@ -167,7 +167,7 @@ available_suites: Dict[str, List[Tuple[callable, ApiTestSuite]]] = {
         (submodel_prefix, submodel.GetSubmodelElementPathTestSuite),
         (submodel_prefix, submodel.GetFileByPathTestSuite),
         (submodel_prefix, serialization.GenerateSerializationSuite),
-        (submodel_prefix, description.GetDescriptionTestSuite),
+        (no_prefix, description.GetDescriptionTestSuite),
     ],
 }
 
