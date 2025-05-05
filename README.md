@@ -121,6 +121,19 @@ You may prefer the HTML output for better readability by running:
 aas_test_engines check_server http://my-server.com/api/v3.0 https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002 --output html > result.html
 ```
 
+### Running a Subset of the Tests
+By default, all tests of the selected suite/profile are executed.
+If you want to limit the test cases to a subset, you can pass `--filter`, so that only operations whose name matches the filter are tested.
+A filter consists of a list of glob patterns separated by `:`.
+Every operation whose name matches this glob pattern is executed.
+Optionally you can provide negative patterns which start after `~`.
+Every operation whose name matches a negative glob pattern is omitted from test execution.
+
+Examples:
+* `GetAll*`: Tests all operations starting with `GetAll`
+* `GetAll*~GetAllShells`: Tests all operations starting with `GetAll` except for `GetAllShells`
+* `*~Post*:Delete*`: Test all operations except for the ones starting with `Post` or `Delete`
+
 ### Handling Authentication
 In case your server applies some authentication mechanism for security, you need to pass credentials to the Test Engines.
 You can use the `--header` option to do so by providing credentials within header fields:
