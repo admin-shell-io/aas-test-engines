@@ -231,7 +231,7 @@ class ContactInformation:
     )
     address_of_additional_link: Optional[str] = field(
         metadata={
-            "semantic_id": "] 0173-1#02-AAQ326#002",
+            "semantic_id": "0173-1#02-AAQ326#002",
         }
     )
 
