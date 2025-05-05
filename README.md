@@ -34,6 +34,7 @@ You may want to invoke the test tools using the command line interface:
 # Check file
 aas_test_engines check_file test.aasx
 aas_test_engines check_file test.json --format json
+aas_test_engines check_file submodel.aasx --model_type Submodel
 
 # Check server
 aas_test_engines check_server https://localhost https://admin-shell.io/aas/API/3/0/AssetAdministrationShellRepositoryServiceSpecification/SSP-002

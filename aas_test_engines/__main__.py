@@ -38,6 +38,7 @@ def _parse_header_value(s: str) -> Tuple[str, str]:
 def run_file_test(argv):
     parser = argparse.ArgumentParser(description="Checks a file for compliance with the AAS meta-model")
     parser.add_argument("file", type=argparse.FileType("rb"), help="the file to check")
+    parser.add_argument("--model_type", type=str, default="Environment", help="Check for a specific model type")
     parser.add_argument(
         "--format",
         type=InputFormats,
@@ -53,11 +54,11 @@ def run_file_test(argv):
     args = parser.parse_args(argv)
 
     if args.format == InputFormats.aasx:
-        result = file.check_aasx_file(args.file)
+        result = file.check_aasx_file(args.file, model_type=args.model_type)
     elif args.format == InputFormats.json:
-        result = file.check_json_file(args.file)
+        result = file.check_json_file(args.file, model_type=args.model_type)
     elif args.format == InputFormats.xml:
-        result = file.check_xml_file(args.file)
+        result = file.check_xml_file(args.file, model_type=args.model_type)
     else:
         raise Exception(f"Invalid format {args.format}")
     if args.output == OutputFormats.TEXT:

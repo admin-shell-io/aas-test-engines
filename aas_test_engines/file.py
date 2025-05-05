@@ -7,7 +7,7 @@ from .opc import Relationship, read_opc
 from xml.etree import ElementTree
 import zipfile
 
-from aas_test_engines.test_cases.v3_0 import json_to_env, xml_to_env
+from aas_test_engines.test_cases.v3_0 import json_to_obj, xml_to_obj
 from aas_test_engines.test_cases.v3_0.submodel_templates import supported_templates
 
 JSON = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
@@ -23,29 +23,27 @@ def latest_version():
     return _DEFAULT_VERSION
 
 
-def check_json_data(data: any, version: str = _DEFAULT_VERSION) -> AasTestResult:
-    result, env = json_to_env(data)
+def check_json_data(data: any, version: str = _DEFAULT_VERSION, model_type: str = "Environment") -> AasTestResult:
+    result, obj = json_to_obj(data, model_type)
     return result
 
 
-def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
+def check_json_file(file: TextIO, version: str = _DEFAULT_VERSION, model_type: str = "Environment") -> AasTestResult:
     try:
         data = json.load(file)
     except json.decoder.JSONDecodeError as e:
         return AasTestResult(f"Invalid JSON: {e}", Level.ERROR)
-    return check_json_data(data, version)
+    return check_json_data(data, version, model_type)
 
 
 def check_xml_data(
-    data: ElementTree,
-    version: str = _DEFAULT_VERSION,
-    submodel_templates: Set[str] = set(),
+    data: ElementTree, version: str = _DEFAULT_VERSION, model_type: str = "Environment"
 ) -> AasTestResult:
-    result, env = xml_to_env(data)
+    result, obj = xml_to_obj(data, model_type)
     return result
 
 
-def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
+def check_xml_file(file: TextIO, version: str = _DEFAULT_VERSION, model_type: str = "Environment") -> AasTestResult:
     try:
         data = ElementTree.fromstring(file.read())
     except ElementTree.ParseError as e:
@@ -109,10 +107,10 @@ def check_aasx_data(zipfile: zipfile.ZipFile, version: str = _DEFAULT_VERSION) -
     return result
 
 
-def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
+def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION, model_type: str = "Environment") -> AasTestResult:
     try:
         zip = zipfile.ZipFile(file)
     except zipfile.BadZipFile as e:
         return AasTestResult(f"Cannot read: {e}", level=Level.ERROR)
 
-    return check_aasx_data(zip, version)
+    return check_aasx_data(zip, version, model_type)

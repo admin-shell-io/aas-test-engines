@@ -1445,4 +1445,4 @@ class Environment:
     concept_descriptions: Optional[List[ConceptDescription]]
 
 
-r_environment, _ = reflect(Environment, globals(), locals())
+r_environment, symbol_table = reflect(Environment, globals(), locals())
