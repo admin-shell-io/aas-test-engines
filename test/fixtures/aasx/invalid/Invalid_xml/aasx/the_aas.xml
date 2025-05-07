@@ -44,34 +44,6 @@
 							<valueType>xs:long</valueType>
 						</qualifier>
 					</qualifiers>
-					<embeddedDataSpecifications>
-						<embeddedDataSpecification>
-							<dataSpecification>
-								<type>ModelReference</type>
-								<keys>
-									<key>
-										<type>Submodel</type>
-										<value>urn:another-company15:2bd0986b</value>
-									</key>
-								</keys>
-							</dataSpecification>
-							<dataSpecificationContent>
-								<dataSpecificationIec61360>
-									<preferredName>
-										<langStringPreferredNameTypeIec61360>
-											<language>X-33DQI-g</language>
-											<text>something_7e795ee2</text>
-										</langStringPreferredNameTypeIec61360>
-										<langStringPreferredNameTypeIec61360>
-											<language>en-UK</language>
-											<text>Something random in English c8512bdf</text>
-										</langStringPreferredNameTypeIec61360>
-									</preferredName>
-									<value>something_4e9c19b7</value>
-								</dataSpecificationIec61360>
-							</dataSpecificationContent>
-						</embeddedDataSpecification>
-					</embeddedDataSpecifications>
 					<valueType>xs:decimal</valueType>
 					<value>0061707</value>
 					<valueId>

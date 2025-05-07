@@ -18,33 +18,6 @@
               "text": "something_535aeb51"
             }
           ],
-          "embeddedDataSpecifications": [
-            {
-              "dataSpecification": {
-                "keys": [
-                  {
-                    "type": "Submodel",
-                    "value": "urn:another-company15:2bd0986b"
-                  }
-                ],
-                "type": "ModelReference"
-              },
-              "dataSpecificationContent": {
-                "modelType": "DataSpecificationIec61360",
-                "preferredName": [
-                  {
-                    "language": "X-33DQI-g",
-                    "text": "something_7e795ee2"
-                  },
-                  {
-                    "language": "en-UK",
-                    "text": "Something random in English c8512bdf"
-                  }
-                ],
-                "value": "something_4e9c19b7"
-              }
-            }
-          ],
           "extensions": [
             {
               "name": "something_aa1af8b3"

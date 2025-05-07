@@ -20,7 +20,9 @@ from aas_test_engines.reflect import StringFormattedValue
 
 
 class CheckConstraintException(Exception):
-    pass
+    def __init__(self, msg: str, level: Level = Level.ERROR):
+        super().__init__(msg)
+        self.level = level
 
 
 INVALID = object()
@@ -193,7 +195,7 @@ def check_constraints(obj, result: AasTestResult, path: AdapterPath = AdapterPat
         try:
             fn()
         except CheckConstraintException as e:
-            result.append(AasTestResult(f"{e} @ {path}", level=Level.ERROR))
+            result.append(AasTestResult(f"{e} @ {path}", level=e.level))
     for field in fields(obj):
         value = getattr(obj, field.name)
         if isinstance(value, list):

@@ -17,6 +17,7 @@ from aas_test_engines.data_types import (
     is_any_uri,
     is_xs_date_time,
 )
+from aas_test_engines.result import Level
 import re
 
 # TODO: AASd-021
@@ -433,6 +434,26 @@ class DataSpecificationContent:
 class EmbeddedDataSpecification:
     data_specification: Reference
     data_specification_content: DataSpecificationContent
+
+    def check_reference(self):
+        deprecated = {
+            "https://adminshell.io/DataSpecificationTemplates/DataSpecificationIec61360/3/0",
+            "http://adminshell.io/DataSpecificationTemplates/DataSpecificationIec61360/3/0",
+            "https://adminshell.io/DataSpecificationTemplates/DataSpecificationIEC61360/3/0",
+            "http://adminshell.io/DataSpecificationTemplates/DataSpecificationIEC61360/3/0",
+        }
+        expected = "https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIec61360/3"
+        if len(self.data_specification.keys) != 1:
+            raise CheckConstraintException("dataSpecification/keys must have exactly one entry", Level.WARNING)
+        key = self.data_specification.keys[0].value.raw_value
+        if key in deprecated:
+            raise CheckConstraintException(
+                f"dataSpecification/keys[0] has deprecated value {key}, expected {expected}", Level.WARNING
+            )
+        if key != expected:
+            raise CheckConstraintException(
+                f"dataSpecification/keys[0] has unexpected value {key}, expected {expected}", Level.WARNING
+            )
 
 
 @dataclass
