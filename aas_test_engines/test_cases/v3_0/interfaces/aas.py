@@ -9,7 +9,6 @@ from .shared import (
     ApiTestSuite,
     invoke,
     PagedResult,
-    Base64String,
     PaginationTests,
 )
 from aas_test_engines.test_cases.v3_0.model import (

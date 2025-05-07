@@ -407,3 +407,7 @@ validators = {
     DataTypeDefXsd.base64Binary: is_base64_binary,
     DataTypeDefXsd.hexBinary: is_hex_binary,
 }
+
+
+def base64_urlsafe(s: str) -> str:
+    return base64.urlsafe_b64encode(s.encode()).decode().strip("=")

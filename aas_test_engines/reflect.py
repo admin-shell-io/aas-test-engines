@@ -13,7 +13,7 @@ from enum import Enum
 from dataclasses import is_dataclass, fields
 import re
 import inspect
-import base64
+from aas_test_engines.data_types import base64_urlsafe
 
 
 def abstract(cls):
@@ -88,7 +88,7 @@ class StringFormattedValue:
 
     def __str__(self) -> str:
         if self.base64:
-            return base64.urlsafe_b64encode(self.raw_value.encode()).decode()
+            return base64_urlsafe(self.raw_value)
         else:
             return self.raw_value
 

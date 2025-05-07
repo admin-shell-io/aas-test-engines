@@ -19,7 +19,7 @@ from aas_test_engines.result import Level as ResultLevel
 import base64
 import json
 import requests
-from fences.core.util import ConfusionMatrix
+from aas_test_engines.data_types import base64_urlsafe
 
 # Util
 
@@ -136,7 +136,8 @@ class AssetId:
     value: str
 
     def __str__(self):
-        return base64.b64encode(json.dumps({"name": self.name, "value": self.value}).encode()).decode()
+        data = {"name": self.name, "value": self.value}
+        return base64_urlsafe(json.dumps(data))
 
 
 class ApiTestSuite:
