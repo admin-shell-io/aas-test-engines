@@ -111,10 +111,9 @@ class Message:
     timestamp: Optional[str]
 
 
-# TODO: should be Optional[List[Message]]
 @dataclass
 class ErrorResult:
-    messages: Optional[List[any]] = field(metadata={"force_name": "Messages"})
+    messages: Optional[List[Message]] = field(metadata={"force_name": "messages"})
 
 
 r_error_result, _ = reflect(ErrorResult)
