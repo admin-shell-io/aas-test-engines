@@ -113,7 +113,7 @@ class Message:
 
 @dataclass
 class ErrorResult:
-    messages: Optional[List[Message]] = field(metadata={"force_name": "messages"})
+    messages: Optional[List[Message]]
 
 
 r_error_result, _ = reflect(ErrorResult)
