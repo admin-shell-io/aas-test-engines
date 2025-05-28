@@ -202,7 +202,60 @@ class GetSubmodelPathTestSuite(ApiTestSuite):
         self.invoke_success()
 
 
-class GetSubmodelElementsTests(ApiTestSuite):
+class GetAllSubmodelElementsValueOnlyTests(ApiTestSuite):
+    def setup(self):
+        result: PagedResult = self.invoke_success(limit=1)
+        self.cursor = result.paging_metadata.cursor
+
+    def test_simple(self):
+        """
+        Fetch all submodel elements
+        """
+        self.invoke_success()
+
+    def test_level_core(self):
+        """
+        Fetch all submodel elements with level=core
+        """
+        self.invoke_success(level=Level.Core)
+
+    def test_level_deep(self):
+        """
+        Fetch all submodel elements with level=deep
+        """
+        self.invoke_success(level=Level.Deep)
+
+
+class GetAllSubmodelElementsTestSuite(PaginationTests):
+    operation = "GetAllSubmodelElements"
+
+    def invoke_success(
+        self,
+        level: Optional[Level] = None,
+        extent: Optional[Level] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+    ) -> GetAllSubmodelElementsResponse:
+        return get_all_submodel_elements(self.client, level, extent, limit, cursor)
+
+    def invoke_error(
+        self,
+        level: Optional[Level] = None,
+        extent: Optional[Level] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+    ) -> ErrorResult:
+        request = Request(
+            "/submodel-elements",
+            query_parameters={
+                "level": unpack_enum(level),
+                "extent": unpack_enum(extent),
+                "limit": limit,
+                "cursor": cursor,
+            },
+        )
+        return invoke_and_decode(self.client, request, r_error_result, range(400, 500))
+
     def setup(self):
         result: PagedResult = self.invoke_success(limit=1)
         self.cursor = result.paging_metadata.cursor
@@ -260,61 +313,6 @@ class GetSubmodelElementsTests(ApiTestSuite):
         Fetch all submodel elements with level=deep and extend=withBlobValue
         """
         self.invoke_success(level=Level.Deep, extent=Extent.WithoutBlobValue)
-
-
-class GetAllSubmodelElementsValueOnlyTests(ApiTestSuite):
-    def setup(self):
-        result: PagedResult = self.invoke_success(limit=1)
-        self.cursor = result.paging_metadata.cursor
-
-    def test_simple(self):
-        """
-        Fetch all submodel elements
-        """
-        self.invoke_success()
-
-    def test_level_core(self):
-        """
-        Fetch all submodel elements with level=core
-        """
-        self.invoke_success(level=Level.Core)
-
-    def test_level_deep(self):
-        """
-        Fetch all submodel elements with level=deep
-        """
-        self.invoke_success(level=Level.Deep)
-
-
-class GetAllSubmodelElementsTestSuite(GetSubmodelElementsTests, PaginationTests):
-    operation = "GetAllSubmodelElements"
-
-    def invoke_success(
-        self,
-        level: Optional[Level] = None,
-        extent: Optional[Level] = None,
-        limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-    ) -> GetAllSubmodelElementsResponse:
-        return get_all_submodel_elements(self.client, level, extent, limit, cursor)
-
-    def invoke_error(
-        self,
-        level: Optional[Level] = None,
-        extent: Optional[Level] = None,
-        limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-    ) -> ErrorResult:
-        request = Request(
-            "/submodel-elements",
-            query_parameters={
-                "level": unpack_enum(level),
-                "extent": unpack_enum(extent),
-                "limit": limit,
-                "cursor": cursor,
-            },
-        )
-        return invoke_and_decode(self.client, request, r_error_result, range(400, 500))
 
 
 class GetAllSubmodelElementsMetaTestSuite(PaginationTests):
