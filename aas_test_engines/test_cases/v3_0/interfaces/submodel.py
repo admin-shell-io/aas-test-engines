@@ -383,14 +383,13 @@ class GetAllSubmodelElementsValueOnlyTestSuite(GetAllSubmodelElementsValueOnlyTe
         return self._invoke(level, limit, cursor, r_error_result, range(400, 500))
 
 
-class GetAllSubmodelElementsReferenceTestSuite(GetAllSubmodelElementsValueOnlyTests, PaginationTests):
+class GetAllSubmodelElementsReferenceTestSuite(PaginationTests):
     operation = "GetAllSubmodelElements-Reference"
 
-    def _invoke(self, level, limit, cursor, reflection, status):
+    def _invoke(self, limit, cursor, reflection, status):
         request = Request(
             "/submodel-elements/$reference",
             query_parameters={
-                "level": unpack_enum(level),
                 "limit": limit,
                 "cursor": cursor,
             },
@@ -399,19 +398,23 @@ class GetAllSubmodelElementsReferenceTestSuite(GetAllSubmodelElementsValueOnlyTe
 
     def invoke_success(
         self,
-        level: Optional[Level] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> GetAllSubmodelElementsValueOnlyResponse:
-        return self._invoke(level, limit, cursor, r_get_all_submodel_elements_reference, {200})
+        return self._invoke(limit, cursor, r_get_all_submodel_elements_reference, {200})
 
     def invoke_error(
         self,
-        level: Optional[Level] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> ErrorResult:
-        return self._invoke(level, limit, cursor, r_error_result, range(400, 500))
+        return self._invoke(limit, cursor, r_error_result, range(400, 500))
+
+    def test_simple(self):
+        """
+        Fetch all submodel elements (references)
+        """
+        self.invoke_success()
 
 
 class GetAllSubmodelElementsPathTestSuite(GetAllSubmodelElementsValueOnlyTests, PaginationTests):
