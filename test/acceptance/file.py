@@ -67,5 +67,8 @@ if __name__ == "__main__":
     start = time.time()
     run("Json", file.check_json_file)
     run("Xml", file.check_xml_file)
+    print(f"Testing AASX...")
+    aasx_file = os.path.join(script_dir, "..", "..", "bin/check_servers/test_data/TestDataWithThumbnail.aasx")
+    file.check_aasx_file(aasx_file)
     stop = time.time()
     print(f"Elapsed time: {stop - start:.1f}s")

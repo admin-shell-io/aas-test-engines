@@ -107,10 +107,10 @@ def check_aasx_data(zipfile: zipfile.ZipFile, version: str = _DEFAULT_VERSION) -
     return result
 
 
-def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION, model_type: str = "Environment") -> AasTestResult:
+def check_aasx_file(file: TextIO, version: str = _DEFAULT_VERSION) -> AasTestResult:
     try:
         zip = zipfile.ZipFile(file)
     except zipfile.BadZipFile as e:
         return AasTestResult(f"Cannot read: {e}", level=Level.ERROR)
 
-    return check_aasx_data(zip, version, model_type)
+    return check_aasx_data(zip, version)

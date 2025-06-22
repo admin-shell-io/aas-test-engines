@@ -54,7 +54,9 @@ def run_file_test(argv):
     args = parser.parse_args(argv)
 
     if args.format == InputFormats.aasx:
-        result = file.check_aasx_file(args.file, model_type=args.model_type)
+        if args.model_type != "Environment":
+            raise Exception("Cannot set --model_type for --format aasx")
+        result = file.check_aasx_file(args.file)
     elif args.format == InputFormats.json:
         result = file.check_json_file(args.file, model_type=args.model_type)
     elif args.format == InputFormats.xml:
