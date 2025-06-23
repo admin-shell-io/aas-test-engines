@@ -18,12 +18,12 @@ from .shared import (
 
 @dataclass
 class GetAllShellsResponse(PagedResult):
-    result: List[AssetAdministrationShell] = field(metadata={"allow_empty": True})
+    result: List[AssetAdministrationShell]
 
 
 @dataclass
 class GetAllShellsReferenceResponse(PagedResult):
-    result: List[Reference] = field(metadata={"allow_empty": True})
+    result: List[Reference]
 
 
 r_get_all_shells_response, _ = reflect(GetAllShellsResponse, globals(), locals())

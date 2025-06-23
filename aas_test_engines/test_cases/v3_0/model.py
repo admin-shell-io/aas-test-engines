@@ -2,7 +2,7 @@ from .parse import (
     CheckConstraintException,
     requires_model_type,
 )
-from aas_test_engines.reflect import reflect, StringFormattedValue, abstract
+from aas_test_engines.reflect import reflect, StringFormattedValue, abstract, NonEmptyList
 
 from dataclasses import dataclass, field
 from typing import List, Optional, Set, Iterator, Union, Iterable
@@ -28,7 +28,7 @@ class IdShortPath:
 
     def __init__(self, root: "Submodel"):
         self.root = root
-        self.id_shorts: List[Union["NameTypeString", int, None]] = []
+        self.id_shorts: NonEmptyList[Union["NameTypeString", int, None]] = []
 
     def __add__(self, token: Union["NameTypeString", int, None]):
         result = IdShortPath(self.root)
@@ -189,7 +189,7 @@ class ValueType(StringFormattedValue):
 # 5.3.12.2 Constraints for Referables and Identifiables
 
 
-def ensure_have_id_shorts(elements: Optional[List["Referable"]], id_short_path: Optional[IdShortPath] = None):
+def ensure_have_id_shorts(elements: Optional[NonEmptyList["Referable"]], id_short_path: Optional[IdShortPath] = None):
     """
     Constraint AASd-117: idShort of non-identifiable Referables not being a direct child of a
     SubmodelElementList shall be specified.
@@ -298,7 +298,7 @@ class ReferenceType(Enum):
 class Reference:
     type: ReferenceType
     referred_semantic_id: Optional["Reference"]
-    keys: List[Key]
+    keys: NonEmptyList[Key]
 
     def check_aasd_121(self):
         """
@@ -458,7 +458,7 @@ class EmbeddedDataSpecification:
 
 @dataclass
 class HasDataSpecification:
-    embedded_data_specifications: Optional[List[EmbeddedDataSpecification]]
+    embedded_data_specifications: Optional[NonEmptyList[EmbeddedDataSpecification]]
 
 
 @dataclass
@@ -469,7 +469,7 @@ class ValueReferencePair:
 
 @dataclass
 class ValueList:
-    value_reference_pairs: List[ValueReferencePair]
+    value_reference_pairs: NonEmptyList[ValueReferencePair]
 
 
 @dataclass
@@ -525,14 +525,14 @@ class NonEmptyString(StringFormattedValue):
 
 @dataclass
 class DataSpecificationIec61360(DataSpecificationContent):
-    preferred_name: List[PreferredNameTypeIec61360]
-    short_name: Optional[List[ShortNameTypeIec61360]]
+    preferred_name: NonEmptyList[PreferredNameTypeIec61360]
+    short_name: Optional[NonEmptyList[ShortNameTypeIec61360]]
     unit: Optional[NonEmptyString]
     unit_id: Optional[Reference]
     source_of_definition: Optional[NonEmptyString]
     symbol: Optional[NonEmptyString]
     data_type: Optional[DataTypeIec61360]
-    definition: Optional[List[DefinitionTypeIec61360]]
+    definition: Optional[NonEmptyList[DefinitionTypeIec61360]]
     value_format: Optional[NonEmptyString]
     value_list: Optional[ValueList]
     value: Optional[ValueTypeIec61360]
@@ -582,7 +582,7 @@ class HasSemantics:
     # TODO: Note: it is recommended to use an external reference
     semantic_id: Optional[Reference]
     # TODO: Note: it is recommended to use an external reference
-    supplemental_semantic_ids: Optional[List[Reference]]
+    supplemental_semantic_ids: Optional[NonEmptyList[Reference]]
 
     def check_aasd_118(self):
         """
@@ -606,7 +606,7 @@ class Extension(HasSemantics):
     value_type: Optional[DataTypeDefXsd]
     value: Optional[ValueDataType]
     # TODO: must be a model reference
-    refers_to: Optional[List[Reference]]
+    refers_to: Optional[NonEmptyList[Reference]]
 
     def check_value_type(self):
         if self.value and self.value_type:
@@ -615,7 +615,7 @@ class Extension(HasSemantics):
 
 @dataclass
 class HasExtensions:
-    extensions: Optional[List[Extension]]
+    extensions: Optional[NonEmptyList[Extension]]
 
 
 # 5.3.2.10 Referable
@@ -626,8 +626,8 @@ class Referable(HasExtensions):
     # TODO: category is deprecated
     category: Optional[NameTypeString]
     id_short: Optional[NameTypeString]
-    display_name: Optional[List[MultiLanguageNameType]]
-    description: Optional[List[MultiLanguageTextType]]
+    display_name: Optional[NonEmptyList[MultiLanguageNameType]]
+    description: Optional[NonEmptyList[MultiLanguageTextType]]
 
     def check_constraint_aasd_002(self):
         """
@@ -723,7 +723,7 @@ class Qualifier(HasSemantics):
 
 @dataclass
 class Qualifiable:
-    qualifiers: Optional[List[Qualifier]]
+    qualifiers: Optional[NonEmptyList[Qualifier]]
 
 
 # 5.3.4 Asset Information
@@ -760,7 +760,7 @@ class AssetKind(Enum):
 class AssetInformation:
     asset_kind: AssetKind
     global_asset_id: Optional[IdentifierString]
-    specific_asset_ids: Optional[List[SpecificAssetId]]
+    specific_asset_ids: Optional[NonEmptyList[SpecificAssetId]]
     asset_type: Optional[IdentifierString]
     default_thumbnail: Optional[Resource]
 
@@ -861,7 +861,7 @@ class RelationshipElement(SubmodelElement):
 
 @dataclass
 class AnnotatedRelationshipElement(RelationshipElement):
-    annotations: Optional[List[DataElement]]
+    annotations: Optional[NonEmptyList[DataElement]]
 
     def check_aasd_117(self):
         ensure_have_id_shorts(self.annotations, self.id_short_path)
@@ -939,10 +939,10 @@ class EntityType(Enum):
 
 @dataclass
 class Entity(SubmodelElement):
-    statements: Optional[List[SubmodelElement]]
+    statements: Optional[NonEmptyList[SubmodelElement]]
     entity_type: EntityType
     global_asset_id: Optional[IdentifierString]
-    specific_asset_ids: Optional[List[SpecificAssetId]]
+    specific_asset_ids: Optional[NonEmptyList[SpecificAssetId]]
 
     def check_aasd_014(self):
         """
@@ -978,7 +978,7 @@ class File(DataElement):
 
 @dataclass
 class MultiLanguageProperty(DataElement):
-    value: Optional[List[MultiLanguageTextType]]
+    value: Optional[NonEmptyList[MultiLanguageTextType]]
     # TODO: Note: it is recommended to use an external reference.
     value_id: Optional[Reference]
 
@@ -1010,11 +1010,11 @@ class OperationVariable:
 
 @dataclass
 class Operation(SubmodelElement):
-    input_variables: Optional[List[OperationVariable]]
-    output_variables: Optional[List[OperationVariable]]
-    inoutput_variables: Optional[List[OperationVariable]]
+    input_variables: Optional[NonEmptyList[OperationVariable]]
+    output_variables: Optional[NonEmptyList[OperationVariable]]
+    inoutput_variables: Optional[NonEmptyList[OperationVariable]]
 
-    def _check_list(self, l: Optional[List[OperationVariable]], all_id_shorts: Set[str]):
+    def _check_list(self, l: Optional[NonEmptyList[OperationVariable]], all_id_shorts: Set[str]):
         if l is None:
             return
         for i in l:
@@ -1092,7 +1092,7 @@ class ReferenceElement(DataElement):
 
 @dataclass
 class SubmodelElementCollection(SubmodelElement):
-    value: Optional[List[SubmodelElement]]
+    value: Optional[NonEmptyList[SubmodelElement]]
 
     def elements(self) -> Iterator["SubmodelElement"]:
         yield self
@@ -1124,7 +1124,7 @@ class SubmodelElementList(SubmodelElement):
     semantic_id_list_element: Optional[Reference]
     type_value_list_element: KeyType
     value_type_list_element: Optional[DataTypeDefXsd]
-    value: Optional[List[SubmodelElement]]
+    value: Optional[NonEmptyList[SubmodelElement]]
 
     def _set_path(self, path):
         self.id_short_path = path
@@ -1244,7 +1244,7 @@ class SubmodelElementList(SubmodelElement):
 class AssetAdministrationShell(Identifiable, HasDataSpecification):
     derived_from: Optional[Reference]
     asset_information: AssetInformation
-    submodels: Optional[List[Reference]]
+    submodels: Optional[NonEmptyList[Reference]]
 
     def check_derived_from(self):
         if self.derived_from and self.derived_from.type != ReferenceType.ModelReference:
@@ -1266,7 +1266,7 @@ class AssetAdministrationShell(Identifiable, HasDataSpecification):
 
 @dataclass
 class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecification):
-    submodel_elements: Optional[List[SubmodelElement]]
+    submodel_elements: Optional[NonEmptyList[SubmodelElement]]
 
     def post_parse(self):
         self.update_id_shorts()
@@ -1328,7 +1328,7 @@ class Submodel(Identifiable, HasKind, HasSemantics, Qualifiable, HasDataSpecific
 @dataclass
 class ConceptDescription(Identifiable, HasDataSpecification):
     # TODO: Note: it is recommended to use an external reference, i.e. Reference/type = ExternalReference.
-    is_case_of: Optional[List[Reference]]
+    is_case_of: Optional[NonEmptyList[Reference]]
 
     def _check_iec_61360(self, categories: Set[str], types, constraint):
         if self.category is None or self.category.raw_value not in categories:
@@ -1461,9 +1461,9 @@ class ConceptDescription(Identifiable, HasDataSpecification):
 
 @dataclass
 class Environment:
-    asset_administration_shells: Optional[List[AssetAdministrationShell]]
-    submodels: Optional[List[Submodel]]
-    concept_descriptions: Optional[List[ConceptDescription]]
+    asset_administration_shells: Optional[NonEmptyList[AssetAdministrationShell]]
+    submodels: Optional[NonEmptyList[Submodel]]
+    concept_descriptions: Optional[NonEmptyList[ConceptDescription]]
 
 
 r_environment, symbol_table = reflect(Environment, globals(), locals())

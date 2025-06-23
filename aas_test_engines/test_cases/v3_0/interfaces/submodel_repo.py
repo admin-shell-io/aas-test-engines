@@ -38,7 +38,7 @@ r_get_submodel_paths, _ = reflect(GetSubmodelPathsResponse)
 
 @dataclass
 class GetAllSubmodelsResponse(PagedResult):
-    result: List[Submodel] = field(metadata={"allow_empty": True})
+    result: List[Submodel]
 
 
 r_get_all_submodels, _ = reflect(GetAllSubmodelsResponse, globals(), locals())
@@ -46,7 +46,7 @@ r_get_all_submodels, _ = reflect(GetAllSubmodelsResponse, globals(), locals())
 
 @dataclass
 class GetAllSubmodelsValueResponse(PagedResult):
-    result: List[any] = field(metadata={"allow_empty": True})
+    result: List[any]
 
 
 r_get_all_submodels_value, _ = reflect(GetAllSubmodelsValueResponse, globals(), locals())
@@ -54,7 +54,7 @@ r_get_all_submodels_value, _ = reflect(GetAllSubmodelsValueResponse, globals(), 
 
 @dataclass
 class GetAllSubmodelsPathResponse(PagedResult):
-    result: List[str] = field(metadata={"allow_empty": True})
+    result: List[str]
 
 
 r_get_all_submodels_path, _ = reflect(GetAllSubmodelsPathResponse, globals(), locals())

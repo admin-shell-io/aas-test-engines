@@ -48,7 +48,7 @@ r_submodel, _ = reflect(Submodel, globals(), locals())
 
 @dataclass
 class GetAllSubmodelElementsResponse(PagedResult):
-    result: List[SubmodelElement] = field(metadata={"allow_empty": True})
+    result: List[SubmodelElement]
 
 
 r_get_all_submodel_elements, _ = reflect(GetAllSubmodelElementsResponse, globals(), locals())
@@ -56,7 +56,7 @@ r_get_all_submodel_elements, _ = reflect(GetAllSubmodelElementsResponse, globals
 
 @dataclass
 class GetAllSubmodelElementsValueOnlyResponse(PagedResult):
-    result: List[any] = field(metadata={"allow_empty": True})
+    result: List[any]
 
 
 r_get_all_submodel_elements_value_only, _ = reflect(GetAllSubmodelElementsValueOnlyResponse, globals(), locals())
@@ -78,7 +78,7 @@ r_reference, _ = reflect(UnconstrainedReference, globals(), locals())
 
 @dataclass
 class GetAllSubmodelElementsReferenceResponse(PagedResult):
-    result: List[UnconstrainedReference] = field(metadata={"allow_empty": True})
+    result: List[UnconstrainedReference]
 
 
 r_get_all_submodel_elements_reference, _ = reflect(GetAllSubmodelElementsReferenceResponse, globals(), locals())
@@ -86,7 +86,7 @@ r_get_all_submodel_elements_reference, _ = reflect(GetAllSubmodelElementsReferen
 
 @dataclass
 class GetAllSubmodelElementsPathResponse(PagedResult):
-    result: List[str] = field(metadata={"allow_empty": False})
+    result: List[str]
 
 
 r_get_all_submodel_elements_path, _ = reflect(GetAllSubmodelElementsPathResponse, globals(), locals())

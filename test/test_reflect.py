@@ -8,6 +8,7 @@ from aas_test_engines.reflect import (
     abstract,
     FunctionType,
     NoneType,
+    NonEmptyList,
 )
 from unittest import TestCase, main
 from dataclasses import dataclass, field
@@ -90,6 +91,29 @@ class TestReflect(TestCase):
         assert isinstance(foo.type, ListType)
         assert isinstance(foo.type.item_type, ClassType)
         self.assertEqual(len(table.symbols), 3)
+
+    def test_emptiable_list(self):
+        @dataclass
+        class Bar:
+            foo: List[str]
+            bar: NonEmptyList[str]
+
+        type, table = reflect(Bar, globals(), locals())
+        assert isinstance(type, ClassType)
+
+        foo = type.attrs[0]
+        self.assertEqual(foo.name, "foo")
+        assert isinstance(foo.type, ListType)
+        assert isinstance(foo.type.item_type, StringType)
+        assert foo.type.allow_empty
+
+        bar = type.attrs[1]
+        self.assertEqual(bar.name, "bar")
+        assert isinstance(bar.type, ListType)
+        assert isinstance(bar.type.item_type, StringType)
+        assert not bar.type.allow_empty
+
+        self.assertEqual(len(table.symbols), 4)
 
     def test_recursion(self):
         @dataclass

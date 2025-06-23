@@ -93,6 +93,22 @@ class StringFormattedValue:
             return self.raw_value
 
 
+from typing import Generic, TypeVar, Iterable
+
+T = TypeVar("T")
+
+
+class NonEmptyList(List[T], Generic[T]):
+    """
+    When using the List[T] annotation we assume that it is allowed to have zero elements in it.
+    If you need to indicate, that a List is guaranteed to be non-empty, use this type annotation instead.
+    Note that this is also enforced during parsing, i.e., parsing an empty list declared as being non-empty
+    will result in an error.
+    """
+
+    pass
+
+
 class TypeBase:
     def construct(self, args: Dict[str, any]):
         raise NotImplementedError(self)
@@ -244,7 +260,7 @@ class SymbolTable:
 
 def _reflect_list(item_cls, globals, locals, symbol_table: SymbolTable, allow_empty: bool) -> ClassType:
     item_cls = _unwrap_forward_ref(item_cls, globals, locals)
-    _reflect(item_cls, globals, locals, symbol_table, False)
+    _reflect(item_cls, globals, locals, symbol_table)
     return ListType(UnresolvedType(item_cls), allow_empty)
 
 
@@ -261,40 +277,38 @@ def _reflect_class(cls, globals, locals, symbol_table: SymbolTable) -> ClassType
         except KeyError:
             pass
         force_name = field.metadata.get("force_name", None)
-        allow_empty_list = field.metadata.get("allow_empty", False)
         field_type = _unwrap_forward_ref(field_type, globals, locals)
         attrs.append(ClassType.Attribute(field.name, UnresolvedType(field_type), required, force_name))
-        _reflect(field_type, globals, locals, symbol_table, allow_empty_list)
+        _reflect(field_type, globals, locals, symbol_table)
 
     subclasses: List[TypeBase] = []
     for subclass in _collect_subclasses(cls):
         subclasses.append(UnresolvedType(subclass))
-        _reflect(subclass, globals, locals, symbol_table, False)
+        _reflect(subclass, globals, locals, symbol_table)
     return ClassType(cls, attrs, static_attrs, subclasses)
 
 
-def _reflect(
-    cls: any, globals, locals, symbol_table: SymbolTable, allow_empty_list: bool
-) -> Tuple[TypeBase, SymbolTable]:
+def _reflect(cls: any, globals, locals, symbol_table: SymbolTable) -> Tuple[TypeBase, SymbolTable]:
     key = str(cls)
     try:
         return symbol_table.symbols[key]
     except KeyError:
         # Avoid infinite recursion if _reflect_unsafe calls itself again
         symbol_table.symbols[key] = None
-        result = _reflect_unsafe(cls, globals, locals, symbol_table, allow_empty_list)
+        result = _reflect_unsafe(cls, globals, locals, symbol_table)
         symbol_table.symbols[key] = result
         return result
 
 
-def _reflect_unsafe(
-    cls: any, globals, locals, symbol_table: SymbolTable, allow_empty_list: bool
-) -> Tuple[TypeBase, SymbolTable]:
+def _reflect_unsafe(cls: any, globals, locals, symbol_table: SymbolTable) -> Tuple[TypeBase, SymbolTable]:
     origin = getattr(cls, "__origin__", None)
     if origin:
         if origin is list:
             item_type = cls.__args__[0]
-            return _reflect_list(item_type, globals, locals, symbol_table, allow_empty_list)
+            return _reflect_list(item_type, globals, locals, symbol_table, True)
+        elif origin is NonEmptyList:
+            item_type = cls.__args__[0]
+            return _reflect_list(item_type, globals, locals, symbol_table, False)
     else:
         if cls is None:
             return NoneType()
@@ -327,7 +341,7 @@ def _reflect_unsafe(
 
 def reflect(cls: any, globals={}, locals={}) -> Tuple[TypeBase, SymbolTable]:
     symbol_table = SymbolTable()
-    type = _reflect(cls, globals, locals, symbol_table, False)
+    type = _reflect(cls, globals, locals, symbol_table)
     symbol_table._resolve()
     return type, symbol_table
 
@@ -335,12 +349,12 @@ def reflect(cls: any, globals={}, locals={}) -> Tuple[TypeBase, SymbolTable]:
 def reflect_function(fn: callable, globals={}, locals={}) -> FunctionType:
     symbol_table = SymbolTable()
     return_type = fn.__annotations__.get("return", None)
-    r_return_type = _reflect(return_type, globals, locals, symbol_table, False)
+    r_return_type = _reflect(return_type, globals, locals, symbol_table)
     args: List[FunctionType.Argument] = []
     for key, value in fn.__annotations__.items():
         if key in ["return"]:
             continue
         required, arg_type = _unwrap_optional(value)
-        r_arg_type = _reflect(arg_type, globals, locals, symbol_table, False)
+        r_arg_type = _reflect(arg_type, globals, locals, symbol_table)
         args.append(FunctionType.Argument(key, r_arg_type, required))
     return FunctionType(fn, r_return_type, args)
