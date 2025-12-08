@@ -379,14 +379,22 @@ class Reference:
         more than one key in Reference/keys, a key with Key/type FragmentReference shall be preceded by a key
         with Key/type File or Blob. All other Asset Administration Shell fragments, i.e. Key/type values out of
         AasSubmodelElements, do not support fragments.
+
+        DEXPI Exception: In DEXPI-compliant RelationshipElements, a SubmodelElement with value="ModelFile" is
+        also accepted as a valid predecessor to FragmentReference.
         """
         if self.type != ReferenceType.ModelReference or self.keys is None or len(self.keys) <= 1:
             return
         for idx, key in enumerate(self.keys):
             if key.type == KeyType.FragmentReference and idx >= 1:
-                if self.keys[idx - 1].type not in {KeyType.File, KeyType.Blob}:
+                prev_key = self.keys[idx - 1]
+                valid_predecessors = {KeyType.File, KeyType.Blob}
+                # DEXPI exception: Allow SubmodelElement with value="ModelFile"
+                if prev_key.type == KeyType.SubmodelElement and prev_key.value.raw_value == "ModelFile":
+                    valid_predecessors.add(KeyType.SubmodelElement)
+                if prev_key.type not in valid_predecessors:
                     raise CheckConstraintException(
-                        f"Constraint AASd-127 violated: key {idx} must be preceded by File or Blob"
+                        f"Constraint AASd-127 violated: key {idx} must be preceded by File, Blob, or SubmodelElement 'ModelFile'"
                     )
 
     def check_aasd_128(self):
